@@ -123,7 +123,16 @@ export default function Layout({ children, onNewEntry }) {
           <div className="space-y-0.5">
             {categories.map((cat) => (
               <div key={cat.id} className="group relative">
-                <button className="w-full flex items-center gap-2.5 px-3 py-[7px] pr-8 rounded-md text-[13px] text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300 transition-colors">
+                <NavLink
+                  to={`/category/${cat.id}`}
+                  className={({ isActive }) =>
+                    `flex w-full items-center gap-2.5 px-3 py-[7px] pr-8 rounded-md text-[13px] transition-colors ${
+                      isActive
+                        ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
+                        : 'text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300'
+                    }`
+                  }
+                >
                   <span
                     className="w-2 h-2 rounded-full shrink-0"
                     style={{ backgroundColor: cat.color }}
@@ -132,7 +141,7 @@ export default function Layout({ children, onNewEntry }) {
                   {cat.count != null && (
                     <span className="text-[11px] text-gray-300 dark:text-[#444]">{cat.count}</span>
                   )}
-                </button>
+                </NavLink>
                 <button
                   onClick={() => deleteCategory(cat.id)}
                   className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-[15px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
