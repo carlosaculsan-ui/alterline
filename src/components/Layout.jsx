@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
+import { useCategories } from '../hooks/useCategories'
+import NewCategoryModal from './NewCategoryModal'
 
 function IconGrid() {
   return (
@@ -61,10 +63,12 @@ const NAV = [
   { to: '/search', label: 'Search', icon: <IconSearch /> },
 ]
 
-export default function Layout({ children, categories = [] }) {
+export default function Layout({ children }) {
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('alterline-theme') !== 'light'
   })
+  const [showModal, setShowModal] = useState(false)
+  const { categories, createCategory, deleteCategory } = useCategories()
 
   useEffect(() => {
     if (dark) {
@@ -117,20 +121,31 @@ export default function Layout({ children, categories = [] }) {
           </div>
           <div className="space-y-0.5">
             {categories.map((cat) => (
-              <button
-                key={cat.id}
-                className="w-full flex items-center gap-2.5 px-3 py-[7px] rounded-md text-[13px] text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300 transition-colors"
-              >
-                <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: cat.color }}
-                />
-                <span className="flex-1 text-left truncate">{cat.name}</span>
-                <span className="text-[11px] text-gray-300 dark:text-[#444]">{cat.count}</span>
-              </button>
+              <div key={cat.id} className="group relative">
+                <button className="w-full flex items-center gap-2.5 px-3 py-[7px] pr-8 rounded-md text-[13px] text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300 transition-colors">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: cat.color }}
+                  />
+                  <span className="flex-1 text-left truncate">{cat.name}</span>
+                  {cat.count != null && (
+                    <span className="text-[11px] text-gray-300 dark:text-[#444]">{cat.count}</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => deleteCategory(cat.id)}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-[15px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
+                  aria-label={`Delete ${cat.name}`}
+                >
+                  ×
+                </button>
+              </div>
             ))}
           </div>
-          <button className="mt-1 w-full flex items-center gap-2.5 px-3 py-[7px] rounded-md text-[13px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-400 transition-colors">
+          <button
+            onClick={() => setShowModal(true)}
+            className="mt-1 w-full flex items-center gap-2.5 px-3 py-[7px] rounded-md text-[13px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-400 transition-colors"
+          >
             <IconPlus />
             New category
           </button>
@@ -171,6 +186,13 @@ export default function Layout({ children, categories = [] }) {
           {children}
         </main>
       </div>
+
+      {showModal && (
+        <NewCategoryModal
+          onConfirm={createCategory}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </div>
   )
 }
