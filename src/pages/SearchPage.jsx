@@ -44,28 +44,32 @@ export default function SearchPage() {
     const timer = setTimeout(async () => {
       setLoading(true)
 
-      const { data: pfRows } = await supabase
-        .from('profile_fields')
-        .select('entry_id')
-        .ilike('field_value', `%${q}%`)
+      const [{ data: pfRows }, { data: titleContent, error }] = await Promise.all([
+        supabase.from('profile_fields').select('entry_id').ilike('field_value', `%${q}%`),
+        supabase.from('entries').select('*, categories(name, color)')
+          .or(`title.ilike.%${q}%,content.ilike.%${q}%`)
+          .order('created_at', { ascending: false })
+          .limit(50),
+      ])
 
       const pfIds = [...new Set((pfRows ?? []).map((r) => r.entry_id))]
+      let data = titleContent ?? []
 
-      const orParts = [`title.ilike.%${q}%`, `content.ilike.%${q}%`]
-      if (pfIds.length > 0) orParts.push(`id.in.(${pfIds.join(',')})`)
-
-      const { data, error } = await supabase
-        .from('entries')
-        .select('*, categories(name, color)')
-        .or(orParts.join(','))
-        .order('created_at', { ascending: false })
-        .limit(50)
+      if (pfIds.length > 0) {
+        const found = new Set(data.map((e) => e.id))
+        const missing = pfIds.filter((id) => !found.has(id))
+        if (missing.length > 0) {
+          const { data: extra } = await supabase
+            .from('entries').select('*, categories(name, color)').in('id', missing)
+          data = [...data, ...(extra ?? [])]
+        }
+      }
 
       if (gen !== searchGen.current) return
-      if (!error && data) setResults(data)
+      if (!error) setResults(data)
       setHasSearched(true)
       setLoading(false)
-    }, 300)
+    }, 150)
 
     return () => clearTimeout(timer)
   }, [query])

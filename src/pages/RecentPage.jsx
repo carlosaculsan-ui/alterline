@@ -6,24 +6,22 @@ import { supabase } from '../lib/supabase'
 function LoadingSkeleton() {
   return (
     <div className="px-6 py-8 animate-pulse">
-      {[3, 2].map((count, i) => (
-        <div key={i} className="mb-8">
-          <div className="h-3 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-16 mb-4" />
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
-            {Array.from({ length: count }).map((_, j) => (
-              <div
-                key={j}
-                className="p-4 rounded-xl border border-[#e8e8e8] dark:border-[#1e1e1e]"
-              >
-                <div className="w-7 h-7 rounded-lg bg-[#f0f0f0] dark:bg-[#1e1e1e] mb-3" />
-                <div className="h-3 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded mb-2 w-4/5" />
-                <div className="h-3 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded mb-3 w-3/5" />
-                <div className="h-2.5 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-2/5" />
-              </div>
-            ))}
-          </div>
+      <div>
+        <div className="h-3 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-16 mb-4" />
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="p-4 rounded-xl border border-[#e8e8e8] dark:border-[#1e1e1e]"
+            >
+              <div className="w-7 h-7 rounded-lg bg-[#f0f0f0] dark:bg-[#1e1e1e] mb-3" />
+              <div className="h-3 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded mb-2 w-4/5" />
+              <div className="h-3 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded mb-3 w-3/5" />
+              <div className="h-2.5 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-2/5" />
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   )
 }

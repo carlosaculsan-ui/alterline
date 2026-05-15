@@ -65,6 +65,14 @@ function IconMoon() {
   )
 }
 
+function IconPencil() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 15 15" fill="none" className="shrink-0">
+      <path d="M11.5 1.5l2 2-9 9H2.5v-2l9-9z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 const NAV = [
   { to: '/', label: 'Dashboard', icon: <IconGrid /> },
   { to: '/recent', label: 'Recent', icon: <IconClock /> },
@@ -224,7 +232,7 @@ export default function Layout({ children }) {
                   ) : (
                     <div
                       onClick={() => navigate(`/category/${cat.id}`)}
-                      className={`flex w-full items-center gap-2.5 px-3 py-[7px] pr-8 rounded-md text-[13px] transition-colors cursor-pointer select-none ${
+                      className={`flex w-full items-center gap-2.5 px-3 py-[7px] pr-[52px] rounded-md text-[13px] transition-colors cursor-pointer select-none ${
                         isActive
                           ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
                           : 'text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300'
@@ -234,17 +242,23 @@ export default function Layout({ children }) {
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: cat.color }}
                       />
-                      <span
-                        className="flex-1 text-left truncate"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setEditingId(cat.id)
-                          setEditDraft({ name: cat.name, color: cat.color })
-                        }}
-                      >
+                      <span className="flex-1 text-left truncate">
                         {cat.name}
                       </span>
                     </div>
+                  )}
+                  {!isEditing && !isConfirming && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setEditingId(cat.id)
+                        setEditDraft({ name: cat.name, color: cat.color })
+                      }}
+                      className="absolute top-[7px] right-7 w-5 h-5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
+                      aria-label={`Edit ${cat.name}`}
+                    >
+                      <IconPencil />
+                    </button>
                   )}
                   <button
                     onClick={(e) => {
