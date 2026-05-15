@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import NewCategoryModal from './NewCategoryModal'
 import NewEntryModal from './NewEntryModal'
+import Toast from './Toast'
 import { supabase } from '../lib/supabase'
 
 const COLORS = [
@@ -81,6 +82,7 @@ export default function Layout({ children }) {
   const [editingId, setEditingId] = useState(null)
   const [editDraft, setEditDraft] = useState({ name: '', color: '' })
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [toastMsg, setToastMsg] = useState(null)
   const { categories, createCategory, updateCategory, deleteCategory } = useCategories()
   const editInputRef = useRef(null)
   const cancelEditRef = useRef(false)
@@ -119,7 +121,8 @@ export default function Layout({ children }) {
       .insert(data)
       .select('id')
       .single()
-    if (!error && created) {
+    if (error) { setToastMsg('Failed to create entry. Try again.'); return }
+    if (created) {
       if (fields.length > 0) {
         await supabase.from('profile_fields').insert(
           fields.map(({ key, value }) => ({
@@ -326,10 +329,12 @@ export default function Layout({ children }) {
       {showEntryModal && (
         <NewEntryModal
           categories={categories}
+          defaultCategoryId={location.pathname.match(/^\/category\/(.+)/)?.[1] ?? null}
           onConfirm={handleCreateEntry}
           onClose={() => setShowEntryModal(false)}
         />
       )}
+      {toastMsg && <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />}
     </div>
   )
 }

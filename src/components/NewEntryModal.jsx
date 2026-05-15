@@ -32,11 +32,11 @@ const DEFAULT_FIELDS = [
   { id: 3, key: 'Notes', value: '' },
 ]
 
-export default function NewEntryModal({ categories, onConfirm, onClose }) {
+export default function NewEntryModal({ categories, defaultCategoryId, onConfirm, onClose }) {
   const [step, setStep] = useState(1)
   const [type, setType] = useState(null)
   const [title, setTitle] = useState('')
-  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? '')
+  const [categoryId, setCategoryId] = useState(defaultCategoryId ?? '')
   const [fields, setFields] = useState(DEFAULT_FIELDS)
   const [nextId, setNextId] = useState(DEFAULT_FIELDS.length)
   const [saving, setSaving] = useState(false)

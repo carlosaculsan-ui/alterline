@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useEntries } from '../hooks/useEntries'
@@ -91,8 +92,17 @@ function EmptyState() {
   )
 }
 
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'profile', label: 'Profiles' },
+  { key: 'story', label: 'Stories' },
+]
+
 export default function Dashboard() {
   const { entries, loading, hasMore, loadingMore, loadMore } = useEntries()
+  const [filter, setFilter] = useState('all')
+
+  const visible = filter === 'all' ? entries : entries.filter((e) => e.type === filter)
 
   return (
     <Layout>
@@ -102,21 +112,46 @@ export default function Dashboard() {
         <EmptyState />
       ) : (
         <div className="p-6">
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
-            {entries.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} />
+          <div className="flex items-center gap-1 mb-5">
+            {FILTERS.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`px-3 py-1 rounded-full text-[12px] transition-colors ${
+                  filter === key
+                    ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
+                    : 'text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-400'
+                }`}
+              >
+                {label}
+              </button>
             ))}
           </div>
-          {hasMore && (
-            <div className="mt-6 flex justify-center">
-              <button
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="px-4 py-2 rounded-md text-[13px] text-gray-400 dark:text-[#555] border border-[#e5e5e5] dark:border-[#2a2a2a] hover:border-[#d0d0d0] dark:hover:border-[#333] hover:text-gray-600 dark:hover:text-gray-400 transition-colors disabled:opacity-40"
-              >
-                {loadingMore ? 'Loading…' : 'Load more'}
-              </button>
+          {visible.length === 0 ? (
+            <div className="flex flex-col items-center justify-center min-h-[300px] text-center">
+              <div className="text-[13px] text-gray-300 dark:text-[#333]">
+                No {filter === 'profile' ? 'profiles' : 'stories'} yet
+              </div>
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+                {visible.map((entry) => (
+                  <EntryCard key={entry.id} entry={entry} />
+                ))}
+              </div>
+              {hasMore && filter === 'all' && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="px-4 py-2 rounded-md text-[13px] text-gray-400 dark:text-[#555] border border-[#e5e5e5] dark:border-[#2a2a2a] hover:border-[#d0d0d0] dark:hover:border-[#333] hover:text-gray-600 dark:hover:text-gray-400 transition-colors disabled:opacity-40"
+                  >
+                    {loadingMore ? 'Loading…' : 'Load more'}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

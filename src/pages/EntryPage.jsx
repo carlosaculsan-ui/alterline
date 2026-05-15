@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import Toast from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { useCategories } from '../hooks/useCategories'
 
@@ -83,6 +84,7 @@ export default function EntryPage() {
   const [loading, setLoading] = useState(true)
   const [content, setContent] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [toastMsg, setToastMsg] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const confirmDeleteTimer = useRef(null)
   const [editing, setEditing] = useState(false)
@@ -201,7 +203,9 @@ export default function EntryPage() {
     if (!draft.title.trim() || saving) return
     setSaving(true)
 
-    await supabase.from('entries').update({ title: draft.title.trim(), updated_at: new Date().toISOString() }).eq('id', id)
+    const { error } = await supabase.from('entries').update({ title: draft.title.trim(), updated_at: new Date().toISOString() }).eq('id', id)
+    if (error) { setToastMsg('Save failed. Try again.'); setSaving(false); return }
+
     await supabase.from('profile_fields').delete().eq('entry_id', id)
 
     const toInsert = draftFields
@@ -224,15 +228,17 @@ export default function EntryPage() {
 
   async function handleContentBlur() {
     if (content === lastSaved.current) return
-    await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
+    const { error } = await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
+    if (error) { setToastMsg('Save failed. Try again.'); return }
     lastSaved.current = content
   }
 
   useEffect(() => {
     if (!entry || entry.type !== 'story' || content === lastSaved.current) return
     const timer = setTimeout(async () => {
-      await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
-      lastSaved.current = content
+      const { error } = await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
+      if (!error) lastSaved.current = content
+      else setToastMsg('Auto-save failed. Try again.')
     }, 2000)
     return () => clearTimeout(timer)
   }, [content])
@@ -259,7 +265,8 @@ export default function EntryPage() {
     setEditingTitle(false)
     if (!trimmed || trimmed === entry.title) return
     setEntry((prev) => ({ ...prev, title: trimmed }))
-    await supabase.from('entries').update({ title: trimmed, updated_at: new Date().toISOString() }).eq('id', id)
+    const { error } = await supabase.from('entries').update({ title: trimmed, updated_at: new Date().toISOString() }).eq('id', id)
+    if (error) { setToastMsg('Save failed. Try again.'); setEntry((prev) => ({ ...prev, title: entry.title })) }
   }
 
   async function saveCategoryEdit(categoryId) {
@@ -272,7 +279,8 @@ export default function EntryPage() {
       category_id: newCatId,
       categories: cat ? { name: cat.name, color: cat.color } : null,
     }))
-    await supabase.from('entries').update({ category_id: newCatId, updated_at: new Date().toISOString() }).eq('id', id)
+    const { error } = await supabase.from('entries').update({ category_id: newCatId, updated_at: new Date().toISOString() }).eq('id', id)
+    if (error) setToastMsg('Save failed. Try again.')
   }
 
   async function addLink(targetEntry) {
@@ -600,6 +608,7 @@ export default function EntryPage() {
           </div>
         </div>
       )}
+      {toastMsg && <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />}
     </Layout>
   )
 }
