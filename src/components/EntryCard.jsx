@@ -34,11 +34,11 @@ export default function EntryCard({ entry }) {
       <div className="w-7 h-7 rounded-lg bg-[#f5f5f5] dark:bg-[#1e1e1e] flex items-center justify-center text-gray-400 dark:text-[#4a4a4a] mb-3">
         {entry.type === 'profile' ? <IconPerson /> : <IconNote />}
       </div>
-      <div className="text-[13px] font-medium text-gray-900 dark:text-gray-100 leading-snug mb-1.5 line-clamp-2">
+      <div className="text-[14px] font-medium text-gray-900 dark:text-gray-100 leading-snug mb-1.5 line-clamp-2">
         {entry.title}
       </div>
       {entry.content ? (
-        <div className="text-[11px] text-gray-400 dark:text-[#444] leading-snug mb-2 line-clamp-2">
+        <div className="text-[12px] text-gray-400 dark:text-[#444] leading-snug mb-2 line-clamp-2">
           {entry.content}
         </div>
       ) : (
@@ -51,15 +51,15 @@ export default function EntryCard({ entry }) {
               className="w-1.5 h-1.5 rounded-full shrink-0"
               style={{ backgroundColor: entry.categories.color }}
             />
-            <span className="text-[11px] text-gray-400 dark:text-[#555] truncate">
+            <span className="text-[12px] text-gray-400 dark:text-[#555] truncate">
               {entry.categories.name}
             </span>
           </>
         ) : (
-          <span className="text-[11px] text-gray-300 dark:text-[#3a3a3a]">—</span>
+          <span className="text-[12px] text-gray-300 dark:text-[#3a3a3a]">—</span>
         )}
       </div>
-      <div className="text-[11px] text-gray-300 dark:text-[#3a3a3a]">{date}</div>
+      <div className="text-[12px] text-gray-300 dark:text-[#3a3a3a]">{date}</div>
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { useEntries } from '../hooks/useEntries'
 
 function LoadingSkeleton() {
   return (
-    <div className="p-6 grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+    <div className="p-6 grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
@@ -25,10 +25,10 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] h-full text-center p-12">
       <div className="text-[36px] text-gray-200 dark:text-[#2a2a2a] mb-3 select-none">✦</div>
-      <div className="text-[14px] font-medium text-gray-400 dark:text-[#444] mb-1">
+      <div className="text-[15px] font-medium text-gray-400 dark:text-[#444] mb-1">
         No entries yet
       </div>
-      <div className="text-[12px] text-gray-300 dark:text-[#333]">
+      <div className="text-[13px] text-gray-300 dark:text-[#333]">
         Hit "New Entry" to start building your universe
       </div>
     </div>
@@ -60,7 +60,7 @@ export default function Dashboard() {
               <button
                 key={key}
                 onClick={() => setFilter(key)}
-                className={`px-3 py-1 rounded-full text-[12px] transition-colors ${
+                className={`px-3 py-1 rounded-full text-[13px] transition-colors ${
                   filter === key
                     ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
                     : 'text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-400'
@@ -72,13 +72,13 @@ export default function Dashboard() {
           </div>
           {visible.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[300px] text-center">
-              <div className="text-[13px] text-gray-300 dark:text-[#333]">
+              <div className="text-[14px] text-gray-300 dark:text-[#333]">
                 No {filter === 'profile' ? 'profiles' : 'stories'} yet
               </div>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">
                 {visible.map((entry) => (
                   <EntryCard key={entry.id} entry={entry} />
                 ))}
@@ -88,7 +88,7 @@ export default function Dashboard() {
                   <button
                     onClick={loadMore}
                     disabled={loadingMore}
-                    className="px-4 py-2 rounded-md text-[13px] text-gray-400 dark:text-[#555] border border-[#e5e5e5] dark:border-[#2a2a2a] hover:border-[#d0d0d0] dark:hover:border-[#333] hover:text-gray-600 dark:hover:text-gray-400 transition-colors disabled:opacity-40"
+                    className="px-4 py-2 rounded-md text-[14px] text-gray-400 dark:text-[#555] border border-[#e5e5e5] dark:border-[#2a2a2a] hover:border-[#d0d0d0] dark:hover:border-[#333] hover:text-gray-600 dark:hover:text-gray-400 transition-colors disabled:opacity-40"
                   >
                     {loadingMore ? 'Loading…' : 'Load more'}
                   </button>

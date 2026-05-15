@@ -148,13 +148,13 @@ export default function Layout({ children }) {
   return (
     <div className="flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
       {/* Sidebar */}
-      <aside className="w-[240px] shrink-0 flex flex-col bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a]">
+      <aside className="w-[280px] shrink-0 flex flex-col bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a]">
         {/* App name */}
         <div className="px-5 py-5 border-b border-[#e5e5e5] dark:border-[#2a2a2a]">
-          <div className="text-[13px] font-semibold tracking-wide text-gray-900 dark:text-white">
+          <div className="text-[15px] font-semibold tracking-wide text-gray-900 dark:text-white">
             Alterline
           </div>
-          <div className="text-[11px] text-gray-400 dark:text-[#555] mt-0.5">
+          <div className="text-[12px] text-gray-400 dark:text-[#555] mt-0.5">
             your alternate universe
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function Layout({ children }) {
               to={to}
               end
               className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors ${
+                `flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] transition-colors ${
                   isActive
                     ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
                     : 'text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300'
@@ -182,7 +182,7 @@ export default function Layout({ children }) {
 
         {/* Categories */}
         <div className="flex-1 overflow-y-auto px-2 pt-5 pb-3">
-          <div className="px-3 mb-3 text-[10px] uppercase tracking-widest text-gray-400 dark:text-[#444] font-medium select-none">
+          <div className="px-3 mb-3 text-[11px] uppercase tracking-widest text-gray-400 dark:text-[#444] font-medium select-none">
             Categories
           </div>
           <div className="space-y-1">
@@ -232,7 +232,7 @@ export default function Layout({ children }) {
                   ) : (
                     <div
                       onClick={() => navigate(`/category/${cat.id}`)}
-                      className={`flex w-full items-center gap-2.5 px-3 py-2 pr-[52px] rounded-md text-[13px] transition-colors cursor-pointer select-none ${
+                      className={`flex w-full items-center gap-2.5 px-3 py-2 pr-[52px] rounded-md text-[14px] transition-colors cursor-pointer select-none ${
                         isActive
                           ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
                           : 'text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300'
@@ -285,7 +285,7 @@ export default function Layout({ children }) {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="mt-1 w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-400 transition-colors"
+            className="mt-1 w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-400 transition-colors"
           >
             <IconPlus />
             New category
@@ -296,7 +296,7 @@ export default function Layout({ children }) {
         <div className="p-3 border-t border-[#e5e5e5] dark:border-[#2a2a2a]">
           <button
             onClick={() => setDark((d) => !d)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
           >
             {dark ? <IconSun /> : <IconMoon />}
             {dark ? 'Light mode' : 'Dark mode'}
