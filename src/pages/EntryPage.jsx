@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { marked } from 'marked'
 import Layout from '../components/Layout'
 import Toast from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { useCategories } from '../hooks/useCategories'
+
+marked.use({ breaks: true })
 
 function IconPersonSm() {
   return (
@@ -95,6 +98,7 @@ export default function EntryPage() {
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
   const [editingCategory, setEditingCategory] = useState(false)
+  const [previewing, setPreviewing] = useState(false)
 
   const [links, setLinks] = useState([])
   const [linkQuery, setLinkQuery] = useState('')
@@ -533,14 +537,31 @@ export default function EntryPage() {
 
               {entry.type === 'profile' && <ProfileSection fields={profileFields} />}
               {entry.type === 'story' && (
-                <textarea
-                  ref={textareaRef}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  onBlur={handleContentBlur}
-                  placeholder="Write something…"
-                  className="w-full min-h-[260px] bg-transparent text-[14px] text-gray-700 dark:text-gray-300 placeholder-gray-300 dark:placeholder-[#333] outline-none resize-none leading-[1.75]"
-                />
+                <>
+                  <div className="flex justify-end mb-2">
+                    <button
+                      onClick={() => setPreviewing((p) => !p)}
+                      className="text-[12px] text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
+                    >
+                      {previewing ? 'Edit' : 'Preview'}
+                    </button>
+                  </div>
+                  {previewing ? (
+                    <div
+                      className="prose-content min-h-[260px] text-[14px] text-gray-700 dark:text-gray-300"
+                      dangerouslySetInnerHTML={{ __html: marked(content) }}
+                    />
+                  ) : (
+                    <textarea
+                      ref={textareaRef}
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      onBlur={handleContentBlur}
+                      placeholder="Write something…"
+                      className="w-full min-h-[260px] bg-transparent text-[14px] text-gray-700 dark:text-gray-300 placeholder-gray-300 dark:placeholder-[#333] outline-none resize-none leading-[1.75]"
+                    />
+                  )}
+                </>
               )}
             </>
           )}
