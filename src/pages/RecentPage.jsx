@@ -107,7 +107,7 @@ function groupByDate(entries) {
   const groups = new Map()
 
   for (const entry of entries) {
-    const d = new Date(entry.created_at)
+    const d = new Date(entry.updated_at ?? entry.created_at)
     const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
 
     let label
@@ -138,7 +138,7 @@ export default function RecentPage() {
     supabase
       .from('entries')
       .select('*, categories(name, color)')
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
       .limit(50)
       .then(({ data, error }) => {
         if (!error && data) setGroups(groupByDate(data))

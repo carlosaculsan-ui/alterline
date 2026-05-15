@@ -2,6 +2,25 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { supabase } from '../lib/supabase'
+import { useCategories } from '../hooks/useCategories'
+
+function IconPersonSm() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 20 20" fill="none" className="shrink-0">
+      <circle cx="10" cy="7" r="3.5" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M3 18c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function IconNoteSm() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 20 20" fill="none" className="shrink-0">
+      <rect x="3.5" y="2.5" width="13" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  )
+}
 
 function Field({ label, value }) {
   if (!value) return null
@@ -58,6 +77,8 @@ const LABEL = 'block text-[11px] uppercase tracking-wider text-gray-400 dark:tex
 export default function EntryPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { categories } = useCategories()
+
   const [entry, setEntry] = useState(null)
   const [loading, setLoading] = useState(true)
   const [content, setContent] = useState('')
@@ -67,9 +88,20 @@ export default function EntryPage() {
   const [profileFields, setProfileFields] = useState([])
   const [draftFields, setDraftFields] = useState([])
   const [saving, setSaving] = useState(false)
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState('')
+  const [editingCategory, setEditingCategory] = useState(false)
+
+  const [links, setLinks] = useState([])
+  const [linkQuery, setLinkQuery] = useState('')
+  const [linkResults, setLinkResults] = useState([])
+  const [showLinkResults, setShowLinkResults] = useState(false)
+
   const lastSaved = useRef('')
   const textareaRef = useRef(null)
+  const titleInputRef = useRef(null)
   const nextFieldId = useRef(0)
+  const cancelTitle = useRef(false)
 
   useEffect(() => {
     supabase
@@ -83,17 +115,46 @@ export default function EntryPage() {
           const c = data.content ?? ''
           setContent(c)
           lastSaved.current = c
-          if (data.type === 'profile') {
-            const { data: pf } = await supabase
-              .from('profile_fields')
-              .select('field_key, field_value')
-              .eq('entry_id', id)
+
+          const [pfResult, linkRowsResult] = await Promise.all([
+            data.type === 'profile'
+              ? supabase.from('profile_fields').select('field_key, field_value').eq('entry_id', id)
+              : Promise.resolve({ data: null }),
+            supabase
+              .from('entry_links')
+              .select('id, from_entry_id, to_entry_id')
+              .or(`from_entry_id.eq.${id},to_entry_id.eq.${id}`),
+          ])
+
+          if (pfResult.data) {
             setProfileFields(
-              (pf ?? []).map((row) => ({
+              pfResult.data.map((row) => ({
                 id: nextFieldId.current++,
                 key: row.field_key,
                 value: row.field_value,
               }))
+            )
+          }
+
+          const linkRows = linkRowsResult.data ?? []
+          if (linkRows.length > 0) {
+            const linkedIds = linkRows.map((row) =>
+              row.from_entry_id === id ? row.to_entry_id : row.from_entry_id
+            )
+            const { data: linkedEntries } = await supabase
+              .from('entries')
+              .select('id, title, type')
+              .in('id', linkedIds)
+            setLinks(
+              linkRows
+                .map((row) => {
+                  const otherId = row.from_entry_id === id ? row.to_entry_id : row.from_entry_id
+                  return {
+                    linkId: row.id,
+                    entry: (linkedEntries ?? []).find((e) => e.id === otherId),
+                  }
+                })
+                .filter((l) => l.entry)
             )
           }
         }
@@ -108,6 +169,26 @@ export default function EntryPage() {
     el.style.height = `${el.scrollHeight}px`
   }, [content])
 
+  useEffect(() => {
+    if (editingTitle) titleInputRef.current?.focus()
+  }, [editingTitle])
+
+  useEffect(() => {
+    const q = linkQuery.trim()
+    if (!q) { setLinkResults([]); return }
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from('entries')
+        .select('id, title, type')
+        .ilike('title', `%${q}%`)
+        .neq('id', id)
+        .limit(10)
+      const alreadyLinked = new Set(links.map((l) => l.entry.id))
+      setLinkResults((data ?? []).filter((e) => !alreadyLinked.has(e.id)).slice(0, 8))
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [linkQuery, id, links])
+
   function handleEdit() {
     setDraft({ title: entry.title ?? '' })
     setDraftFields(profileFields.map((f) => ({ ...f })))
@@ -118,8 +199,7 @@ export default function EntryPage() {
     if (!draft.title.trim() || saving) return
     setSaving(true)
 
-    await supabase.from('entries').update({ title: draft.title.trim() }).eq('id', id)
-
+    await supabase.from('entries').update({ title: draft.title.trim(), updated_at: new Date().toISOString() }).eq('id', id)
     await supabase.from('profile_fields').delete().eq('entry_id', id)
 
     const toInsert = draftFields
@@ -142,7 +222,7 @@ export default function EntryPage() {
 
   async function handleContentBlur() {
     if (content === lastSaved.current) return
-    await supabase.from('entries').update({ content }).eq('id', id)
+    await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
     lastSaved.current = content
   }
 
@@ -151,6 +231,56 @@ export default function EntryPage() {
     setDeleting(true)
     await supabase.from('entries').delete().eq('id', id)
     navigate('/')
+  }
+
+  async function saveTitleEdit() {
+    if (cancelTitle.current) {
+      cancelTitle.current = false
+      setEditingTitle(false)
+      return
+    }
+    const trimmed = titleDraft.trim()
+    setEditingTitle(false)
+    if (!trimmed || trimmed === entry.title) return
+    setEntry((prev) => ({ ...prev, title: trimmed }))
+    await supabase.from('entries').update({ title: trimmed, updated_at: new Date().toISOString() }).eq('id', id)
+  }
+
+  async function saveCategoryEdit(categoryId) {
+    setEditingCategory(false)
+    const newCatId = categoryId || null
+    if (newCatId === entry.category_id) return
+    const cat = newCatId ? (categories.find((c) => c.id === newCatId) ?? null) : null
+    setEntry((prev) => ({
+      ...prev,
+      category_id: newCatId,
+      categories: cat ? { name: cat.name, color: cat.color } : null,
+    }))
+    await supabase.from('entries').update({ category_id: newCatId, updated_at: new Date().toISOString() }).eq('id', id)
+  }
+
+  async function addLink(targetEntry) {
+    const { data: existing } = await supabase
+      .from('entry_links')
+      .select('id')
+      .or(`and(from_entry_id.eq.${id},to_entry_id.eq.${targetEntry.id}),and(from_entry_id.eq.${targetEntry.id},to_entry_id.eq.${id})`)
+      .maybeSingle()
+    if (existing) return
+    const { data: row, error } = await supabase
+      .from('entry_links')
+      .insert({ from_entry_id: id, to_entry_id: targetEntry.id })
+      .select('id')
+      .single()
+    if (!error && row) {
+      setLinks((prev) => [...prev, { linkId: row.id, entry: targetEntry }])
+      setLinkQuery('')
+      setLinkResults([])
+    }
+  }
+
+  async function removeLink(linkId) {
+    await supabase.from('entry_links').delete().eq('id', linkId)
+    setLinks((prev) => prev.filter((l) => l.linkId !== linkId))
   }
 
   return (
@@ -216,6 +346,7 @@ export default function EntryPage() {
             </div>
           </div>
 
+          {/* Main content */}
           {editing ? (
             <div className="space-y-4">
               <div>
@@ -255,9 +386,7 @@ export default function EntryPage() {
                       className={`flex-1 ${INPUT}`}
                     />
                     <button
-                      onClick={() =>
-                        setDraftFields((fs) => fs.filter((f) => f.id !== field.id))
-                      }
+                      onClick={() => setDraftFields((fs) => fs.filter((f) => f.id !== field.id))}
                       className="shrink-0 w-6 h-6 flex items-center justify-center rounded text-[15px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#f0f0f0] dark:hover:bg-[#1e1e1e] transition-all"
                       aria-label="Remove field"
                     >
@@ -281,25 +410,88 @@ export default function EntryPage() {
             </div>
           ) : (
             <>
-              <h1 className="text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-3">
-                {entry.title}
-              </h1>
+              {/* Title */}
+              {entry.type === 'story' && editingTitle ? (
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onBlur={saveTitleEdit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); titleInputRef.current?.blur() }
+                    if (e.key === 'Escape') { cancelTitle.current = true; titleInputRef.current?.blur() }
+                  }}
+                  className="text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-3 w-full bg-transparent outline-none border-b border-[#e5e5e5] dark:border-[#2a2a2a] focus:border-indigo-500 transition-colors"
+                />
+              ) : (
+                <h1
+                  onClick={
+                    entry.type === 'story'
+                      ? () => { setTitleDraft(entry.title); setEditingTitle(true) }
+                      : undefined
+                  }
+                  className={`text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-3 ${entry.type === 'story' ? 'cursor-text' : ''}`}
+                >
+                  {entry.title}
+                </h1>
+              )}
+
+              {/* Type badge + category */}
               <div className="flex items-center gap-3 mb-7">
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#f0f0f0] dark:bg-[#1e1e1e] text-gray-400 dark:text-[#555]">
                   {entry.type === 'profile' ? 'Profile' : 'Story / Note'}
                 </span>
-                {entry.categories && (
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className="w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ backgroundColor: entry.categories.color }}
-                    />
-                    <span className="text-[12px] text-gray-400 dark:text-[#555]">
-                      {entry.categories.name}
-                    </span>
+
+                {entry.type === 'story' && editingCategory ? (
+                  <select
+                    autoFocus
+                    defaultValue={entry.category_id ?? ''}
+                    onChange={(e) => saveCategoryEdit(e.target.value)}
+                    onBlur={() => setEditingCategory(false)}
+                    className="text-[12px] bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-indigo-500 rounded-md px-2 py-0.5 text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
+                  >
+                    <option value="">No category</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                ) : entry.type === 'story' ? (
+                  <div
+                    onClick={() => setEditingCategory(true)}
+                    className="flex items-center gap-1.5 cursor-pointer group"
+                  >
+                    {entry.categories ? (
+                      <>
+                        <span
+                          className="w-1.5 h-1.5 rounded-full shrink-0"
+                          style={{ backgroundColor: entry.categories.color }}
+                        />
+                        <span className="text-[12px] text-gray-400 dark:text-[#555] group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors">
+                          {entry.categories.name}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[12px] text-gray-300 dark:text-[#3a3a3a] group-hover:text-gray-500 dark:group-hover:text-[#555] transition-colors">
+                        Add category…
+                      </span>
+                    )}
                   </div>
+                ) : (
+                  entry.categories && (
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: entry.categories.color }}
+                      />
+                      <span className="text-[12px] text-gray-400 dark:text-[#555]">
+                        {entry.categories.name}
+                      </span>
+                    </div>
+                  )
                 )}
               </div>
+
               {entry.type === 'profile' && <ProfileSection fields={profileFields} />}
               {entry.type === 'story' && (
                 <textarea
@@ -313,6 +505,79 @@ export default function EntryPage() {
               )}
             </>
           )}
+
+          {/* Linked entries — always visible, independent of edit mode */}
+          <div className="mt-10 pt-7 border-t border-[#f0f0f0] dark:border-[#1e1e1e]">
+            <div className="text-[10px] uppercase tracking-widest text-gray-400 dark:text-[#444] font-medium mb-3 select-none">
+              Linked Entries
+            </div>
+
+            {links.length > 0 && (
+              <div className="mb-3 space-y-0.5">
+                {links.map(({ linkId, entry: linked }) => (
+                  <div key={linkId} className="flex items-center gap-2 group/link rounded-md px-2 py-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#161616] transition-colors">
+                    <span className="text-gray-300 dark:text-[#3a3a3a] shrink-0">
+                      {linked.type === 'profile' ? <IconPersonSm /> : <IconNoteSm />}
+                    </span>
+                    <button
+                      onClick={() => navigate(`/entry/${linked.id}`)}
+                      className="flex-1 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white truncate transition-colors"
+                    >
+                      {linked.title}
+                    </button>
+                    <button
+                      onClick={() => removeLink(linkId)}
+                      className="opacity-0 group-hover/link:opacity-100 w-5 h-5 flex items-center justify-center rounded text-[14px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#2a2a2a] transition-all shrink-0"
+                      aria-label="Remove link"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Link search */}
+            <div className="relative">
+              <input
+                type="text"
+                value={linkQuery}
+                onChange={(e) => setLinkQuery(e.target.value)}
+                onFocus={() => setShowLinkResults(true)}
+                onBlur={() => setTimeout(() => setShowLinkResults(false), 150)}
+                onKeyDown={(e) => { if (e.key === 'Escape') { setLinkQuery(''); setShowLinkResults(false) } }}
+                placeholder="Link an entry…"
+                className="w-full bg-transparent text-[13px] text-gray-700 dark:text-gray-300 placeholder-gray-300 dark:placeholder-[#3a3a3a] outline-none border-b border-[#f0f0f0] dark:border-[#1e1e1e] focus:border-indigo-400 dark:focus:border-indigo-500/60 transition-colors py-1.5"
+              />
+              {showLinkResults && linkResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg overflow-hidden shadow-lg">
+                  {linkResults.map((result) => (
+                    <button
+                      key={result.id}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => addLink(result)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
+                    >
+                      <span className="text-gray-300 dark:text-[#444] shrink-0">
+                        {result.type === 'profile' ? <IconPersonSm /> : <IconNoteSm />}
+                      </span>
+                      <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate flex-1">
+                        {result.title}
+                      </span>
+                      <span className="text-[11px] text-gray-300 dark:text-[#444] shrink-0">
+                        {result.type === 'profile' ? 'Profile' : 'Story'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {showLinkResults && linkQuery.trim() && linkResults.length === 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-10 px-3 py-2 text-[12px] text-gray-300 dark:text-[#444] bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg">
+                  No entries found
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </Layout>

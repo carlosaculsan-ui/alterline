@@ -1,7 +1,14 @@
-import { useState, useEffect } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import NewCategoryModal from './NewCategoryModal'
+import NewEntryModal from './NewEntryModal'
+import { supabase } from '../lib/supabase'
+
+const COLORS = [
+  '#5DCAA5', '#85B7EB', '#F0997B', '#ED93B1',
+  '#AFA9EC', '#FAC775', '#E24B4A', '#888780',
+]
 
 function IconGrid() {
   return (
@@ -52,7 +59,7 @@ function IconSun() {
 function IconMoon() {
   return (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
-      <path d="M13 9.5A6 6 0 016 2.5a5.5 5.5 0 100 10A6 6 0 0013 9.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M13 9.5A6 6 0 016 2.5a5.5 5.5 0 100 10A6 6 0 0113 9.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -63,13 +70,19 @@ const NAV = [
   { to: '/search', label: 'Search', icon: <IconSearch /> },
 ]
 
-export default function Layout({ children, onNewEntry }) {
+export default function Layout({ children }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('alterline-theme') !== 'light'
   })
   const [showModal, setShowModal] = useState(false)
-  const { categories, createCategory, deleteCategory } = useCategories()
+  const [showEntryModal, setShowEntryModal] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [editDraft, setEditDraft] = useState({ name: '', color: '' })
+  const { categories, createCategory, updateCategory, deleteCategory } = useCategories()
+  const editInputRef = useRef(null)
+  const cancelEditRef = useRef(false)
 
   useEffect(() => {
     if (dark) {
@@ -79,6 +92,46 @@ export default function Layout({ children, onNewEntry }) {
     }
     localStorage.setItem('alterline-theme', dark ? 'dark' : 'light')
   }, [dark])
+
+  useEffect(() => {
+    if (editingId) editInputRef.current?.focus()
+  }, [editingId])
+
+  async function saveEdit() {
+    if (cancelEditRef.current) {
+      cancelEditRef.current = false
+      setEditingId(null)
+      return
+    }
+    const name = editDraft.name.trim()
+    const catId = editingId
+    setEditingId(null)
+    if (!name) return
+    const original = categories.find((c) => c.id === catId)
+    if (!original || (name === original.name && editDraft.color === original.color)) return
+    await updateCategory(catId, name, editDraft.color)
+  }
+
+  async function handleCreateEntry(data, fields) {
+    const { data: created, error } = await supabase
+      .from('entries')
+      .insert(data)
+      .select('id')
+      .single()
+    if (!error && created) {
+      if (fields.length > 0) {
+        await supabase.from('profile_fields').insert(
+          fields.map(({ key, value }) => ({
+            entry_id: created.id,
+            field_key: key,
+            field_value: value,
+          }))
+        )
+      }
+      setShowEntryModal(false)
+      navigate(`/entry/${created.id}`)
+    }
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
@@ -121,36 +174,88 @@ export default function Layout({ children, onNewEntry }) {
             Categories
           </div>
           <div className="space-y-0.5">
-            {categories.map((cat) => (
-              <div key={cat.id} className="group relative">
-                <NavLink
-                  to={`/category/${cat.id}`}
-                  className={({ isActive }) =>
-                    `flex w-full items-center gap-2.5 px-3 py-[7px] pr-8 rounded-md text-[13px] transition-colors ${
-                      isActive
-                        ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
-                        : 'text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300'
-                    }`
-                  }
-                >
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: cat.color }}
-                  />
-                  <span className="flex-1 text-left truncate">{cat.name}</span>
-                  {cat.count != null && (
-                    <span className="text-[11px] text-gray-300 dark:text-[#444]">{cat.count}</span>
+            {categories.map((cat) => {
+              const isActive = location.pathname === `/category/${cat.id}`
+              const isEditing = editingId === cat.id
+
+              return (
+                <div key={cat.id} className="group relative">
+                  {isEditing ? (
+                    <div className="px-3 py-2 rounded-md bg-[#f0f0f0] dark:bg-[#1e1e1e]">
+                      <div className="flex items-center gap-2.5 pr-6">
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: editDraft.color }}
+                        />
+                        <input
+                          ref={editInputRef}
+                          type="text"
+                          value={editDraft.name}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))}
+                          onBlur={saveEdit}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); editInputRef.current?.blur() }
+                            if (e.key === 'Escape') { cancelEditRef.current = true; editInputRef.current?.blur() }
+                          }}
+                          className="flex-1 bg-transparent text-[13px] text-gray-900 dark:text-white outline-none min-w-0"
+                        />
+                      </div>
+                      <div className="flex gap-1.5 mt-2 pl-[18px] flex-wrap">
+                        {COLORS.map((c) => (
+                          <button
+                            key={c}
+                            onMouseDown={(e) => { e.preventDefault(); setEditDraft((d) => ({ ...d, color: c })) }}
+                            className="w-3.5 h-3.5 rounded-full shrink-0 transition-transform hover:scale-110"
+                            style={{
+                              backgroundColor: c,
+                              outline: editDraft.color === c ? `2px solid ${c}` : 'none',
+                              outlineOffset: '2px',
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => navigate(`/category/${cat.id}`)}
+                      className={`flex w-full items-center gap-2.5 px-3 py-[7px] pr-8 rounded-md text-[13px] transition-colors cursor-pointer select-none ${
+                        isActive
+                          ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
+                          : 'text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      <span
+                        className="flex-1 text-left truncate"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingId(cat.id)
+                          setEditDraft({ name: cat.name, color: cat.color })
+                        }}
+                      >
+                        {cat.name}
+                      </span>
+                      {cat.count != null && (
+                        <span className="text-[11px] text-gray-300 dark:text-[#444]">{cat.count}</span>
+                      )}
+                    </div>
                   )}
-                </NavLink>
-                <button
-                  onClick={() => deleteCategory(cat.id)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-[15px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
-                  aria-label={`Delete ${cat.name}`}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteCategory(cat.id)
+                    }}
+                    className="absolute right-1.5 top-[7px] opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-[15px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
+                    aria-label={`Delete ${cat.name}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              )
+            })}
           </div>
           <button
             onClick={() => setShowModal(true)}
@@ -185,7 +290,7 @@ export default function Layout({ children, onNewEntry }) {
             <span className="text-[13px] text-gray-400 dark:text-[#555]">Search entries…</span>
           </button>
           <button
-            onClick={onNewEntry}
+            onClick={() => setShowEntryModal(true)}
             className="flex items-center gap-1.5 px-3 h-8 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-[13px] font-medium transition-colors shrink-0"
           >
             <IconPlus />
@@ -203,6 +308,14 @@ export default function Layout({ children, onNewEntry }) {
         <NewCategoryModal
           onConfirm={createCategory}
           onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {showEntryModal && (
+        <NewEntryModal
+          categories={categories}
+          onConfirm={handleCreateEntry}
+          onClose={() => setShowEntryModal(false)}
         />
       )}
     </div>

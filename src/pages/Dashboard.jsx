@@ -1,9 +1,6 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useEntries } from '../hooks/useEntries'
-import { useCategories } from '../hooks/useCategories'
-import NewEntryModal from '../components/NewEntryModal'
 
 function IconPerson() {
   return (
@@ -95,30 +92,33 @@ function EmptyState() {
 }
 
 export default function Dashboard() {
-  const { entries, loading, createEntry } = useEntries()
-  const { categories } = useCategories()
-  const [showModal, setShowModal] = useState(false)
+  const { entries, loading, hasMore, loadingMore, loadMore } = useEntries()
 
   return (
-    <Layout onNewEntry={() => setShowModal(true)}>
+    <Layout>
       {loading ? (
         <LoadingSkeleton />
       ) : entries.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="p-6 grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
-          {entries.map((entry) => (
-            <EntryCard key={entry.id} entry={entry} />
-          ))}
+        <div className="p-6">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+            {entries.map((entry) => (
+              <EntryCard key={entry.id} entry={entry} />
+            ))}
+          </div>
+          {hasMore && (
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-4 py-2 rounded-md text-[13px] text-gray-400 dark:text-[#555] border border-[#e5e5e5] dark:border-[#2a2a2a] hover:border-[#d0d0d0] dark:hover:border-[#333] hover:text-gray-600 dark:hover:text-gray-400 transition-colors disabled:opacity-40"
+              >
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </button>
+            </div>
+          )}
         </div>
-      )}
-
-      {showModal && (
-        <NewEntryModal
-          categories={categories}
-          onConfirm={createEntry}
-          onClose={() => setShowModal(false)}
-        />
       )}
     </Layout>
   )

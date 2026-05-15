@@ -25,10 +25,15 @@ export function useCategories() {
     if (!error && data) setCategories((prev) => [...prev, data])
   }
 
+  async function updateCategory(id, name, color) {
+    const { error } = await supabase.from('categories').update({ name, color }).eq('id', id)
+    if (!error) setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, name, color } : c)))
+  }
+
   async function deleteCategory(id) {
     const { error } = await supabase.from('categories').delete().eq('id', id)
     if (!error) setCategories((prev) => prev.filter((c) => c.id !== id))
   }
 
-  return { categories, loading, createCategory, deleteCategory }
+  return { categories, loading, createCategory, updateCategory, deleteCategory }
 }
