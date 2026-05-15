@@ -83,6 +83,8 @@ export default function EntryPage() {
   const [loading, setLoading] = useState(true)
   const [content, setContent] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const confirmDeleteTimer = useRef(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState({ title: '' })
   const [profileFields, setProfileFields] = useState([])
@@ -235,11 +237,16 @@ export default function EntryPage() {
     return () => clearTimeout(timer)
   }, [content])
 
-  async function handleDelete() {
-    if (!window.confirm('Delete this entry? This cannot be undone.')) return
+  function handleDelete() {
+    if (!confirmDelete) {
+      setConfirmDelete(true)
+      clearTimeout(confirmDeleteTimer.current)
+      confirmDeleteTimer.current = setTimeout(() => setConfirmDelete(false), 3000)
+      return
+    }
+    clearTimeout(confirmDeleteTimer.current)
     setDeleting(true)
-    await supabase.from('entries').delete().eq('id', id)
-    navigate('/')
+    supabase.from('entries').delete().eq('id', id).then(() => navigate(-1))
   }
 
   async function saveTitleEdit() {
@@ -346,9 +353,13 @@ export default function EntryPage() {
                   <button
                     onClick={handleDelete}
                     disabled={deleting}
-                    className="text-[13px] text-red-400 hover:text-red-500 dark:text-[#5a3030] dark:hover:text-red-400 disabled:opacity-50 transition-colors"
+                    className={`text-[13px] disabled:opacity-50 transition-colors ${
+                      confirmDelete
+                        ? 'text-red-500 dark:text-red-400 font-medium'
+                        : 'text-gray-400 dark:text-[#555] hover:text-red-400 dark:hover:text-red-400'
+                    }`}
                   >
-                    {deleting ? 'Deleting…' : 'Delete'}
+                    {deleting ? 'Deleting…' : confirmDelete ? 'Confirm?' : 'Delete'}
                   </button>
                 </>
               )}

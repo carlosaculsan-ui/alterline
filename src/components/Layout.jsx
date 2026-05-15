@@ -80,6 +80,7 @@ export default function Layout({ children }) {
   const [showEntryModal, setShowEntryModal] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editDraft, setEditDraft] = useState({ name: '', color: '' })
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const { categories, createCategory, updateCategory, deleteCategory } = useCategories()
   const editInputRef = useRef(null)
   const cancelEditRef = useRef(false)
@@ -178,8 +179,10 @@ export default function Layout({ children }) {
               const isActive = location.pathname === `/category/${cat.id}`
               const isEditing = editingId === cat.id
 
+              const isConfirming = confirmDeleteId === cat.id
+
               return (
-                <div key={cat.id} className="group relative">
+                <div key={cat.id} className="group relative" onMouseLeave={() => { if (isConfirming) setConfirmDeleteId(null) }}>
                   {isEditing ? (
                     <div className="px-3 py-2 rounded-md bg-[#f0f0f0] dark:bg-[#1e1e1e]">
                       <div className="flex items-center gap-2.5 pr-6">
@@ -246,12 +249,21 @@ export default function Layout({ children }) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      deleteCategory(cat.id)
+                      if (isConfirming) {
+                        deleteCategory(cat.id)
+                        setConfirmDeleteId(null)
+                      } else {
+                        setConfirmDeleteId(cat.id)
+                      }
                     }}
-                    className="absolute right-1.5 top-[7px] opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-[15px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
+                    className={`absolute top-[7px] opacity-0 group-hover:opacity-100 flex items-center justify-center rounded leading-none transition-all ${
+                      isConfirming
+                        ? 'right-1 px-1.5 h-5 text-[11px] font-medium text-red-500 dark:text-red-400 bg-red-50 dark:bg-[#2a1515] opacity-100'
+                        : 'right-1.5 w-5 h-5 text-[15px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333]'
+                    }`}
                     aria-label={`Delete ${cat.name}`}
                   >
-                    ×
+                    {isConfirming ? 'Confirm?' : '×'}
                   </button>
                 </div>
               )
