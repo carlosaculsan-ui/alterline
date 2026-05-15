@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import NewCategoryModal from './NewCategoryModal'
 
@@ -64,6 +64,7 @@ const NAV = [
 ]
 
 export default function Layout({ children, onNewEntry }) {
+  const navigate = useNavigate()
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('alterline-theme') !== 'light'
   })
@@ -167,14 +168,13 @@ export default function Layout({ children, onNewEntry }) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
         <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-white dark:bg-[#111]">
-          <label className="flex-1 flex items-center gap-2 bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-md px-3 h-8 cursor-text">
+          <button
+            onClick={() => navigate('/search')}
+            className="flex-1 flex items-center gap-2 bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-md px-3 h-8 cursor-pointer text-left hover:border-[#d0d0d0] dark:hover:border-[#333] transition-colors"
+          >
             <IconSearch />
-            <input
-              type="text"
-              placeholder="Search entries..."
-              className="flex-1 bg-transparent text-[13px] text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-[#555] outline-none"
-            />
-          </label>
+            <span className="text-[13px] text-gray-400 dark:text-[#555]">Search entries…</span>
+          </button>
           <button
             onClick={onNewEntry}
             className="flex items-center gap-1.5 px-3 h-8 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-[13px] font-medium transition-colors shrink-0"
