@@ -34,9 +34,16 @@ export default function EntryCard({ entry }) {
       <div className="w-7 h-7 rounded-lg bg-[#f5f5f5] dark:bg-[#1e1e1e] flex items-center justify-center text-gray-400 dark:text-[#4a4a4a] mb-3">
         {entry.type === 'profile' ? <IconPerson /> : <IconNote />}
       </div>
-      <div className="text-[13px] font-medium text-gray-900 dark:text-gray-100 leading-snug mb-2.5 line-clamp-2">
+      <div className="text-[13px] font-medium text-gray-900 dark:text-gray-100 leading-snug mb-1.5 line-clamp-2">
         {entry.title}
       </div>
+      {entry.content ? (
+        <div className="text-[11px] text-gray-400 dark:text-[#444] leading-snug mb-2 line-clamp-2">
+          {entry.content}
+        </div>
+      ) : (
+        <div className="mb-2" />
+      )}
       <div className="flex items-center gap-1.5 mb-1">
         {entry.categories ? (
           <>

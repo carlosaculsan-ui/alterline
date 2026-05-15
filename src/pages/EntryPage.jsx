@@ -43,8 +43,8 @@ function Field({ label, value }) {
 function ProfileSection({ fields }) {
   if (fields.length === 0) {
     return (
-      <p className="text-[13px] text-gray-300 dark:text-[#3a3a3a] italic">
-        No details added yet.
+      <p className="text-[13px] text-gray-300 dark:text-[#3a3a3a]">
+        No fields yet — click <span className="font-medium">Edit</span> to add details like age, nationality, or occupation.
       </p>
     )
   }
@@ -606,7 +606,7 @@ export default function EntryPage() {
                 onFocus={() => setShowLinkResults(true)}
                 onBlur={() => setTimeout(() => setShowLinkResults(false), 150)}
                 onKeyDown={(e) => { if (e.key === 'Escape') { setLinkQuery(''); setShowLinkResults(false) } }}
-                placeholder="Link an entry…"
+                placeholder="Type a name to search and link entries…"
                 className="w-full bg-transparent text-[13px] text-gray-700 dark:text-gray-300 placeholder-gray-300 dark:placeholder-[#3a3a3a] outline-none border-b border-[#f0f0f0] dark:border-[#1e1e1e] focus:border-indigo-400 dark:focus:border-indigo-500/60 transition-colors py-1.5"
               />
               {showLinkResults && linkResults.length > 0 && (
