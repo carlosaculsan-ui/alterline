@@ -16,13 +16,24 @@ export function useEntries() {
       })
   }, [])
 
-  async function createEntry(data) {
+  async function createEntry(data, fields = []) {
     const { data: created, error } = await supabase
       .from('entries')
       .insert(data)
       .select('*, categories(name, color)')
       .single()
-    if (!error && created) setEntries((prev) => [created, ...prev])
+    if (!error && created) {
+      if (fields.length > 0) {
+        await supabase.from('profile_fields').insert(
+          fields.map(({ key, value }) => ({
+            entry_id: created.id,
+            field_key: key,
+            field_value: value,
+          }))
+        )
+      }
+      setEntries((prev) => [created, ...prev])
+    }
   }
 
   async function deleteEntry(id) {

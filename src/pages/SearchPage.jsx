@@ -98,20 +98,21 @@ export default function SearchPage() {
 
     const timer = setTimeout(async () => {
       setLoading(true)
-      // Search title + all profile field columns + story content
+
+      const { data: pfRows } = await supabase
+        .from('profile_fields')
+        .select('entry_id')
+        .ilike('field_value', `%${q}%`)
+
+      const pfIds = [...new Set((pfRows ?? []).map((r) => r.entry_id))]
+
+      const orParts = [`title.ilike.%${q}%`, `content.ilike.%${q}%`]
+      if (pfIds.length > 0) orParts.push(`id.in.(${pfIds.join(',')})`)
+
       const { data, error } = await supabase
         .from('entries')
         .select('*, categories(name, color)')
-        .or(
-          [
-            `title.ilike.%${q}%`,
-            `nationality.ilike.%${q}%`,
-            `role.ilike.%${q}%`,
-            `organization.ilike.%${q}%`,
-            `notes.ilike.%${q}%`,
-            `content.ilike.%${q}%`,
-          ].join(',')
-        )
+        .or(orParts.join(','))
         .order('created_at', { ascending: false })
         .limit(50)
 

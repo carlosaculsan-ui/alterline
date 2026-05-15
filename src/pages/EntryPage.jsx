@@ -17,14 +17,7 @@ function Field({ label, value }) {
   )
 }
 
-function ProfileSection({ entry }) {
-  const fields = [
-    { label: 'Nationality', value: entry.nationality },
-    { label: 'Role / Career', value: entry.role },
-    { label: 'Organization', value: entry.organization },
-    { label: 'Notes', value: entry.notes },
-  ].filter((f) => f.value)
-
+function ProfileSection({ fields }) {
   if (fields.length === 0) {
     return (
       <p className="text-[13px] text-gray-300 dark:text-[#3a3a3a] italic">
@@ -32,11 +25,10 @@ function ProfileSection({ entry }) {
       </p>
     )
   }
-
   return (
     <div className="border border-[#f0f0f0] dark:border-[#1e1e1e] rounded-xl overflow-hidden">
-      {fields.map(({ label, value }) => (
-        <Field key={label} label={label} value={value} />
+      {fields.map(({ id, key, value }) => (
+        <Field key={id} label={key} value={value} />
       ))}
     </div>
   )
@@ -71,10 +63,13 @@ export default function EntryPage() {
   const [content, setContent] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState({ title: '', nationality: '', role: '', organization: '', notes: '' })
+  const [draft, setDraft] = useState({ title: '' })
+  const [profileFields, setProfileFields] = useState([])
+  const [draftFields, setDraftFields] = useState([])
   const [saving, setSaving] = useState(false)
   const lastSaved = useRef('')
   const textareaRef = useRef(null)
+  const nextFieldId = useRef(0)
 
   useEffect(() => {
     supabase
@@ -82,12 +77,25 @@ export default function EntryPage() {
       .select('*, categories(name, color)')
       .eq('id', id)
       .single()
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (!error && data) {
           setEntry(data)
           const c = data.content ?? ''
           setContent(c)
           lastSaved.current = c
+          if (data.type === 'profile') {
+            const { data: pf } = await supabase
+              .from('profile_fields')
+              .select('field_key, field_value')
+              .eq('entry_id', id)
+            setProfileFields(
+              (pf ?? []).map((row) => ({
+                id: nextFieldId.current++,
+                key: row.field_key,
+                value: row.field_value,
+              }))
+            )
+          }
         }
         setLoading(false)
       })
@@ -101,13 +109,8 @@ export default function EntryPage() {
   }, [content])
 
   function handleEdit() {
-    setDraft({
-      title: entry.title ?? '',
-      nationality: entry.nationality ?? '',
-      role: entry.role ?? '',
-      organization: entry.organization ?? '',
-      notes: entry.notes ?? '',
-    })
+    setDraft({ title: entry.title ?? '' })
+    setDraftFields(profileFields.map((f) => ({ ...f })))
     setEditing(true)
   }
 
@@ -115,23 +118,24 @@ export default function EntryPage() {
     if (!draft.title.trim() || saving) return
     setSaving(true)
 
-    const profileFields = {
-      nationality: draft.nationality.trim() || null,
-      role: draft.role.trim() || null,
-      organization: draft.organization.trim() || null,
-      notes: draft.notes.trim() || null,
+    await supabase.from('entries').update({ title: draft.title.trim() }).eq('id', id)
+
+    await supabase.from('profile_fields').delete().eq('entry_id', id)
+
+    const toInsert = draftFields
+      .filter((f) => f.key.trim() && f.value.trim())
+      .map((f) => ({ entry_id: id, field_key: f.key.trim(), field_value: f.value.trim() }))
+
+    if (toInsert.length > 0) {
+      await supabase.from('profile_fields').insert(toInsert)
     }
 
-    await supabase
-      .from('entries')
-      .update({ title: draft.title.trim(), ...profileFields })
-      .eq('id', id)
+    const savedFields = draftFields
+      .filter((f) => f.key.trim() && f.value.trim())
+      .map((f) => ({ id: nextFieldId.current++, key: f.key.trim(), value: f.value.trim() }))
 
-    await supabase
-      .from('profile_fields')
-      .upsert({ entry_id: id, ...profileFields }, { onConflict: 'entry_id' })
-
-    setEntry((prev) => ({ ...prev, title: draft.title.trim(), ...profileFields }))
+    setEntry((prev) => ({ ...prev, title: draft.title.trim() }))
+    setProfileFields(savedFields)
     setEditing(false)
     setSaving(false)
   }
@@ -225,46 +229,54 @@ export default function EntryPage() {
                   className={INPUT}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={LABEL}>Nationality</label>
-                  <input
-                    type="text"
-                    value={draft.nationality}
-                    onChange={(e) => setDraft((d) => ({ ...d, nationality: e.target.value }))}
-                    placeholder="e.g. Japanese"
-                    className={INPUT}
-                  />
-                </div>
-                <div>
-                  <label className={LABEL}>Role / Career</label>
-                  <input
-                    type="text"
-                    value={draft.role}
-                    onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))}
-                    placeholder="e.g. Detective"
-                    className={INPUT}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className={LABEL}>Organization</label>
-                <input
-                  type="text"
-                  value={draft.organization}
-                  onChange={(e) => setDraft((d) => ({ ...d, organization: e.target.value }))}
-                  placeholder="e.g. ACME Corp"
-                  className={INPUT}
-                />
-              </div>
-              <div>
-                <label className={LABEL}>Notes</label>
-                <textarea
-                  value={draft.notes}
-                  onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
-                  placeholder="Any additional notes…"
-                  className={`${INPUT} resize-none h-24`}
-                />
+              <div className="space-y-2">
+                {draftFields.map((field) => (
+                  <div key={field.id} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={field.key}
+                      onChange={(e) =>
+                        setDraftFields((fs) =>
+                          fs.map((f) => (f.id === field.id ? { ...f, key: e.target.value } : f))
+                        )
+                      }
+                      placeholder="Label"
+                      className={`w-2/5 ${INPUT}`}
+                    />
+                    <input
+                      type="text"
+                      value={field.value}
+                      onChange={(e) =>
+                        setDraftFields((fs) =>
+                          fs.map((f) => (f.id === field.id ? { ...f, value: e.target.value } : f))
+                        )
+                      }
+                      placeholder="Value"
+                      className={`flex-1 ${INPUT}`}
+                    />
+                    <button
+                      onClick={() =>
+                        setDraftFields((fs) => fs.filter((f) => f.id !== field.id))
+                      }
+                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded text-[15px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#f0f0f0] dark:hover:bg-[#1e1e1e] transition-all"
+                      aria-label="Remove field"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() =>
+                    setDraftFields((fs) => [
+                      ...fs,
+                      { id: nextFieldId.current++, key: '', value: '' },
+                    ])
+                  }
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[12px] text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-gray-400 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] transition-colors"
+                >
+                  <span className="text-[14px] leading-none">+</span>
+                  Add field
+                </button>
               </div>
             </div>
           ) : (
@@ -288,7 +300,7 @@ export default function EntryPage() {
                   </div>
                 )}
               </div>
-              {entry.type === 'profile' && <ProfileSection entry={entry} />}
+              {entry.type === 'profile' && <ProfileSection fields={profileFields} />}
               {entry.type === 'story' && (
                 <textarea
                   ref={textareaRef}

@@ -18,31 +18,18 @@ function IconNote() {
   )
 }
 
-function FieldLabel({ children }) {
-  return (
-    <label className="block text-[11px] uppercase tracking-wider text-gray-400 dark:text-[#555] mb-1.5">
-      {children}
-    </label>
-  )
-}
-
-function TextInput({ value, onChange, placeholder, autoFocus, onKeyDown }) {
-  return (
-    <input
-      autoFocus={autoFocus}
-      type="text"
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      onKeyDown={onKeyDown}
-      className="w-full bg-[#f5f5f5] dark:bg-[#222] border border-[#e5e5e5] dark:border-[#333] rounded-lg px-3 py-2 text-[13px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none focus:border-indigo-500 transition-colors"
-    />
-  )
-}
+const INPUT = 'w-full bg-[#f5f5f5] dark:bg-[#222] border border-[#e5e5e5] dark:border-[#333] rounded-lg px-3 py-2 text-[13px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none focus:border-indigo-500 transition-colors'
 
 const TYPE_CARDS = [
   { t: 'profile', icon: <IconPerson />, label: 'Profile', sub: 'person or org' },
   { t: 'story', icon: <IconNote />, label: 'Story / Note', sub: 'free writing' },
+]
+
+const DEFAULT_FIELDS = [
+  { id: 0, key: 'Nationality', value: '' },
+  { id: 1, key: 'Role / Career', value: '' },
+  { id: 2, key: 'Organization', value: '' },
+  { id: 3, key: 'Notes', value: '' },
 ]
 
 export default function NewEntryModal({ categories, onConfirm, onClose }) {
@@ -50,10 +37,8 @@ export default function NewEntryModal({ categories, onConfirm, onClose }) {
   const [type, setType] = useState(null)
   const [title, setTitle] = useState('')
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? '')
-  const [nationality, setNationality] = useState('')
-  const [role, setRole] = useState('')
-  const [organization, setOrganization] = useState('')
-  const [notes, setNotes] = useState('')
+  const [fields, setFields] = useState(DEFAULT_FIELDS)
+  const [nextId, setNextId] = useState(DEFAULT_FIELDS.length)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -67,6 +52,19 @@ export default function NewEntryModal({ categories, onConfirm, onClose }) {
     setStep(2)
   }
 
+  function addField() {
+    setFields((f) => [...f, { id: nextId, key: '', value: '' }])
+    setNextId((n) => n + 1)
+  }
+
+  function removeField(id) {
+    setFields((f) => f.filter((field) => field.id !== id))
+  }
+
+  function updateField(id, prop, val) {
+    setFields((f) => f.map((field) => (field.id === id ? { ...field, [prop]: val } : field)))
+  }
+
   async function handleConfirm() {
     if (!title.trim() || saving) return
     setSaving(true)
@@ -75,13 +73,13 @@ export default function NewEntryModal({ categories, onConfirm, onClose }) {
       title: title.trim(),
       category_id: categoryId || null,
     }
-    if (type === 'profile') {
-      if (nationality.trim()) data.nationality = nationality.trim()
-      if (role.trim()) data.role = role.trim()
-      if (organization.trim()) data.organization = organization.trim()
-      if (notes.trim()) data.notes = notes.trim()
-    }
-    await onConfirm(data)
+    const nonEmptyFields =
+      type === 'profile'
+        ? fields
+            .filter((f) => f.key.trim() && f.value.trim())
+            .map((f) => ({ key: f.key.trim(), value: f.value.trim() }))
+        : []
+    await onConfirm(data, nonEmptyFields)
     onClose()
   }
 
@@ -136,7 +134,9 @@ export default function NewEntryModal({ categories, onConfirm, onClose }) {
 
             <div className="space-y-4">
               <div>
-                <FieldLabel>Category</FieldLabel>
+                <label className="block text-[11px] uppercase tracking-wider text-gray-400 dark:text-[#555] mb-1.5">
+                  Category
+                </label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
@@ -150,56 +150,57 @@ export default function NewEntryModal({ categories, onConfirm, onClose }) {
               </div>
 
               <div>
-                <FieldLabel>Title</FieldLabel>
-                <TextInput
+                <label className="block text-[11px] uppercase tracking-wider text-gray-400 dark:text-[#555] mb-1.5">
+                  Title
+                </label>
+                <input
                   autoFocus
+                  type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder={type === 'profile' ? 'Full name…' : 'Entry title…'}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && type === 'story') handleConfirm()
                   }}
+                  className={INPUT}
                 />
               </div>
 
               {type === 'profile' && (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <FieldLabel>Nationality</FieldLabel>
-                      <TextInput
-                        value={nationality}
-                        onChange={(e) => setNationality(e.target.value)}
-                        placeholder="e.g. Japanese"
+                <div className="space-y-2">
+                  {fields.map((field) => (
+                    <div key={field.id} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={field.key}
+                        onChange={(e) => updateField(field.id, 'key', e.target.value)}
+                        placeholder="Label"
+                        className={`w-2/5 ${INPUT}`}
                       />
-                    </div>
-                    <div>
-                      <FieldLabel>Role / Career</FieldLabel>
-                      <TextInput
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        placeholder="e.g. Detective"
+                      <input
+                        type="text"
+                        value={field.value}
+                        onChange={(e) => updateField(field.id, 'value', e.target.value)}
+                        placeholder="Value"
+                        className={`flex-1 ${INPUT}`}
                       />
+                      <button
+                        onClick={() => removeField(field.id)}
+                        className="shrink-0 w-6 h-6 flex items-center justify-center rounded text-[15px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#f0f0f0] dark:hover:bg-[#333] transition-all"
+                        aria-label="Remove field"
+                      >
+                        ×
+                      </button>
                     </div>
-                  </div>
-                  <div>
-                    <FieldLabel>Organization</FieldLabel>
-                    <TextInput
-                      value={organization}
-                      onChange={(e) => setOrganization(e.target.value)}
-                      placeholder="e.g. ACME Corp"
-                    />
-                  </div>
-                  <div>
-                    <FieldLabel>Notes</FieldLabel>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Any additional notes…"
-                      className="w-full bg-[#f5f5f5] dark:bg-[#222] border border-[#e5e5e5] dark:border-[#333] rounded-lg px-3 py-2 text-[13px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none focus:border-indigo-500 transition-colors resize-none h-20"
-                    />
-                  </div>
-                </>
+                  ))}
+                  <button
+                    onClick={addField}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[12px] text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-gray-400 hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors"
+                  >
+                    <span className="text-[14px] leading-none">+</span>
+                    Add field
+                  </button>
+                </div>
               )}
             </div>
 
