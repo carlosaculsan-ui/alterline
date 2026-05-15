@@ -76,7 +76,6 @@ function IconPencil() {
 const NAV = [
   { to: '/', label: 'Dashboard', icon: <IconGrid /> },
   { to: '/recent', label: 'Recent', icon: <IconClock /> },
-  { to: '/search', label: 'Search', icon: <IconSearch /> },
 ]
 
 export default function Layout({ children }) {
@@ -149,18 +148,49 @@ export default function Layout({ children }) {
     <div className="flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
       {/* Sidebar */}
       <aside className="w-[280px] shrink-0 flex flex-col bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a]">
-        {/* App name */}
-        <div className="px-5 py-5 border-b border-[#e5e5e5] dark:border-[#2a2a2a]">
-          <div className="text-[15px] font-semibold tracking-wide text-gray-900 dark:text-white">
-            Alterline
-          </div>
-          <div className="text-[12px] text-gray-400 dark:text-[#555] mt-0.5">
-            your alternate universe
+        {/* Logo */}
+        <div className="px-5 py-[18px] border-b border-[#e5e5e5] dark:border-[#2a2a2a]">
+          <div className="flex items-center gap-3">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="shrink-0 text-gray-900 dark:text-white">
+              <path d="M4 21L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M14 3L20 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M7 13H17" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span
+              className="text-gray-900 dark:text-white"
+              style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif", fontSize: '15px', fontWeight: 700, letterSpacing: '0.1em' }}
+            >
+              Alterline
+            </span>
           </div>
         </div>
 
         {/* Nav */}
         <nav className="px-2 pt-4 pb-2 space-y-1">
+          {/* Search bar */}
+          <NavLink
+            to="/search"
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] transition-colors mb-1 ${
+                isActive
+                  ? 'bg-[#ebebeb] dark:bg-[#222] border border-[#e0e0e0] dark:border-[#2a2a2a] text-gray-700 dark:text-gray-300'
+                  : 'border border-[#e5e5e5] dark:border-[#252525] bg-[#f5f5f5] dark:bg-[#1a1a1a] text-gray-400 dark:text-[#555] hover:border-[#d5d5d5] dark:hover:border-[#333] hover:text-gray-600 dark:hover:text-gray-400'
+              }`
+            }
+          >
+            <IconSearch />
+            <span>Search…</span>
+          </NavLink>
+
+          {/* New Entry */}
+          <button
+            onClick={() => setShowEntryModal(true)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-700 dark:text-gray-300 hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            <IconPlus />
+            New Entry
+          </button>
+
           {NAV.map(({ to, label, icon }) => (
             <NavLink
               key={to}
@@ -306,24 +336,6 @@ export default function Layout({ children }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Topbar */}
-        <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-white dark:bg-[#111]">
-          <button
-            onClick={() => navigate('/search')}
-            className="flex-1 flex items-center gap-2 bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-md px-3 h-8 cursor-pointer text-left hover:border-[#d0d0d0] dark:hover:border-[#333] transition-colors"
-          >
-            <IconSearch />
-            <span className="text-[13px] text-gray-400 dark:text-[#555]">Search entries…</span>
-          </button>
-          <button
-            onClick={() => setShowEntryModal(true)}
-            className="flex items-center gap-1.5 px-3 h-8 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-[13px] font-medium transition-colors shrink-0"
-          >
-            <IconPlus />
-            New Entry
-          </button>
-        </header>
-
         {/* Content */}
         <main className="flex-1 overflow-auto bg-white dark:bg-[#111]">
           <div className="max-w-5xl mx-auto">
