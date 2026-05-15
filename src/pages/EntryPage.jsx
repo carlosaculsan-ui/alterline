@@ -226,6 +226,15 @@ export default function EntryPage() {
     lastSaved.current = content
   }
 
+  useEffect(() => {
+    if (!entry || entry.type !== 'story' || content === lastSaved.current) return
+    const timer = setTimeout(async () => {
+      await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
+      lastSaved.current = content
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [content])
+
   async function handleDelete() {
     if (!window.confirm('Delete this entry? This cannot be undone.')) return
     setDeleting(true)
@@ -290,10 +299,10 @@ export default function EntryPage() {
       ) : !entry ? (
         <div className="max-w-2xl mx-auto px-6 py-8">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
             className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors mb-4 block"
           >
-            ← Dashboard
+            ← Back
           </button>
           <p className="text-[13px] text-gray-400 dark:text-[#555]">Entry not found.</p>
         </div>
@@ -302,10 +311,10 @@ export default function EntryPage() {
           {/* Action bar */}
           <div className="flex items-center justify-between mb-7">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate(-1)}
               className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
-              ← Dashboard
+              ← Back
             </button>
             <div className="flex items-center gap-4">
               {editing ? (
