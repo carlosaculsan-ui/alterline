@@ -81,6 +81,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const inputRef = useRef(null)
+  const searchGen = useRef(0)
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -88,6 +89,7 @@ export default function SearchPage() {
 
   useEffect(() => {
     const q = query.trim()
+    const gen = ++searchGen.current
 
     if (!q) {
       setResults([])
@@ -116,6 +118,7 @@ export default function SearchPage() {
         .order('created_at', { ascending: false })
         .limit(50)
 
+      if (gen !== searchGen.current) return
       if (!error && data) setResults(data)
       setHasSearched(true)
       setLoading(false)

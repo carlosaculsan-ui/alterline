@@ -102,6 +102,7 @@ export default function EntryPage() {
   const [showLinkResults, setShowLinkResults] = useState(false)
 
   const lastSaved = useRef('')
+  const contentRef = useRef('')
   const textareaRef = useRef(null)
   const titleInputRef = useRef(null)
   const nextFieldId = useRef(0)
@@ -173,6 +174,8 @@ export default function EntryPage() {
     el.style.height = `${el.scrollHeight}px`
   }, [content])
 
+  useEffect(() => { contentRef.current = content }, [content])
+
   useEffect(() => {
     if (editingTitle) titleInputRef.current?.focus()
   }, [editingTitle])
@@ -239,9 +242,17 @@ export default function EntryPage() {
       const { error } = await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
       if (!error) lastSaved.current = content
       else setToastMsg('Auto-save failed. Try again.')
-    }, 2000)
+    }, 60000)
     return () => clearTimeout(timer)
   }, [content])
+
+  useEffect(() => {
+    return () => {
+      if (contentRef.current !== lastSaved.current) {
+        supabase.from('entries').update({ content: contentRef.current, updated_at: new Date().toISOString() }).eq('id', id)
+      }
+    }
+  }, [id])
 
   function handleDelete() {
     if (!confirmDelete) {
@@ -252,7 +263,9 @@ export default function EntryPage() {
     }
     clearTimeout(confirmDeleteTimer.current)
     setDeleting(true)
-    supabase.from('entries').delete().eq('id', id).then(() => navigate(-1))
+    supabase.from('profile_fields').delete().eq('entry_id', id)
+      .then(() => supabase.from('entries').delete().eq('id', id))
+      .then(() => navigate(-1))
   }
 
   async function saveTitleEdit() {

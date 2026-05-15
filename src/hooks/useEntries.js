@@ -60,6 +60,7 @@ export function useEntries() {
   }
 
   async function deleteEntry(id) {
+    await supabase.from('profile_fields').delete().eq('entry_id', id)
     const { error } = await supabase.from('entries').delete().eq('id', id)
     if (!error) setEntries((prev) => prev.filter((e) => e.id !== id))
   }
