@@ -63,7 +63,7 @@ const NAV = [
   { to: '/search', label: 'Search', icon: <IconSearch /> },
 ]
 
-export default function Layout({ children }) {
+export default function Layout({ children, onNewEntry }) {
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('alterline-theme') !== 'light'
   })
@@ -175,7 +175,10 @@ export default function Layout({ children }) {
               className="flex-1 bg-transparent text-[13px] text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-[#555] outline-none"
             />
           </label>
-          <button className="flex items-center gap-1.5 px-3 h-8 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-[13px] font-medium transition-colors shrink-0">
+          <button
+            onClick={onNewEntry}
+            className="flex items-center gap-1.5 px-3 h-8 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-[13px] font-medium transition-colors shrink-0"
+          >
             <IconPlus />
             New Entry
           </button>
