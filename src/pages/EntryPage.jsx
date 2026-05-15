@@ -413,7 +413,7 @@ export default function EntryPage() {
                         )
                       }
                       placeholder="Label"
-                      className={`w-2/5 ${INPUT}`}
+                      className={`basis-2/5 min-w-0 ${INPUT}`}
                     />
                     <input
                       type="text"
@@ -424,7 +424,7 @@ export default function EntryPage() {
                         )
                       }
                       placeholder="Value"
-                      className={`flex-1 ${INPUT}`}
+                      className={`flex-1 min-w-0 ${INPUT}`}
                     />
                     <button
                       onClick={() => setDraftFields((fs) => fs.filter((f) => f.id !== field.id))}

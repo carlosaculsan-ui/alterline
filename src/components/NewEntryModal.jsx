@@ -175,14 +175,14 @@ export default function NewEntryModal({ categories, defaultCategoryId, onConfirm
                         value={field.key}
                         onChange={(e) => updateField(field.id, 'key', e.target.value)}
                         placeholder="Label"
-                        className={`w-2/5 ${INPUT}`}
+                        className={`basis-2/5 min-w-0 ${INPUT}`}
                       />
                       <input
                         type="text"
                         value={field.value}
                         onChange={(e) => updateField(field.id, 'value', e.target.value)}
                         placeholder="Value"
-                        className={`flex-1 ${INPUT}`}
+                        className={`flex-1 min-w-0 ${INPUT}`}
                       />
                       <button
                         onClick={() => removeField(field.id)}
