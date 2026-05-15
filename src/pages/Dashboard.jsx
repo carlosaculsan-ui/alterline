@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useEntries } from '../hooks/useEntries'
 import { useCategories } from '../hooks/useCategories'
@@ -23,6 +24,7 @@ function IconNote() {
 }
 
 function EntryCard({ entry }) {
+  const navigate = useNavigate()
   const date = new Date(entry.created_at).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -30,7 +32,10 @@ function EntryCard({ entry }) {
   })
 
   return (
-    <div className="p-4 rounded-xl border border-[#e8e8e8] dark:border-[#1e1e1e] bg-white dark:bg-[#161616] hover:border-[#d0d0d0] dark:hover:border-[#2a2a2a] hover:shadow-sm dark:hover:shadow-none transition-all cursor-pointer">
+    <div
+      onClick={() => navigate(`/entry/${entry.id}`)}
+      className="p-4 rounded-xl border border-[#e8e8e8] dark:border-[#1e1e1e] bg-white dark:bg-[#161616] hover:border-[#d0d0d0] dark:hover:border-[#2a2a2a] hover:shadow-sm dark:hover:shadow-none transition-all cursor-pointer"
+    >
       <div className="w-7 h-7 rounded-lg bg-[#f5f5f5] dark:bg-[#1e1e1e] flex items-center justify-center text-gray-400 dark:text-[#4a4a4a] mb-3">
         {entry.type === 'profile' ? <IconPerson /> : <IconNote />}
       </div>
