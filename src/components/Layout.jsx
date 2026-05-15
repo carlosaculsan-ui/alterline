@@ -244,9 +244,6 @@ export default function Layout({ children }) {
                       >
                         {cat.name}
                       </span>
-                      {cat.count != null && (
-                        <span className="text-[11px] text-gray-300 dark:text-[#444]">{cat.count}</span>
-                      )}
                     </div>
                   )}
                   <button

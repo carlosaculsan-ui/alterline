@@ -436,12 +436,10 @@ export default function EntryPage() {
                   </div>
                 ))}
                 <button
-                  onClick={() =>
-                    setDraftFields((fs) => [
-                      ...fs,
-                      { id: nextFieldId.current++, key: '', value: '' },
-                    ])
-                  }
+                  onClick={() => {
+                    const newId = nextFieldId.current++
+                    setDraftFields((fs) => [...fs, { id: newId, key: '', value: '' }])
+                  }}
                   className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[12px] text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-gray-400 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] transition-colors"
                 >
                   <span className="text-[14px] leading-none">+</span>
