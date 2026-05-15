@@ -148,9 +148,9 @@ export default function Layout({ children }) {
   return (
     <div className="flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
       {/* Sidebar */}
-      <aside className="w-[220px] shrink-0 flex flex-col bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a]">
+      <aside className="w-[240px] shrink-0 flex flex-col bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a]">
         {/* App name */}
-        <div className="px-4 py-4 border-b border-[#e5e5e5] dark:border-[#2a2a2a]">
+        <div className="px-5 py-5 border-b border-[#e5e5e5] dark:border-[#2a2a2a]">
           <div className="text-[13px] font-semibold tracking-wide text-gray-900 dark:text-white">
             Alterline
           </div>
@@ -160,14 +160,14 @@ export default function Layout({ children }) {
         </div>
 
         {/* Nav */}
-        <nav className="px-2 pt-3 pb-1 space-y-0.5">
+        <nav className="px-2 pt-4 pb-2 space-y-1">
           {NAV.map(({ to, label, icon }) => (
             <NavLink
               key={to}
               to={to}
               end
               className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-[7px] rounded-md text-[13px] transition-colors ${
+                `flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors ${
                   isActive
                     ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
                     : 'text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300'
@@ -181,11 +181,11 @@ export default function Layout({ children }) {
         </nav>
 
         {/* Categories */}
-        <div className="flex-1 overflow-y-auto px-2 pt-4 pb-2">
-          <div className="px-3 mb-2 text-[10px] uppercase tracking-widest text-gray-400 dark:text-[#444] font-medium select-none">
+        <div className="flex-1 overflow-y-auto px-2 pt-5 pb-3">
+          <div className="px-3 mb-3 text-[10px] uppercase tracking-widest text-gray-400 dark:text-[#444] font-medium select-none">
             Categories
           </div>
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {categories.map((cat) => {
               const isActive = location.pathname === `/category/${cat.id}`
               const isEditing = editingId === cat.id
@@ -232,7 +232,7 @@ export default function Layout({ children }) {
                   ) : (
                     <div
                       onClick={() => navigate(`/category/${cat.id}`)}
-                      className={`flex w-full items-center gap-2.5 px-3 py-[7px] pr-[52px] rounded-md text-[13px] transition-colors cursor-pointer select-none ${
+                      className={`flex w-full items-center gap-2.5 px-3 py-2 pr-[52px] rounded-md text-[13px] transition-colors cursor-pointer select-none ${
                         isActive
                           ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
                           : 'text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300'
@@ -254,7 +254,7 @@ export default function Layout({ children }) {
                         setEditingId(cat.id)
                         setEditDraft({ name: cat.name, color: cat.color })
                       }}
-                      className="absolute top-[7px] right-7 w-5 h-5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
+                      className="absolute top-2 right-7 w-5 h-5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
                       aria-label={`Edit ${cat.name}`}
                     >
                       <IconPencil />
@@ -270,7 +270,7 @@ export default function Layout({ children }) {
                         setConfirmDeleteId(cat.id)
                       }
                     }}
-                    className={`absolute top-[7px] opacity-0 group-hover:opacity-100 flex items-center justify-center rounded leading-none transition-all ${
+                    className={`absolute top-2 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded leading-none transition-all ${
                       isConfirming
                         ? 'right-1 px-1.5 h-5 text-[11px] font-medium text-red-500 dark:text-red-400 bg-red-50 dark:bg-[#2a1515] opacity-100'
                         : 'right-1.5 w-5 h-5 text-[15px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333]'
@@ -285,7 +285,7 @@ export default function Layout({ children }) {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="mt-1 w-full flex items-center gap-2.5 px-3 py-[7px] rounded-md text-[13px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-400 transition-colors"
+            className="mt-1 w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-400 transition-colors"
           >
             <IconPlus />
             New category
@@ -293,10 +293,10 @@ export default function Layout({ children }) {
         </div>
 
         {/* Theme toggle */}
-        <div className="p-2 border-t border-[#e5e5e5] dark:border-[#2a2a2a]">
+        <div className="p-3 border-t border-[#e5e5e5] dark:border-[#2a2a2a]">
           <button
             onClick={() => setDark((d) => !d)}
-            className="w-full flex items-center gap-2.5 px-3 py-[7px] rounded-md text-[13px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
           >
             {dark ? <IconSun /> : <IconMoon />}
             {dark ? 'Light mode' : 'Dark mode'}
@@ -326,7 +326,9 @@ export default function Layout({ children }) {
 
         {/* Content */}
         <main className="flex-1 overflow-auto bg-white dark:bg-[#111]">
-          {children}
+          <div className="max-w-5xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
 
