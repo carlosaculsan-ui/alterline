@@ -1,12 +1,104 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { marked } from 'marked'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Underline from '@tiptap/extension-underline'
+import { TextStyle, FontSize } from '@tiptap/extension-text-style'
+import { Color } from '@tiptap/extension-color'
+import Highlight from '@tiptap/extension-highlight'
 import Layout from '../components/Layout'
 import Toast from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { useCategories } from '../hooks/useCategories'
 
-marked.use({ breaks: true })
+
+function ToolBtn({ active, onAction, title, children }) {
+  return (
+    <button
+      onMouseDown={(e) => { e.preventDefault(); onAction() }}
+      title={title}
+      className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${
+        active
+          ? 'bg-[#ebebeb] dark:bg-[#2a2a2a] text-gray-900 dark:text-white'
+          : 'text-gray-500 dark:text-gray-400 hover:bg-[#f0f0f0] dark:hover:bg-[#222]'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+function Toolbar({ editor }) {
+  if (!editor) return null
+  const fontSize = editor.getAttributes('textStyle').fontSize ?? ''
+
+  return (
+    <div className="flex items-center gap-0.5 mb-4 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] flex-wrap">
+      <select
+        value={fontSize}
+        onChange={(e) => {
+          const s = e.target.value
+          if (s) editor.chain().focus().setFontSize(s).run()
+          else editor.chain().focus().unsetFontSize().run()
+        }}
+        className="text-[12px] bg-transparent text-gray-600 dark:text-gray-400 border border-[#e5e5e5] dark:border-[#2a2a2a] rounded px-2 py-1 outline-none cursor-pointer mr-1"
+      >
+        <option value="12px">Small</option>
+        <option value="">Normal</option>
+        <option value="18px">Large</option>
+        <option value="24px">Heading</option>
+      </select>
+
+      <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mx-1 shrink-0" />
+
+      <ToolBtn active={editor.isActive('bold')} onAction={() => editor.chain().focus().toggleBold().run()} title="Bold">
+        <span className="font-bold text-[13px]">B</span>
+      </ToolBtn>
+      <ToolBtn active={editor.isActive('italic')} onAction={() => editor.chain().focus().toggleItalic().run()} title="Italic">
+        <span className="italic text-[13px]">I</span>
+      </ToolBtn>
+      <ToolBtn active={editor.isActive('underline')} onAction={() => editor.chain().focus().toggleUnderline().run()} title="Underline">
+        <span className="underline text-[13px]">U</span>
+      </ToolBtn>
+
+      <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mx-1 shrink-0" />
+
+      {/* Text color */}
+      <label
+        className="relative w-7 h-7 flex flex-col items-center justify-center rounded cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#222] transition-colors"
+        title="Text color"
+      >
+        <span className="text-[13px] font-bold text-gray-600 dark:text-gray-400 select-none leading-none">A</span>
+        <span
+          className="absolute bottom-1 left-1.5 right-1.5 h-[2.5px] rounded-full"
+          style={{ backgroundColor: editor.getAttributes('textStyle').color ?? '#888888' }}
+        />
+        <input
+          type="color"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          onInput={(e) => editor.chain().focus().setColor(e.target.value).run()}
+        />
+      </label>
+
+      {/* Highlight color */}
+      <label
+        className="relative w-7 h-7 flex items-center justify-center rounded cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#222] transition-colors"
+        title="Highlight color"
+      >
+        <svg width="14" height="14" viewBox="0 0 15 15" fill="none" className="text-gray-600 dark:text-gray-400">
+          <path d="M2 11.5h3.5L13 4 11 2 3.5 9.5 2 11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+          <path d="M1 14h5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+        <input
+          type="color"
+          defaultValue="#fef08a"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          onInput={(e) => editor.chain().focus().setHighlight({ color: e.target.value }).run()}
+        />
+      </label>
+    </div>
+  )
+}
 
 function IconNoteSm() {
   return (
@@ -24,8 +116,8 @@ function LoadingSkeleton() {
         <div className="h-3.5 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-24" />
         <div className="h-3.5 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-20" />
       </div>
-      <div className="h-7 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-2/3 mb-3" />
-      <div className="h-3 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-28 mb-8" />
+      <div className="h-7 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-2/3 mb-6" />
+      <div className="h-px bg-[#f0f0f0] dark:bg-[#1e1e1e] mb-6" />
       <div className="space-y-2">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="h-4 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded" style={{ width: `${85 - i * 10}%` }} />
@@ -40,14 +132,12 @@ export default function EntryPage() {
   const navigate = useNavigate()
   const [entry, setEntry] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [content, setContent] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [toastMsg, setToastMsg] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const confirmDeleteTimer = useRef(null)
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
-  const [previewing, setPreviewing] = useState(false)
 
   const [links, setLinks] = useState([])
   const [linkQuery, setLinkQuery] = useState('')
@@ -61,11 +151,34 @@ export default function EntryPage() {
 
   const lastSaved = useRef('')
   const contentRef = useRef('')
-  const textareaRef = useRef(null)
   const titleInputRef = useRef(null)
   const linkInputRef = useRef(null)
   const categorySelectRef = useRef(null)
   const cancelTitle = useRef(false)
+  const contentInitialized = useRef(false)
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      TextStyle,
+      FontSize,
+      Color,
+      Highlight.configure({ multicolor: true }),
+    ],
+    editorProps: {
+      attributes: {
+        class: 'outline-none min-h-[calc(100vh-260px)] text-[14px] text-gray-700 dark:text-gray-300 leading-[1.75]',
+      },
+    },
+    onUpdate({ editor }) {
+      const html = editor.getHTML()
+      contentRef.current = html
+    },
+    onBlur() {
+      handleContentBlur()
+    },
+  })
 
   useEffect(() => {
     supabase
@@ -77,8 +190,8 @@ export default function EntryPage() {
         if (!error && data) {
           setEntry(data)
           const c = data.content ?? ''
-          setContent(c)
           lastSaved.current = c
+          contentRef.current = c
 
           const { data: linkRows } = await supabase
             .from('entry_links')
@@ -110,14 +223,13 @@ export default function EntryPage() {
       })
   }, [id])
 
+  // Set editor content once entry loads
   useEffect(() => {
-    const el = textareaRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
-  }, [content])
-
-  useEffect(() => { contentRef.current = content }, [content])
+    if (editor && entry && !contentInitialized.current) {
+      contentInitialized.current = true
+      editor.commands.setContent(entry.content ?? '')
+    }
+  }, [editor, entry])
 
   useEffect(() => {
     if (editingTitle) titleInputRef.current?.focus()
@@ -139,16 +251,20 @@ export default function EntryPage() {
     return () => clearTimeout(timer)
   }, [linkQuery, id, links])
 
+  // Auto-save every 60s of inactivity
   useEffect(() => {
-    if (!entry || content === lastSaved.current) return
+    if (!entry) return
     const timer = setTimeout(async () => {
-      const { error } = await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
-      if (!error) lastSaved.current = content
+      const html = contentRef.current
+      if (html === lastSaved.current) return
+      const { error } = await supabase.from('entries').update({ content: html, updated_at: new Date().toISOString() }).eq('id', id)
+      if (!error) lastSaved.current = html
       else setToastMsg('Auto-save failed. Try again.')
     }, 60000)
     return () => clearTimeout(timer)
-  }, [content])
+  }, [entry])
 
+  // Save on unmount
   useEffect(() => {
     return () => {
       if (contentRef.current !== lastSaved.current) {
@@ -158,10 +274,11 @@ export default function EntryPage() {
   }, [id])
 
   async function handleContentBlur() {
-    if (content === lastSaved.current) return
-    const { error } = await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
+    const html = contentRef.current
+    if (html === lastSaved.current) return
+    const { error } = await supabase.from('entries').update({ content: html, updated_at: new Date().toISOString() }).eq('id', id)
     if (error) { setToastMsg('Save failed. Try again.'); return }
-    lastSaved.current = content
+    lastSaved.current = html
   }
 
   function handleDelete() {
@@ -278,41 +395,22 @@ export default function EntryPage() {
                 if (e.key === 'Enter') { e.preventDefault(); titleInputRef.current?.blur() }
                 if (e.key === 'Escape') { cancelTitle.current = true; titleInputRef.current?.blur() }
               }}
-              className="text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-3 w-full bg-transparent outline-none border-b border-[#e5e5e5] dark:border-[#2a2a2a] focus:border-indigo-500 transition-colors"
+              className="text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-6 w-full bg-transparent outline-none border-b border-[#e5e5e5] dark:border-[#2a2a2a] focus:border-indigo-500 transition-colors"
             />
           ) : (
             <h1
               onClick={() => { setTitleDraft(entry.title); setEditingTitle(true) }}
-              className="text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-3 cursor-text"
+              className="text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-6 cursor-text"
             >
               {entry.title}
             </h1>
           )}
 
-          {/* Content */}
-          <div className="flex justify-end mb-2">
-            <button
-              onClick={() => setPreviewing((p) => !p)}
-              className="text-[12px] text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
-            >
-              {previewing ? 'Edit' : 'Preview'}
-            </button>
-          </div>
-          {previewing ? (
-            <div
-              className="prose-content min-h-[calc(100vh-260px)] text-[14px] text-gray-700 dark:text-gray-300"
-              dangerouslySetInnerHTML={{ __html: marked(content) }}
-            />
-          ) : (
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onBlur={handleContentBlur}
-              placeholder="Write something…"
-              className="w-full min-h-[calc(100vh-260px)] bg-transparent text-[14px] text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-[#333] outline-none resize-none leading-[1.75]"
-            />
-          )}
+          {/* Toolbar */}
+          <Toolbar editor={editor} />
+
+          {/* Editor */}
+          <EditorContent editor={editor} />
 
           {/* Bottom action area */}
           <div className="mt-10 pt-6 border-t border-[#f0f0f0] dark:border-[#1e1e1e]">
@@ -446,7 +544,7 @@ export default function EntryPage() {
                     ? 'border-indigo-400 text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40'
                     : 'border-[#e5e5e5] dark:border-[#2a2a2a] text-gray-400 dark:text-[#555] hover:border-[#ccc] dark:hover:border-[#444] hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
-                aria-label="Add attachment"
+                aria-label="Add"
               >
                 +
               </button>
