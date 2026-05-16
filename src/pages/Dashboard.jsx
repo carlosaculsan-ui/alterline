@@ -48,14 +48,8 @@ function EmptyState() {
   )
 }
 
-const FILTERS = [
-  { key: 'all', label: 'All' },
-  { key: 'story', label: 'Stories' },
-]
-
 export default function Dashboard() {
-  const { entries, loading, hasMore, loadingMore, loadMore } = useEntries()
-  const [filter, setFilter] = useState('all')
+  const { entries, loading, hasMore, loadingMore, loadMore, deleteEntry } = useEntries()
 
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
@@ -106,9 +100,7 @@ export default function Dashboard() {
 
   const trimmed = query.trim()
   const isSearching = !!trimmed
-  const visible = isSearching
-    ? searchResults
-    : filter === 'all' ? entries : entries.filter((e) => e.type === filter)
+  const visible = isSearching ? searchResults : entries
 
   if (loading) return <Layout><LoadingSkeleton /></Layout>
   if (entries.length === 0) return <Layout><EmptyState /></Layout>
@@ -139,25 +131,6 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Filter chips — only when not searching */}
-        {!isSearching && (
-          <div className="flex items-center gap-1 mb-5">
-            {FILTERS.map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setFilter(key)}
-                className={`px-3 py-1 rounded-full text-[13px] transition-colors ${
-                  filter === key
-                    ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c]'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
-
         {/* Result count — only when searching */}
         {isSearching && !searchLoading && (
           <div className="text-[12px] text-gray-600 dark:text-gray-300 mb-4">
@@ -180,10 +153,10 @@ export default function Dashboard() {
           <>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">
               {visible.map((entry) => (
-                <EntryCard key={entry.id} entry={entry} />
+                <EntryCard key={entry.id} entry={entry} onDelete={deleteEntry} />
               ))}
             </div>
-            {!isSearching && hasMore && filter === 'all' && (
+            {!isSearching && hasMore && (
               <div className="mt-6 flex justify-center">
                 <button
                   onClick={loadMore}

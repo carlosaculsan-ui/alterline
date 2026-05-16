@@ -20,7 +20,7 @@ function ToolBtn({ active, onAction, title, children }) {
       className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${
         active
           ? 'bg-[#ebebeb] dark:bg-[#2a2a2a] text-gray-900 dark:text-white'
-          : 'text-gray-500 dark:text-gray-400 hover:bg-[#f0f0f0] dark:hover:bg-[#222]'
+          : 'text-gray-900 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#222]'
       }`}
     >
       {children}
@@ -28,25 +28,47 @@ function ToolBtn({ active, onAction, title, children }) {
   )
 }
 
-function Toolbar({ editor }) {
+const FONT_SIZES = ['8','9','10','11','12','14','16','18','20','24','28','32','36','48','60','72']
+
+function Toolbar({ editor, onBack }) {
+  const [, forceUpdate] = useState(0)
+
+  useEffect(() => {
+    if (!editor) return
+    const update = () => forceUpdate((n) => n + 1)
+    editor.on('transaction', update)
+    return () => editor.off('transaction', update)
+  }, [editor])
+
   if (!editor) return null
-  const fontSize = editor.getAttributes('textStyle').fontSize ?? ''
+
+  const editorSize = editor.getAttributes('textStyle').fontSize
+  const currentSize = editorSize ? parseInt(editorSize).toString() : '14'
 
   return (
-    <div className="flex items-center gap-0.5 mb-4 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] flex-wrap">
+    <div className="sticky top-0 z-10 -mx-8 px-8 pt-3 bg-white dark:bg-[#111] flex items-center gap-0.5 mb-4 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] flex-wrap">
+      {onBack && (
+        <>
+          <button
+            onClick={onBack}
+            className="text-[14px] font-medium text-gray-900 dark:text-white hover:opacity-60 transition-opacity mr-4"
+          >
+            ← Back
+          </button>
+          <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mr-4 shrink-0" />
+        </>
+      )}
       <select
-        value={fontSize}
+        value={currentSize}
         onChange={(e) => {
           const s = e.target.value
-          if (s) editor.chain().focus().setFontSize(s).run()
-          else editor.chain().focus().unsetFontSize().run()
+          editor.chain().focus().setFontSize(`${s}px`).run()
         }}
-        className="text-[12px] bg-transparent text-gray-600 dark:text-gray-400 border border-[#e5e5e5] dark:border-[#2a2a2a] rounded px-2 py-1 outline-none cursor-pointer mr-1"
+        className="w-16 text-[12px] text-center bg-white dark:bg-[#1c1c1c] text-gray-900 dark:text-white border border-[#e5e5e5] dark:border-[#2a2a2a] rounded px-1.5 py-1 outline-none cursor-pointer mr-1"
       >
-        <option value="12px">Small</option>
-        <option value="">Normal</option>
-        <option value="18px">Large</option>
-        <option value="24px">Heading</option>
+        {FONT_SIZES.map((s) => (
+          <option key={s} value={s}>{s}</option>
+        ))}
       </select>
 
       <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mx-1 shrink-0" />
@@ -68,7 +90,7 @@ function Toolbar({ editor }) {
         className="relative w-7 h-7 flex flex-col items-center justify-center rounded cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#222] transition-colors"
         title="Text color"
       >
-        <span className="text-[13px] font-bold text-gray-600 dark:text-gray-400 select-none leading-none">A</span>
+        <span className="text-[13px] font-bold text-gray-900 dark:text-white select-none leading-none">A</span>
         <span
           className="absolute bottom-1 left-1.5 right-1.5 h-[2.5px] rounded-full"
           style={{ backgroundColor: editor.getAttributes('textStyle').color ?? '#888888' }}
@@ -85,7 +107,7 @@ function Toolbar({ editor }) {
         className="relative w-7 h-7 flex items-center justify-center rounded cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#222] transition-colors"
         title="Highlight color"
       >
-        <svg width="14" height="14" viewBox="0 0 15 15" fill="none" className="text-gray-600 dark:text-gray-400">
+        <svg width="14" height="14" viewBox="0 0 15 15" fill="none" className="text-gray-900 dark:text-white">
           <path d="M2 11.5h3.5L13 4 11 2 3.5 9.5 2 11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
           <path d="M1 14h5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
         </svg>
@@ -168,7 +190,7 @@ export default function EntryPage() {
     ],
     editorProps: {
       attributes: {
-        class: 'outline-none min-h-[calc(100vh-260px)] text-[14px] text-gray-700 dark:text-gray-300 leading-[1.75]',
+        class: 'outline-none min-h-[calc(100vh-260px)] text-[14px] text-gray-900 dark:text-white leading-[1.75]',
       },
     },
     onUpdate({ editor }) {
@@ -363,13 +385,7 @@ export default function EntryPage() {
       ) : (
         <div className="px-8 py-8">
           {/* Action bar */}
-          <div className="flex items-center justify-between mb-7">
-            <button
-              onClick={() => navigate(-1)}
-              className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-            >
-              ← Back
-            </button>
+          <div className="flex items-center justify-end mb-7">
             <button
               onClick={handleDelete}
               disabled={deleting}
@@ -407,7 +423,7 @@ export default function EntryPage() {
           )}
 
           {/* Toolbar */}
-          <Toolbar editor={editor} />
+          <Toolbar editor={editor} onBack={() => navigate(-1)} />
 
           {/* Editor */}
           <EditorContent editor={editor} />

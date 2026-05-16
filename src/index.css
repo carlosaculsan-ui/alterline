@@ -41,3 +41,4 @@
 .ProseMirror mark { border-radius: 2px; padding: 0 1px; }
 .dark .ProseMirror blockquote { border-left-color: #2a2a2a; }
 .dark .ProseMirror code { background: #1e1e1e; }
+.dark select option { background-color: #1c1c1c; color: #fff; }
