@@ -8,52 +8,12 @@ import { useCategories } from '../hooks/useCategories'
 
 marked.use({ breaks: true })
 
-function IconPersonSm() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 20 20" fill="none" className="shrink-0">
-      <circle cx="10" cy="7" r="3.5" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M3 18c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  )
-}
-
 function IconNoteSm() {
   return (
     <svg width="12" height="12" viewBox="0 0 20 20" fill="none" className="shrink-0">
       <rect x="3.5" y="2.5" width="13" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.7" />
       <path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
-  )
-}
-
-function Field({ label, value }) {
-  if (!value) return null
-  return (
-    <div className="px-5 py-4 border-b border-[#f0f0f0] dark:border-[#1e1e1e] last:border-b-0">
-      <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-[#444] mb-1.5">
-        {label}
-      </div>
-      <div className="text-[13px] text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
-        {value}
-      </div>
-    </div>
-  )
-}
-
-function ProfileSection({ fields }) {
-  if (fields.length === 0) {
-    return (
-      <p className="text-[13px] text-gray-300 dark:text-[#3a3a3a]">
-        No fields yet — click <span className="font-medium">Edit</span> to add details like age, nationality, or occupation.
-      </p>
-    )
-  }
-  return (
-    <div className="border border-[#f0f0f0] dark:border-[#1e1e1e] rounded-xl overflow-hidden">
-      {fields.map(({ id, key, value }) => (
-        <Field key={id} label={key} value={value} />
-      ))}
-    </div>
   )
 }
 
@@ -66,17 +26,14 @@ function LoadingSkeleton() {
       </div>
       <div className="h-7 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-2/3 mb-3" />
       <div className="h-3 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-28 mb-8" />
-      <div className="border border-[#f0f0f0] dark:border-[#1e1e1e] rounded-xl overflow-hidden">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-16 bg-[#fafafa] dark:bg-[#161616] border-b border-[#f0f0f0] dark:border-[#1e1e1e] last:border-b-0" />
+      <div className="space-y-2">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-4 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded" style={{ width: `${85 - i * 10}%` }} />
         ))}
       </div>
     </div>
   )
 }
-
-const INPUT = 'w-full bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg px-3 py-2 text-[13px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none focus:border-indigo-500 transition-colors'
-const LABEL = 'block text-[11px] uppercase tracking-wider text-gray-400 dark:text-[#555] mb-1.5'
 
 export default function EntryPage() {
   const { id } = useParams()
@@ -90,11 +47,6 @@ export default function EntryPage() {
   const [toastMsg, setToastMsg] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const confirmDeleteTimer = useRef(null)
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState({ title: '' })
-  const [profileFields, setProfileFields] = useState([])
-  const [draftFields, setDraftFields] = useState([])
-  const [saving, setSaving] = useState(false)
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
   const [editingCategory, setEditingCategory] = useState(false)
@@ -109,7 +61,6 @@ export default function EntryPage() {
   const contentRef = useRef('')
   const textareaRef = useRef(null)
   const titleInputRef = useRef(null)
-  const nextFieldId = useRef(0)
   const cancelTitle = useRef(false)
 
   useEffect(() => {
@@ -125,34 +76,18 @@ export default function EntryPage() {
           setContent(c)
           lastSaved.current = c
 
-          const [pfResult, linkRowsResult] = await Promise.all([
-            data.type === 'profile'
-              ? supabase.from('profile_fields').select('field_key, field_value').eq('entry_id', id)
-              : Promise.resolve({ data: null }),
-            supabase
-              .from('entry_links')
-              .select('id, from_entry_id, to_entry_id')
-              .or(`from_entry_id.eq.${id},to_entry_id.eq.${id}`),
-          ])
+          const { data: linkRows } = await supabase
+            .from('entry_links')
+            .select('id, from_entry_id, to_entry_id')
+            .or(`from_entry_id.eq.${id},to_entry_id.eq.${id}`)
 
-          if (pfResult.data) {
-            setProfileFields(
-              pfResult.data.map((row) => ({
-                id: nextFieldId.current++,
-                key: row.field_key,
-                value: row.field_value,
-              }))
-            )
-          }
-
-          const linkRows = linkRowsResult.data ?? []
-          if (linkRows.length > 0) {
+          if (linkRows?.length > 0) {
             const linkedIds = linkRows.map((row) =>
               row.from_entry_id === id ? row.to_entry_id : row.from_entry_id
             )
             const { data: linkedEntries } = await supabase
               .from('entries')
-              .select('id, title, type')
+              .select('id, title')
               .in('id', linkedIds)
             setLinks(
               linkRows
@@ -190,7 +125,7 @@ export default function EntryPage() {
     const timer = setTimeout(async () => {
       const { data } = await supabase
         .from('entries')
-        .select('id, title, type')
+        .select('id, title')
         .ilike('title', `%${q}%`)
         .neq('id', id)
         .limit(10)
@@ -200,48 +135,8 @@ export default function EntryPage() {
     return () => clearTimeout(timer)
   }, [linkQuery, id, links])
 
-  function handleEdit() {
-    setDraft({ title: entry.title ?? '' })
-    setDraftFields(profileFields.map((f) => ({ ...f })))
-    setEditing(true)
-  }
-
-  async function handleSave() {
-    if (!draft.title.trim() || saving) return
-    setSaving(true)
-
-    const { error } = await supabase.from('entries').update({ title: draft.title.trim(), updated_at: new Date().toISOString() }).eq('id', id)
-    if (error) { setToastMsg('Save failed. Try again.'); setSaving(false); return }
-
-    await supabase.from('profile_fields').delete().eq('entry_id', id)
-
-    const toInsert = draftFields
-      .filter((f) => f.key.trim() && f.value.trim())
-      .map((f) => ({ entry_id: id, field_key: f.key.trim(), field_value: f.value.trim() }))
-
-    if (toInsert.length > 0) {
-      await supabase.from('profile_fields').insert(toInsert)
-    }
-
-    const savedFields = draftFields
-      .filter((f) => f.key.trim() && f.value.trim())
-      .map((f) => ({ id: nextFieldId.current++, key: f.key.trim(), value: f.value.trim() }))
-
-    setEntry((prev) => ({ ...prev, title: draft.title.trim() }))
-    setProfileFields(savedFields)
-    setEditing(false)
-    setSaving(false)
-  }
-
-  async function handleContentBlur() {
-    if (content === lastSaved.current) return
-    const { error } = await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
-    if (error) { setToastMsg('Save failed. Try again.'); return }
-    lastSaved.current = content
-  }
-
   useEffect(() => {
-    if (!entry || entry.type !== 'story' || content === lastSaved.current) return
+    if (!entry || content === lastSaved.current) return
     const timer = setTimeout(async () => {
       const { error } = await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
       if (!error) lastSaved.current = content
@@ -258,6 +153,13 @@ export default function EntryPage() {
     }
   }, [id])
 
+  async function handleContentBlur() {
+    if (content === lastSaved.current) return
+    const { error } = await supabase.from('entries').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
+    if (error) { setToastMsg('Save failed. Try again.'); return }
+    lastSaved.current = content
+  }
+
   function handleDelete() {
     if (!confirmDelete) {
       setConfirmDelete(true)
@@ -267,9 +169,7 @@ export default function EntryPage() {
     }
     clearTimeout(confirmDeleteTimer.current)
     setDeleting(true)
-    supabase.from('profile_fields').delete().eq('entry_id', id)
-      .then(() => supabase.from('entries').delete().eq('id', id))
-      .then(() => navigate(-1))
+    supabase.from('entries').delete().eq('id', id).then(() => navigate(-1))
   }
 
   async function saveTitleEdit() {
@@ -348,225 +248,107 @@ export default function EntryPage() {
             >
               ← Back
             </button>
-            <div className="flex items-center gap-4">
-              {editing ? (
-                <>
-                  <button
-                    onClick={() => setEditing(false)}
-                    className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    disabled={!draft.title.trim() || saving}
-                    className="text-[13px] font-medium text-indigo-500 hover:text-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {saving ? 'Saving…' : 'Save'}
-                  </button>
-                </>
-              ) : (
-                <>
-                  {entry.type === 'profile' && (
-                    <button
-                      onClick={handleEdit}
-                      className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                    >
-                      Edit
-                    </button>
-                  )}
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className={`text-[13px] disabled:opacity-50 transition-colors ${
-                      confirmDelete
-                        ? 'text-red-500 dark:text-red-400 font-medium'
-                        : 'text-gray-400 dark:text-[#555] hover:text-red-400 dark:hover:text-red-400'
-                    }`}
-                  >
-                    {deleting ? 'Deleting…' : confirmDelete ? 'Confirm?' : 'Delete'}
-                  </button>
-                </>
-              )}
-            </div>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className={`text-[13px] disabled:opacity-50 transition-colors ${
+                confirmDelete
+                  ? 'text-red-500 dark:text-red-400 font-medium'
+                  : 'text-gray-400 dark:text-[#555] hover:text-red-400 dark:hover:text-red-400'
+              }`}
+            >
+              {deleting ? 'Deleting…' : confirmDelete ? 'Confirm?' : 'Delete'}
+            </button>
           </div>
 
-          {/* Main content */}
-          {editing ? (
-            <div className="space-y-4">
-              <div>
-                <label className={LABEL}>Title</label>
-                <input
-                  autoFocus
-                  type="text"
-                  value={draft.title}
-                  onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                  placeholder="Full name…"
-                  className={INPUT}
-                />
-              </div>
-              <div className="space-y-2">
-                {draftFields.map((field) => (
-                  <div key={field.id} className="flex gap-2 items-center">
-                    <input
-                      type="text"
-                      value={field.key}
-                      onChange={(e) =>
-                        setDraftFields((fs) =>
-                          fs.map((f) => (f.id === field.id ? { ...f, key: e.target.value } : f))
-                        )
-                      }
-                      placeholder="Label"
-                      className={`basis-2/5 min-w-0 ${INPUT}`}
-                    />
-                    <input
-                      type="text"
-                      value={field.value}
-                      onChange={(e) =>
-                        setDraftFields((fs) =>
-                          fs.map((f) => (f.id === field.id ? { ...f, value: e.target.value } : f))
-                        )
-                      }
-                      placeholder="Value"
-                      className={`flex-1 min-w-0 ${INPUT}`}
-                    />
-                    <button
-                      onClick={() => setDraftFields((fs) => fs.filter((f) => f.id !== field.id))}
-                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded text-[15px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#f0f0f0] dark:hover:bg-[#1e1e1e] transition-all"
-                      aria-label="Remove field"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => {
-                    const newId = nextFieldId.current++
-                    setDraftFields((fs) => [...fs, { id: newId, key: '', value: '' }])
-                  }}
-                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[12px] text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-gray-400 hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] transition-colors"
-                >
-                  <span className="text-[14px] leading-none">+</span>
-                  Add field
-                </button>
-              </div>
-            </div>
+          {/* Title */}
+          {editingTitle ? (
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              onBlur={saveTitleEdit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); titleInputRef.current?.blur() }
+                if (e.key === 'Escape') { cancelTitle.current = true; titleInputRef.current?.blur() }
+              }}
+              className="text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-3 w-full bg-transparent outline-none border-b border-[#e5e5e5] dark:border-[#2a2a2a] focus:border-indigo-500 transition-colors"
+            />
           ) : (
-            <>
-              {/* Title */}
-              {entry.type === 'story' && editingTitle ? (
-                <input
-                  ref={titleInputRef}
-                  type="text"
-                  value={titleDraft}
-                  onChange={(e) => setTitleDraft(e.target.value)}
-                  onBlur={saveTitleEdit}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') { e.preventDefault(); titleInputRef.current?.blur() }
-                    if (e.key === 'Escape') { cancelTitle.current = true; titleInputRef.current?.blur() }
-                  }}
-                  className="text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-3 w-full bg-transparent outline-none border-b border-[#e5e5e5] dark:border-[#2a2a2a] focus:border-indigo-500 transition-colors"
-                />
-              ) : (
-                <h1
-                  onClick={
-                    entry.type === 'story'
-                      ? () => { setTitleDraft(entry.title); setEditingTitle(true) }
-                      : undefined
-                  }
-                  className={`text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-3 ${entry.type === 'story' ? 'cursor-text' : ''}`}
-                >
-                  {entry.title}
-                </h1>
-              )}
-
-              {/* Type badge + category */}
-              <div className="flex items-center gap-3 mb-7">
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#f0f0f0] dark:bg-[#1e1e1e] text-gray-400 dark:text-[#555]">
-                  {entry.type === 'profile' ? 'Profile' : 'Story / Note'}
-                </span>
-
-                {entry.type === 'story' && editingCategory ? (
-                  <select
-                    autoFocus
-                    defaultValue={entry.category_id ?? ''}
-                    onChange={(e) => saveCategoryEdit(e.target.value)}
-                    onBlur={() => setEditingCategory(false)}
-                    className="text-[12px] bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-indigo-500 rounded-md px-2 py-0.5 text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
-                  >
-                    <option value="">No category</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                ) : entry.type === 'story' ? (
-                  <div
-                    onClick={() => setEditingCategory(true)}
-                    className="flex items-center gap-1.5 cursor-pointer group"
-                  >
-                    {entry.categories ? (
-                      <>
-                        <span
-                          className="w-1.5 h-1.5 rounded-full shrink-0"
-                          style={{ backgroundColor: entry.categories.color }}
-                        />
-                        <span className="text-[12px] text-gray-400 dark:text-[#555] group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors">
-                          {entry.categories.name}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-[12px] text-gray-300 dark:text-[#3a3a3a] group-hover:text-gray-500 dark:group-hover:text-[#555] transition-colors">
-                        Add category…
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  entry.categories && (
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="w-1.5 h-1.5 rounded-full shrink-0"
-                        style={{ backgroundColor: entry.categories.color }}
-                      />
-                      <span className="text-[12px] text-gray-400 dark:text-[#555]">
-                        {entry.categories.name}
-                      </span>
-                    </div>
-                  )
-                )}
-              </div>
-
-              {entry.type === 'profile' && <ProfileSection fields={profileFields} />}
-              {entry.type === 'story' && (
-                <>
-                  <div className="flex justify-end mb-2">
-                    <button
-                      onClick={() => setPreviewing((p) => !p)}
-                      className="text-[12px] text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
-                    >
-                      {previewing ? 'Edit' : 'Preview'}
-                    </button>
-                  </div>
-                  {previewing ? (
-                    <div
-                      className="prose-content min-h-[260px] text-[14px] text-gray-700 dark:text-gray-300"
-                      dangerouslySetInnerHTML={{ __html: marked(content) }}
-                    />
-                  ) : (
-                    <textarea
-                      ref={textareaRef}
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      onBlur={handleContentBlur}
-                      placeholder="Write something…"
-                      className="w-full min-h-[260px] bg-transparent text-[14px] text-gray-700 dark:text-gray-300 placeholder-gray-300 dark:placeholder-[#333] outline-none resize-none leading-[1.75]"
-                    />
-                  )}
-                </>
-              )}
-            </>
+            <h1
+              onClick={() => { setTitleDraft(entry.title); setEditingTitle(true) }}
+              className="text-[22px] font-semibold text-gray-900 dark:text-white leading-tight mb-3 cursor-text"
+            >
+              {entry.title}
+            </h1>
           )}
 
-          {/* Linked entries — always visible, independent of edit mode */}
+          {/* Category */}
+          <div className="mb-7">
+            {editingCategory ? (
+              <select
+                autoFocus
+                defaultValue={entry.category_id ?? ''}
+                onChange={(e) => saveCategoryEdit(e.target.value)}
+                onBlur={() => setEditingCategory(false)}
+                className="text-[12px] bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-indigo-500 rounded-md px-2 py-0.5 text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
+              >
+                <option value="">No category</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            ) : (
+              <div
+                onClick={() => setEditingCategory(true)}
+                className="flex items-center gap-1.5 cursor-pointer group w-fit"
+              >
+                {entry.categories ? (
+                  <>
+                    <span
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: entry.categories.color }}
+                    />
+                    <span className="text-[12px] text-gray-400 dark:text-[#555] group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors">
+                      {entry.categories.name}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[12px] text-gray-400 dark:text-[#3a3a3a] group-hover:text-gray-500 dark:group-hover:text-[#555] transition-colors">
+                    Add category…
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={() => setPreviewing((p) => !p)}
+              className="text-[12px] text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
+            >
+              {previewing ? 'Edit' : 'Preview'}
+            </button>
+          </div>
+          {previewing ? (
+            <div
+              className="prose-content min-h-[260px] text-[14px] text-gray-700 dark:text-gray-300"
+              dangerouslySetInnerHTML={{ __html: marked(content) }}
+            />
+          ) : (
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              onBlur={handleContentBlur}
+              placeholder="Write something…"
+              className="w-full min-h-[260px] bg-transparent text-[14px] text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-[#333] outline-none resize-none leading-[1.75]"
+            />
+          )}
+
+          {/* Linked entries */}
           <div className="mt-10 pt-7 border-t border-[#f0f0f0] dark:border-[#1e1e1e]">
             <div className="text-[10px] uppercase tracking-widest text-gray-400 dark:text-[#444] font-medium mb-3 select-none">
               Linked Entries
@@ -576,8 +358,8 @@ export default function EntryPage() {
               <div className="mb-3 space-y-0.5">
                 {links.map(({ linkId, entry: linked }) => (
                   <div key={linkId} className="flex items-center gap-2 group/link rounded-md px-2 py-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#161616] transition-colors">
-                    <span className="text-gray-300 dark:text-[#3a3a3a] shrink-0">
-                      {linked.type === 'profile' ? <IconPersonSm /> : <IconNoteSm />}
+                    <span className="text-gray-400 dark:text-[#3a3a3a] shrink-0">
+                      <IconNoteSm />
                     </span>
                     <button
                       onClick={() => navigate(`/entry/${linked.id}`)}
@@ -597,7 +379,6 @@ export default function EntryPage() {
               </div>
             )}
 
-            {/* Link search */}
             <div className="relative">
               <input
                 type="text"
@@ -607,7 +388,7 @@ export default function EntryPage() {
                 onBlur={() => setTimeout(() => setShowLinkResults(false), 150)}
                 onKeyDown={(e) => { if (e.key === 'Escape') { setLinkQuery(''); setShowLinkResults(false) } }}
                 placeholder="Type a name to search and link entries…"
-                className="w-full bg-transparent text-[13px] text-gray-700 dark:text-gray-300 placeholder-gray-300 dark:placeholder-[#3a3a3a] outline-none border-b border-[#f0f0f0] dark:border-[#1e1e1e] focus:border-indigo-400 dark:focus:border-indigo-500/60 transition-colors py-1.5"
+                className="w-full bg-transparent text-[13px] text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-[#3a3a3a] outline-none border-b border-[#f0f0f0] dark:border-[#1e1e1e] focus:border-indigo-400 dark:focus:border-indigo-500/60 transition-colors py-1.5"
               />
               {showLinkResults && linkResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg overflow-hidden shadow-lg">
@@ -618,21 +399,18 @@ export default function EntryPage() {
                       onClick={() => addLink(result)}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
                     >
-                      <span className="text-gray-300 dark:text-[#444] shrink-0">
-                        {result.type === 'profile' ? <IconPersonSm /> : <IconNoteSm />}
+                      <span className="text-gray-400 dark:text-[#444] shrink-0">
+                        <IconNoteSm />
                       </span>
-                      <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate flex-1">
+                      <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">
                         {result.title}
-                      </span>
-                      <span className="text-[11px] text-gray-300 dark:text-[#444] shrink-0">
-                        {result.type === 'profile' ? 'Profile' : 'Story'}
                       </span>
                     </button>
                   ))}
                 </div>
               )}
               {showLinkResults && linkQuery.trim() && linkResults.length === 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 z-10 px-3 py-2 text-[12px] text-gray-300 dark:text-[#444] bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg">
+                <div className="absolute top-full left-0 right-0 mt-1 z-10 px-3 py-2 text-[12px] text-gray-500 dark:text-[#444] bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg">
                   No entries found
                 </div>
               )}

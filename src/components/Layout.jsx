@@ -31,14 +31,6 @@ function IconClock() {
   )
 }
 
-function IconSearch() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 15 15" fill="none" className="shrink-0">
-      <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M10 10L13 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    </svg>
-  )
-}
 
 function IconPlus() {
   return (
@@ -73,6 +65,15 @@ function IconPencil() {
   )
 }
 
+function IconSidebarToggle() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
+      <rect x="1" y="1.5" width="13" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M5 1.5v12" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+
 const NAV = [
   { to: '/', label: 'Dashboard', icon: <IconGrid /> },
   { to: '/recent', label: 'Recent', icon: <IconClock /> },
@@ -84,6 +85,7 @@ export default function Layout({ children }) {
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('alterline-theme') !== 'light'
   })
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [showEntryModal, setShowEntryModal] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -145,11 +147,11 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
+    <div className="relative flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
       {/* Sidebar */}
-      <aside className="w-[280px] shrink-0 flex flex-col bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a]">
+      <aside className={`${sidebarOpen ? 'w-[280px]' : 'w-0'} shrink-0 flex flex-col bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a] overflow-hidden transition-[width] duration-200`}>
         {/* Logo */}
-        <div className="px-5 py-[18px] border-b border-[#e5e5e5] dark:border-[#2a2a2a]">
+        <div className="px-5 py-[18px] border-b border-[#e5e5e5] dark:border-[#2a2a2a] flex items-center justify-between min-w-[280px]">
           <div className="flex items-center gap-3">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="shrink-0 text-gray-900 dark:text-white">
               <path d="M4 21L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -163,29 +165,21 @@ export default function Layout({ children }) {
               Alterline
             </span>
           </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#ebebeb] dark:hover:bg-[#222] p-1.5 rounded-md transition-colors"
+            aria-label="Close sidebar"
+          >
+            <IconSidebarToggle />
+          </button>
         </div>
 
         {/* Nav */}
         <nav className="px-2 pt-4 pb-2 space-y-1">
-          {/* Search bar */}
-          <NavLink
-            to="/search"
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] transition-colors mb-1 ${
-                isActive
-                  ? 'bg-[#ebebeb] dark:bg-[#222] border border-[#e0e0e0] dark:border-[#2a2a2a] text-gray-700 dark:text-gray-300'
-                  : 'border border-[#e5e5e5] dark:border-[#252525] bg-[#f5f5f5] dark:bg-[#1a1a1a] text-gray-400 dark:text-[#555] hover:border-[#d5d5d5] dark:hover:border-[#333] hover:text-gray-600 dark:hover:text-gray-400'
-              }`
-            }
-          >
-            <IconSearch />
-            <span>Search…</span>
-          </NavLink>
-
           {/* New Entry */}
           <button
             onClick={() => setShowEntryModal(true)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-700 dark:text-gray-300 hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
           >
             <IconPlus />
             New Entry
@@ -200,7 +194,7 @@ export default function Layout({ children }) {
                 `flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] transition-colors ${
                   isActive
                     ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
-                    : 'text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300'
+                    : 'text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c]'
                 }`
               }
             >
@@ -212,7 +206,7 @@ export default function Layout({ children }) {
 
         {/* Categories */}
         <div className="flex-1 overflow-y-auto px-2 pt-5 pb-3">
-          <div className="px-3 mb-3 text-[11px] uppercase tracking-widest text-gray-400 dark:text-[#444] font-medium select-none">
+          <div className="px-3 mb-3 text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-400 font-medium select-none">
             Categories
           </div>
           <div className="space-y-1">
@@ -265,7 +259,7 @@ export default function Layout({ children }) {
                       className={`flex w-full items-center gap-2.5 px-3 py-2 pr-[52px] rounded-md text-[14px] transition-colors cursor-pointer select-none ${
                         isActive
                           ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
-                          : 'text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-800 dark:hover:text-gray-300'
+                          : 'text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c]'
                       }`}
                     >
                       <span
@@ -284,7 +278,7 @@ export default function Layout({ children }) {
                         setEditingId(cat.id)
                         setEditDraft({ name: cat.name, color: cat.color })
                       }}
-                      className="absolute top-2 right-7 w-5 h-5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
+                      className="absolute top-2 right-7 w-5 h-5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
                       aria-label={`Edit ${cat.name}`}
                     >
                       <IconPencil />
@@ -303,7 +297,7 @@ export default function Layout({ children }) {
                     className={`absolute top-2 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded leading-none transition-all ${
                       isConfirming
                         ? 'right-1 px-1.5 h-5 text-[11px] font-medium text-red-500 dark:text-red-400 bg-red-50 dark:bg-[#2a1515] opacity-100'
-                        : 'right-1.5 w-5 h-5 text-[15px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#333]'
+                        : 'right-1.5 w-5 h-5 text-[15px] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#e5e5e5] dark:hover:bg-[#333]'
                     }`}
                     aria-label={`Delete ${cat.name}`}
                   >
@@ -315,7 +309,7 @@ export default function Layout({ children }) {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="mt-1 w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-400 transition-colors"
+            className="mt-1 w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
           >
             <IconPlus />
             New category
@@ -326,7 +320,7 @@ export default function Layout({ children }) {
         <div className="p-3 border-t border-[#e5e5e5] dark:border-[#2a2a2a]">
           <button
             onClick={() => setDark((d) => !d)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-400 dark:text-[#555] hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
           >
             {dark ? <IconSun /> : <IconMoon />}
             {dark ? 'Light mode' : 'Dark mode'}
@@ -336,6 +330,18 @@ export default function Layout({ children }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Sidebar reopen button */}
+        {!sidebarOpen && (
+          <div className="absolute top-3 left-3 z-10">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#ebebeb] dark:hover:bg-[#222] p-1.5 rounded-md transition-colors"
+              aria-label="Open sidebar"
+            >
+              <IconSidebarToggle />
+            </button>
+          </div>
+        )}
         {/* Content */}
         <main className="flex-1 overflow-auto bg-white dark:bg-[#111]">
           <div className="max-w-5xl mx-auto">
@@ -353,8 +359,6 @@ export default function Layout({ children }) {
 
       {showEntryModal && (
         <NewEntryModal
-          categories={categories}
-          defaultCategoryId={location.pathname.match(/^\/category\/(.+)/)?.[1] ?? null}
           onConfirm={handleCreateEntry}
           onClose={() => setShowEntryModal(false)}
         />

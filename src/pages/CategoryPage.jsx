@@ -30,10 +30,10 @@ function EmptyState({ name }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[300px] text-center p-12">
       <div className="text-[36px] text-gray-200 dark:text-[#2a2a2a] mb-3 select-none">✦</div>
-      <div className="text-[14px] font-medium text-gray-400 dark:text-[#444] mb-1">
+      <div className="text-[14px] font-medium text-gray-900 dark:text-white mb-1">
         No entries in {name}
       </div>
-      <div className="text-[12px] text-gray-300 dark:text-[#333]">
+      <div className="text-[12px] text-gray-600 dark:text-gray-300">
         Hit "New Entry" to add the first one
       </div>
     </div>

@@ -1,14 +1,5 @@
 import { useNavigate } from 'react-router-dom'
 
-function IconPerson() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" className="shrink-0">
-      <circle cx="10" cy="7" r="3.5" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M3 18c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  )
-}
-
 function IconNote() {
   return (
     <svg width="14" height="14" viewBox="0 0 20 20" fill="none" className="shrink-0">
@@ -31,14 +22,14 @@ export default function EntryCard({ entry }) {
       onClick={() => navigate(`/entry/${entry.id}`)}
       className="p-4 rounded-xl border border-[#e8e8e8] dark:border-[#1e1e1e] bg-white dark:bg-[#161616] hover:border-[#d0d0d0] dark:hover:border-[#2a2a2a] hover:shadow-sm dark:hover:shadow-none transition-all cursor-pointer"
     >
-      <div className="w-7 h-7 rounded-lg bg-[#f5f5f5] dark:bg-[#1e1e1e] flex items-center justify-center text-gray-400 dark:text-[#4a4a4a] mb-3">
-        {entry.type === 'profile' ? <IconPerson /> : <IconNote />}
+      <div className="w-7 h-7 rounded-lg bg-[#f5f5f5] dark:bg-[#1e1e1e] flex items-center justify-center text-gray-600 dark:text-gray-300 mb-3">
+        <IconNote />
       </div>
-      <div className="text-[14px] font-medium text-gray-900 dark:text-gray-100 leading-snug mb-1.5 line-clamp-2">
+      <div className="text-[14px] font-medium text-gray-900 dark:text-white leading-snug mb-1.5 line-clamp-2">
         {entry.title}
       </div>
       {entry.content ? (
-        <div className="text-[12px] text-gray-400 dark:text-[#444] leading-snug mb-2 line-clamp-2">
+        <div className="text-[12px] text-gray-600 dark:text-gray-300 leading-snug mb-2 line-clamp-2">
           {entry.content}
         </div>
       ) : (
@@ -51,15 +42,15 @@ export default function EntryCard({ entry }) {
               className="w-1.5 h-1.5 rounded-full shrink-0"
               style={{ backgroundColor: entry.categories.color }}
             />
-            <span className="text-[12px] text-gray-400 dark:text-[#555] truncate">
+            <span className="text-[12px] text-gray-700 dark:text-gray-200 truncate">
               {entry.categories.name}
             </span>
           </>
         ) : (
-          <span className="text-[12px] text-gray-300 dark:text-[#3a3a3a]">—</span>
+          <span className="text-[12px] text-gray-500 dark:text-gray-400">—</span>
         )}
       </div>
-      <div className="text-[12px] text-gray-300 dark:text-[#3a3a3a]">{date}</div>
+      <div className="text-[12px] text-gray-500 dark:text-gray-400">{date}</div>
     </div>
   )
 }
