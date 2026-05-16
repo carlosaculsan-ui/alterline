@@ -135,7 +135,7 @@ export default function CarlopediaPage() {
           <div className="py-16 text-center">
             <div className="text-[15px] text-gray-400 dark:text-[#555] mb-1">No articles yet</div>
             <div className="text-[13px] text-gray-300 dark:text-[#3a3a3a]">
-              Select a word in any story and hit "Create Wikipedia", or use "+ New article" above
+              Select a word in any story and hit "Create Carlopedia", or use "+ New article" above
             </div>
           </div>
         ) : (

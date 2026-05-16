@@ -130,7 +130,7 @@ function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
           onMouseDown={(e) => { e.preventDefault(); onSaveAndNavigate(linkedEntryId) }}
           className="px-3 py-2 text-[12px] font-medium text-indigo-600 dark:text-indigo-400 hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors whitespace-nowrap"
         >
-          Open Wikipedia →
+          Open Carlopedia →
         </button>
         <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] shrink-0" />
         <button
@@ -192,7 +192,7 @@ function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
         disabled={loading}
         className="px-3 py-2 text-[12px] font-medium text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222] disabled:opacity-50 transition-colors whitespace-nowrap"
       >
-        {loading ? 'Creating…' : '+ Create Wikipedia'}
+        {loading ? 'Creating…' : '+ Create Carlopedia'}
       </button>
       <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] shrink-0" />
       <button

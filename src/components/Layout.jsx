@@ -5,6 +5,7 @@ import NewCategoryModal from './NewCategoryModal'
 import NewEntryModal from './NewEntryModal'
 import Toast from './Toast'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 
 const COLORS = [
   '#5DCAA5', '#85B7EB', '#F0997B', '#ED93B1',
@@ -93,9 +94,20 @@ const NAV_WIKI = [
   { to: '/carlopedia', label: 'Carlopedia', icon: <IconBook /> },
 ]
 
+function IconLogOut() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
+      <path d="M6 2H2.5A1.5 1.5 0 001 3.5v8A1.5 1.5 0 002.5 13H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M10 10l3-2.5L10 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M13 7.5H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export default function Layout({ children, forceLight = false, wide = false }) {
   const navigate = useNavigate()
   const location = useLocation()
+  const user = useAuth()
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('alterline-theme') !== 'light'
   })
@@ -349,8 +361,8 @@ export default function Layout({ children, forceLight = false, wide = false }) {
           </button>
         </div>
 
-        {/* Theme toggle */}
-        <div className="p-3 border-t border-[#e5e5e5] dark:border-[#2a2a2a]">
+        {/* Theme toggle + logout */}
+        <div className="p-3 border-t border-[#e5e5e5] dark:border-[#2a2a2a] space-y-1">
           <button
             onClick={() => setDark((d) => !d)}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
@@ -358,6 +370,15 @@ export default function Layout({ children, forceLight = false, wide = false }) {
             {dark ? <IconSun /> : <IconMoon />}
             {dark ? 'Light mode' : 'Dark mode'}
           </button>
+          {user && (
+            <button
+              onClick={async () => { await supabase.auth.signOut(); navigate('/login') }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
+            >
+              <IconLogOut />
+              Log out
+            </button>
+          )}
         </div>
       </aside>
 
