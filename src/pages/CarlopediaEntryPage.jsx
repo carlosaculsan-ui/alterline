@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -119,11 +119,183 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting }) {
         className={`text-[13px] disabled:opacity-50 transition-colors ${
           confirmDelete
             ? 'text-red-500 dark:text-red-400 font-medium'
-            : 'text-gray-400 dark:text-[#555] hover:text-red-400 dark:hover:text-red-400'
+            : 'text-gray-900 dark:text-[#555] hover:text-red-400 dark:hover:text-red-400'
         }`}
       >
         {deleting ? 'Deleting…' : confirmDelete ? 'Confirm?' : 'Delete'}
       </button>
+    </div>
+  )
+}
+
+const INFO_ROWS = [
+  { key: 'born', label: 'Born' },
+  { key: 'died', label: 'Died' },
+  { key: 'nationality', label: 'Nationality' },
+  { key: 'occupation', label: 'Occupation' },
+  { key: 'known_for', label: 'Known for' },
+]
+
+function WikiInfobox({ entryId, entryTitle, photo, onPhotoClick, onPhotoRemove, fields, fieldIds, onFieldsChange, onFieldIdsChange }) {
+  const [editingKey, setEditingKey] = useState(null)
+  const [draft, setDraft] = useState('')
+
+  function startEdit(key) {
+    setEditingKey(key)
+    setDraft(fields[key] || '')
+  }
+
+  async function commitEdit() {
+    if (!editingKey) return
+    const key = editingKey
+    const value = draft.trim()
+    setEditingKey(null)
+
+    onFieldsChange((prev) => ({ ...prev, [key]: value }))
+
+    const dbKey = key === 'caption' ? 'infobox_caption' : `infobox_${key}`
+    const existingId = fieldIds[key]
+
+    if (!value && existingId) {
+      await supabase.from('profile_fields').delete().eq('id', existingId)
+      onFieldIdsChange((prev) => { const n = { ...prev }; delete n[key]; return n })
+    } else if (value && existingId) {
+      await supabase.from('profile_fields').update({ field_value: value }).eq('id', existingId)
+    } else if (value) {
+      const { data } = await supabase.from('profile_fields').insert({
+        entry_id: entryId,
+        field_key: dbKey,
+        field_value: value,
+      }).select('id').single()
+      if (data) onFieldIdsChange((prev) => ({ ...prev, [key]: data.id }))
+    }
+  }
+
+  function cancelEdit() {
+    setEditingKey(null)
+  }
+
+  const filledRows = INFO_ROWS.filter((r) => fields[r.key] || editingKey === r.key)
+  const emptyRows = INFO_ROWS.filter((r) => !fields[r.key] && editingKey !== r.key)
+
+  return (
+    <div
+      className="mb-4 ml-6 w-[290px] border border-[#a2a9b1] bg-[#f8f9fa] text-sm"
+      style={{ float: 'right', clear: 'right' }}
+    >
+      {/* Name header */}
+      <div className="bg-[#cee0f3] text-center font-bold py-1.5 px-3 text-gray-900 text-[14px] border-b border-[#a2a9b1]">
+        {entryTitle}
+      </div>
+
+      {/* Photo + caption */}
+      <div className="border-b border-[#a2a9b1]">
+        <div className="relative group bg-[#f0f0f0]">
+          {photo ? (
+            <>
+              <img src={photo} alt={entryTitle} className="w-full block" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-end p-2 gap-1.5 bg-black/5">
+                <button
+                  onClick={onPhotoClick}
+                  className="bg-white/90 text-[11px] text-gray-900 px-2 py-1 rounded-full font-medium shadow-sm hover:bg-white transition-colors"
+                >
+                  Change
+                </button>
+                <button
+                  onClick={onPhotoRemove}
+                  className="bg-white/90 text-[11px] text-red-500 px-2 py-1 rounded-full font-medium shadow-sm hover:bg-white transition-colors"
+                >
+                  Remove
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              onClick={onPhotoClick}
+              className="w-full flex flex-col items-center justify-center gap-2 hover:bg-[#e8e8e8] transition-colors"
+              style={{ minHeight: '220px' }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-gray-400">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="8.5" cy="10" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M3 16l5-4 4 3 3-2.5 6 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+              </svg>
+              <span className="text-[12px] text-gray-500">Add photo</span>
+            </button>
+          )}
+        </div>
+
+        {/* Caption */}
+        <div className="px-2 py-1.5 bg-white min-h-[28px]">
+          {editingKey === 'caption' ? (
+            <input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.target.blur()
+                if (e.key === 'Escape') { cancelEdit(); e.target.blur() }
+              }}
+              className="w-full text-center text-[11px] italic text-gray-600 bg-transparent outline-none border-b border-indigo-300"
+              placeholder="Add caption…"
+            />
+          ) : (
+            <div
+              onClick={() => startEdit('caption')}
+              className="text-center text-[11px] italic text-gray-600 cursor-text hover:bg-[#f5f5f5] rounded px-1 min-h-[1rem] leading-snug"
+            >
+              {fields.caption || <span className="text-gray-300">Add caption…</span>}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Info rows */}
+      {filledRows.map(({ key, label }) => (
+        <div key={key} className="flex border-b border-[#a2a9b1] last:border-b-0">
+          <div className="w-[38%] bg-[#eaecf0] px-2 py-1.5 font-bold text-gray-900 text-[12px] shrink-0 border-r border-[#a2a9b1] flex items-start leading-snug">
+            {label}
+          </div>
+          <div className="flex-1 bg-white px-2 py-1.5">
+            {editingKey === key ? (
+              <input
+                autoFocus
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={commitEdit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.target.blur()
+                  if (e.key === 'Escape') { cancelEdit(); e.target.blur() }
+                }}
+                className="w-full text-[12px] text-gray-900 bg-transparent outline-none border-b border-indigo-300"
+              />
+            ) : (
+              <div
+                onClick={() => startEdit(key)}
+                className="text-[12px] text-gray-900 cursor-text hover:bg-[#f5f5f5] rounded px-0.5 min-h-[1rem] leading-snug"
+              >
+                {fields[key]}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+
+      {/* Add field buttons */}
+      {emptyRows.length > 0 && (
+        <div className="bg-[#f8f9fa] px-3 py-1.5 flex flex-wrap gap-x-3 gap-y-0.5 border-t border-[#a2a9b1]">
+          {emptyRows.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => startEdit(key)}
+              className="text-[11px] text-blue-600 hover:underline"
+            >
+              + {label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -133,7 +305,7 @@ async function compressImage(file) {
     const img = new Image()
     const url = URL.createObjectURL(file)
     img.onload = () => {
-      const maxW = 1600
+      const maxW = 600
       const scale = Math.min(1, maxW / img.width)
       const canvas = document.createElement('canvas')
       canvas.width = Math.round(img.width * scale)
@@ -148,28 +320,33 @@ async function compressImage(file) {
 
 function LoadingSkeleton() {
   return (
-    <>
-      <div className="w-full h-[200px] bg-[#f0f0f0] dark:bg-[#1c1c1c] animate-pulse" />
-      <div className="bg-white px-8 py-8 animate-pulse max-w-[720px] mx-auto">
-        <div className="h-9 bg-[#f0f0f0] rounded w-2/3 mb-4" />
-        <div className="h-px bg-[#f0f0f0] mb-6" />
-        <div className="space-y-3">
+    <div className="bg-white pl-5 pr-8 py-8 animate-pulse max-w-[900px]">
+      <div className="h-9 bg-[#f0f0f0] rounded w-2/3 mb-4" />
+      <div className="h-px bg-[#f0f0f0] mb-6" />
+      <div className="flex gap-6">
+        <div className="flex-1 space-y-3">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-4 bg-[#f0f0f0] rounded" style={{ width: `${90 - i * 8}%` }} />
           ))}
         </div>
+        <div className="w-[290px] shrink-0 h-[260px] bg-[#f0f0f0] rounded" />
       </div>
-    </>
+    </div>
   )
 }
 
 export default function CarlopediaEntryPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const backTo = location.state?.from ?? '/carlopedia'
+
   const [entry, setEntry] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [coverImage, setCoverImage] = useState(null)
-  const [coverFieldId, setCoverFieldId] = useState(null)
+  const [infoboxPhoto, setInfoboxPhoto] = useState(null)
+  const [infoboxPhotoFieldId, setInfoboxPhotoFieldId] = useState(null)
+  const [infoboxFields, setInfoboxFields] = useState({})
+  const [infoboxFieldIds, setInfoboxFieldIds] = useState({})
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -229,17 +406,34 @@ export default function CarlopediaEntryPage() {
           lastSaved.current = data.content ?? ''
           contentRef.current = data.content ?? ''
 
-          const { data: field } = await supabase
+          const { data: fields } = await supabase
             .from('profile_fields')
-            .select('id, field_value')
+            .select('id, field_key, field_value')
             .eq('entry_id', id)
-            .eq('field_key', 'cover_image')
-            .maybeSingle()
+            .in('field_key', [
+              'cover_image',
+              'infobox_caption',
+              'infobox_born',
+              'infobox_died',
+              'infobox_nationality',
+              'infobox_occupation',
+              'infobox_known_for',
+            ])
 
-          if (field) {
-            setCoverImage(field.field_value)
-            setCoverFieldId(field.id)
-          }
+          const fieldMap = {}
+          const fieldIdMap = {}
+          ;(fields ?? []).forEach((f) => {
+            if (f.field_key === 'cover_image') {
+              setInfoboxPhoto(f.field_value)
+              setInfoboxPhotoFieldId(f.id)
+            } else {
+              const key = f.field_key.replace('infobox_', '')
+              fieldMap[key] = f.field_value
+              fieldIdMap[key] = f.id
+            }
+          })
+          setInfoboxFields(fieldMap)
+          setInfoboxFieldIds(fieldIdMap)
         }
         setLoading(false)
       })
@@ -287,24 +481,24 @@ export default function CarlopediaEntryPage() {
     if (!file) return
     e.target.value = ''
     const compressed = await compressImage(file)
-    setCoverImage(compressed)
-    if (coverFieldId) {
-      await supabase.from('profile_fields').update({ field_value: compressed }).eq('id', coverFieldId)
+    setInfoboxPhoto(compressed)
+    if (infoboxPhotoFieldId) {
+      await supabase.from('profile_fields').update({ field_value: compressed }).eq('id', infoboxPhotoFieldId)
     } else {
       const { data } = await supabase.from('profile_fields').insert({
         entry_id: id,
         field_key: 'cover_image',
         field_value: compressed,
       }).select('id').single()
-      if (data) setCoverFieldId(data.id)
+      if (data) setInfoboxPhotoFieldId(data.id)
     }
   }
 
-  async function removeImage() {
-    if (!coverFieldId) return
-    await supabase.from('profile_fields').delete().eq('id', coverFieldId)
-    setCoverImage(null)
-    setCoverFieldId(null)
+  async function removePhoto() {
+    if (!infoboxPhotoFieldId) return
+    await supabase.from('profile_fields').delete().eq('id', infoboxPhotoFieldId)
+    setInfoboxPhoto(null)
+    setInfoboxPhotoFieldId(null)
   }
 
   function handleDelete() {
@@ -339,57 +533,23 @@ export default function CarlopediaEntryPage() {
   if (!entry) return (
     <Layout wide>
       <div className="px-8 py-8">
-        <button onClick={() => navigate('/carlopedia')} className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-4 block">← Carlopedia</button>
-        <p className="text-[13px] text-gray-400 dark:text-[#555]">Article not found.</p>
+        <button onClick={() => navigate('/carlopedia')} className="text-[13px] text-gray-900 dark:text-[#555] hover:opacity-60 transition-opacity mb-4 block">← Carlopedia</button>
+        <p className="text-[13px] text-gray-900 dark:text-[#555]">Article not found.</p>
       </div>
     </Layout>
   )
 
   return (
     <Layout wide>
-      {/* Toolbar — follows dark mode */}
-      <Toolbar editor={editor} onBack={() => navigate('/carlopedia')} onDelete={handleDelete} confirmDelete={confirmDelete} deleting={deleting} />
+      <Toolbar editor={editor} onBack={() => navigate(backTo)} onDelete={handleDelete} confirmDelete={confirmDelete} deleting={deleting} />
 
-      {/* Cover image — placeholder follows dark mode, actual photo is always full color */}
-      <div
-        className="relative group w-full overflow-hidden cursor-pointer bg-[#f0f0f0] dark:bg-[#1a1a1a]"
-        style={{ height: coverImage ? '280px' : '140px' }}
-        onClick={() => imageInputRef.current?.click()}
-      >
-        {coverImage ? (
-          <img src={coverImage} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-2 select-none">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" className="text-gray-300 dark:text-[#333]">
-              <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-              <circle cx="8.5" cy="10" r="1.5" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M3 16l5-4 4 3 3-2.5 6 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-            </svg>
-            <span className="text-[12px] text-gray-400 dark:text-[#444]">Add cover image</span>
-          </div>
-        )}
+      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
 
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-end p-3 gap-2 bg-black/10">
-          <span className="bg-white/90 text-[12px] text-gray-800 px-3 py-1.5 rounded-full font-medium shadow-sm">
-            {coverImage ? 'Change photo' : 'Add photo'}
-          </span>
-          {coverImage && (
-            <button
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={(e) => { e.stopPropagation(); removeImage() }}
-              className="bg-white/90 text-[12px] text-red-500 px-3 py-1.5 rounded-full font-medium shadow-sm hover:bg-white transition-colors"
-            >
-              Remove
-            </button>
-          )}
-        </div>
+      {/* White article canvas */}
+      <div className="bg-white" style={{ minHeight: 'calc(100vh - 56px)' }}>
+        <div className="pl-5 pr-8 py-8">
 
-        <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-      </div>
-
-      {/* White article canvas — ALWAYS white regardless of dark mode */}
-      <div className="bg-white" style={{ minHeight: 'calc(100vh - 200px)' }}>
-        <div className="max-w-[720px] mx-auto px-8 py-8">
+          {/* Title */}
           {editingTitle ? (
             <input
               ref={titleInputRef}
@@ -401,24 +561,41 @@ export default function CarlopediaEntryPage() {
                 if (e.key === 'Enter') { e.preventDefault(); titleInputRef.current?.blur() }
                 if (e.key === 'Escape') { cancelTitle.current = true; titleInputRef.current?.blur() }
               }}
-              className="text-[32px] font-bold text-gray-900 leading-tight mb-4 w-full bg-transparent outline-none border-b-2 border-indigo-400"
+              className="text-[28px] font-bold text-gray-900 leading-tight mb-1 w-full bg-transparent outline-none border-b-2 border-indigo-400"
             />
           ) : (
             <h1
               onClick={() => { setTitleDraft(entry.title); setEditingTitle(true) }}
-              className="text-[32px] font-bold text-gray-900 leading-tight mb-4 cursor-text"
+              className="text-[28px] font-bold text-gray-900 leading-tight mb-1 cursor-text font-['Linux_Libertine',Georgia,serif]"
             >
               {entry.title}
             </h1>
           )}
 
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-[10px] uppercase tracking-widest text-gray-300 font-medium select-none">Article</span>
-            <div className="flex-1 h-px bg-gray-200" />
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-[#a2a9b1]" />
+            <span className="text-[10px] uppercase tracking-widest text-gray-400 font-medium select-none">Article</span>
+            <div className="flex-1 h-px bg-[#a2a9b1]" />
           </div>
 
-          <EditorContent editor={editor} />
+          {/* Body: infobox floated right + article text wrapping left */}
+          <div>
+            <WikiInfobox
+              entryId={id}
+              entryTitle={entry.title}
+              photo={infoboxPhoto}
+              onPhotoClick={() => imageInputRef.current?.click()}
+              onPhotoRemove={removePhoto}
+              fields={infoboxFields}
+              fieldIds={infoboxFieldIds}
+              onFieldsChange={setInfoboxFields}
+              onFieldIdsChange={setInfoboxFieldIds}
+            />
+
+            <EditorContent editor={editor} />
+            <div style={{ clear: 'both' }} />
+          </div>
+
         </div>
       </div>
 

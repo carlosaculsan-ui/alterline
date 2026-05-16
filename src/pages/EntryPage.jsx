@@ -37,16 +37,57 @@ const EntryLink = Mark.create({
 
 function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
   const [loading, setLoading] = useState(false)
+  const [mode, setMode] = useState('default') // 'default' | 'search'
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const searchInputRef = useRef(null)
+
   const isOnLink = editor.isActive('entryLink')
   const linkedEntryId = editor.getAttributes('entryLink').entryId
+
+  useEffect(() => {
+    if (mode === 'search') setTimeout(() => searchInputRef.current?.focus(), 0)
+  }, [mode])
+
+  useEffect(() => {
+    if (mode !== 'search') return
+    const q = searchQuery.trim()
+    if (!q) { setSearchResults([]); return }
+
+    const timer = setTimeout(async () => {
+      setSearchLoading(true)
+      const [{ data: typed }, { data: pfRows }] = await Promise.all([
+        supabase.from('entries').select('id, title').eq('type', 'carlopedia').ilike('title', `%${q}%`).limit(6),
+        supabase.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
+      ])
+      let results = typed ?? []
+      const pfIds = (pfRows ?? []).map((r) => r.entry_id)
+      if (pfIds.length > 0) {
+        const { data: pfEntries } = await supabase
+          .from('entries').select('id, title').in('id', pfIds).ilike('title', `%${q}%`).limit(6)
+        const seen = new Set(results.map((e) => e.id))
+        results = [...results, ...(pfEntries ?? []).filter((e) => !seen.has(e.id))]
+      }
+      setSearchResults(results.slice(0, 6))
+      setSearchLoading(false)
+    }, 200)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery, mode])
+
+  function linkExisting(article) {
+    editor.chain()
+      .setTextSelection({ from: range.from, to: range.to })
+      .setMark('entryLink', { entryId: article.id })
+      .run()
+  }
 
   async function handleCreate(e) {
     e.preventDefault()
     if (!range || !range.text.trim()) return
-
     setLoading(true)
 
-    // Try inserting as carlopedia. If the DB rejects the type, fall back to story.
     let usedFallback = false
     let result = await supabase
       .from('entries')
@@ -55,7 +96,6 @@ function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
       .single()
 
     if (result.error) {
-      // Fallback: some DBs have a type constraint that doesn't include 'carlopedia'
       usedFallback = true
       result = await supabase
         .from('entries')
@@ -67,7 +107,6 @@ function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
     const { data: created, error } = result
 
     if (!error && created) {
-      // If we fell back to 'story', mark this entry as carlopedia via profile_field
       if (usedFallback) {
         await supabase.from('profile_fields').insert({
           entry_id: created.id,
@@ -93,6 +132,55 @@ function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
         >
           Open Wikipedia →
         </button>
+        <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] shrink-0" />
+        <button
+          onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().unsetMark('entryLink').run() }}
+          className="px-3 py-2 text-[12px] font-medium text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors whitespace-nowrap"
+        >
+          Unlink
+        </button>
+      </div>
+    )
+  }
+
+  if (mode === 'search') {
+    return (
+      <div className="bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg shadow-xl overflow-hidden w-52">
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-[#f0f0f0] dark:border-[#2a2a2a]">
+          <input
+            ref={searchInputRef}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') { setMode('default'); setSearchQuery('') }
+            }}
+            placeholder="Search Carlopedia…"
+            className="flex-1 text-[12px] bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none"
+          />
+          <button
+            onMouseDown={(e) => { e.preventDefault(); setMode('default'); setSearchQuery('') }}
+            className="text-[15px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors shrink-0"
+          >
+            ×
+          </button>
+        </div>
+        {!searchQuery.trim() ? (
+          <div className="px-3 py-2 text-[11px] text-gray-400 dark:text-[#555]">Type to search…</div>
+        ) : searchLoading ? (
+          <div className="px-3 py-2 text-[11px] text-gray-400 dark:text-[#555]">Searching…</div>
+        ) : searchResults.length === 0 ? (
+          <div className="px-3 py-2 text-[11px] text-gray-400 dark:text-[#555]">No articles found</div>
+        ) : (
+          searchResults.map((article) => (
+            <button
+              key={article.id}
+              onMouseDown={(e) => { e.preventDefault(); linkExisting(article) }}
+              className="w-full text-left px-3 py-2 text-[12px] text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors truncate border-t border-[#f5f5f5] dark:border-[#222] first:border-t-0"
+            >
+              {article.title}
+            </button>
+          ))
+        )}
       </div>
     )
   }
@@ -105,6 +193,13 @@ function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
         className="px-3 py-2 text-[12px] font-medium text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222] disabled:opacity-50 transition-colors whitespace-nowrap"
       >
         {loading ? 'Creating…' : '+ Create Wikipedia'}
+      </button>
+      <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] shrink-0" />
+      <button
+        onMouseDown={(e) => { e.preventDefault(); setMode('search') }}
+        className="px-3 py-2 text-[12px] font-medium text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors whitespace-nowrap"
+      >
+        Link existing
       </button>
     </div>
   )
@@ -237,6 +332,7 @@ export default function EntryPage() {
   const navigate = useNavigate()
   const [entry, setEntry] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isCarlopediaEntry, setIsCarlopediaEntry] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [toastMsg, setToastMsg] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -316,41 +412,40 @@ export default function EntryPage() {
   }, [editor])
 
   useEffect(() => {
-    supabase
-      .from('entries')
-      .select('*, categories(name, color)')
-      .eq('id', id)
-      .single()
-      .then(async ({ data, error }) => {
-        if (!error && data) {
-          setEntry(data)
-          const c = data.content ?? ''
-          lastSaved.current = c
-          contentRef.current = c
+    Promise.all([
+      supabase.from('entries').select('*, categories(name, color)').eq('id', id).single(),
+      supabase.from('profile_fields').select('id').eq('entry_id', id).eq('field_key', 'carlopedia').maybeSingle(),
+    ]).then(async ([{ data, error }, { data: carlopediaField }]) => {
+      if (!error && data) {
+        setEntry(data)
+        if (carlopediaField) setIsCarlopediaEntry(true)
+        const c = data.content ?? ''
+        lastSaved.current = c
+        contentRef.current = c
 
-          const { data: linkRows } = await supabase
-            .from('entry_links')
-            .select('id, from_entry_id, to_entry_id')
-            .or(`from_entry_id.eq.${id},to_entry_id.eq.${id}`)
+        const { data: linkRows } = await supabase
+          .from('entry_links')
+          .select('id, from_entry_id, to_entry_id')
+          .or(`from_entry_id.eq.${id},to_entry_id.eq.${id}`)
 
-          if (linkRows?.length > 0) {
-            const linkedIds = linkRows.map((row) =>
-              row.from_entry_id === id ? row.to_entry_id : row.from_entry_id
-            )
-            const { data: linkedEntries } = await supabase
-              .from('entries').select('id, title').in('id', linkedIds)
-            setLinks(
-              linkRows
-                .map((row) => {
-                  const otherId = row.from_entry_id === id ? row.to_entry_id : row.from_entry_id
-                  return { linkId: row.id, entry: (linkedEntries ?? []).find((e) => e.id === otherId) }
-                })
-                .filter((l) => l.entry)
-            )
-          }
+        if (linkRows?.length > 0) {
+          const linkedIds = linkRows.map((row) =>
+            row.from_entry_id === id ? row.to_entry_id : row.from_entry_id
+          )
+          const { data: linkedEntries } = await supabase
+            .from('entries').select('id, title').in('id', linkedIds)
+          setLinks(
+            linkRows
+              .map((row) => {
+                const otherId = row.from_entry_id === id ? row.to_entry_id : row.from_entry_id
+                return { linkId: row.id, entry: (linkedEntries ?? []).find((e) => e.id === otherId) }
+              })
+              .filter((l) => l.entry)
+          )
         }
-        setLoading(false)
-      })
+      }
+      setLoading(false)
+    })
   }, [id])
 
   useEffect(() => {
@@ -407,7 +502,9 @@ export default function EntryPage() {
 
   function saveAndNavigate(targetId, path) {
     if (editor) contentRef.current = editor.getHTML()
-    navigate(path ?? `/entry/${targetId}`)
+    const destination = path ?? `/entry/${targetId}`
+    const state = destination.startsWith('/carlopedia/') ? { from: `/entry/${id}` } : undefined
+    navigate(destination, state ? { state } : undefined)
   }
 
   function handleDelete() {
@@ -458,7 +555,7 @@ export default function EntryPage() {
     setLinks((prev) => prev.filter((l) => l.linkId !== linkId))
   }
 
-  if (!loading && entry?.type === 'carlopedia') {
+  if (!loading && (entry?.type === 'carlopedia' || isCarlopediaEntry)) {
     return <Navigate to={`/carlopedia/${id}`} replace />
   }
 

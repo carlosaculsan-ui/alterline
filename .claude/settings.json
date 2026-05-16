@@ -9,7 +9,8 @@
       "Bash(node -e \"const { FontSize } = require\\('./node_modules/@tiptap/extension-text-style/dist/index.js'\\); const fs = new FontSize\\(\\); console.log\\(JSON.stringify\\(Object.keys\\(fs.config || {}\\)\\)\\)\")",
       "Bash(node -e \"const { FontSize } = require\\('./node_modules/@tiptap/extension-text-style/dist/index.js'\\); console.log\\(typeof FontSize, JSON.stringify\\(FontSize?.config?.name\\), JSON.stringify\\(Object.keys\\(FontSize || {}\\)\\)\\)\")",
       "Bash(node -e \"const { FontSize } = require\\('./node_modules/@tiptap/extension-text-style/dist/index.js'\\); console.log\\(JSON.stringify\\(Object.keys\\(FontSize.config\\)\\)\\)\")",
-      "Bash(node -e \"const { FontSize } = require\\('./node_modules/@tiptap/extension-text-style/dist/index.js'\\); const cmds = FontSize.config.addCommands\\(\\); console.log\\(Object.keys\\(cmds\\)\\)\")"
+      "Bash(node -e \"const { FontSize } = require\\('./node_modules/@tiptap/extension-text-style/dist/index.js'\\); const cmds = FontSize.config.addCommands\\(\\); console.log\\(Object.keys\\(cmds\\)\\)\")",
+      "Bash(npx tsc *)"
     ]
   }
 }
