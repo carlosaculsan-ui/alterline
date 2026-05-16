@@ -76,15 +76,19 @@ export default function RecentPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase
-      .from('entries')
-      .select('*, categories(name, color)')
-      .order('updated_at', { ascending: false })
-      .limit(50)
-      .then(({ data, error }) => {
-        if (!error && data) setGroups(groupByDate(data))
-        setLoading(false)
-      })
+    Promise.all([
+      supabase.from('entries').select('*, categories(name, color)')
+        .neq('type', 'carlopedia')
+        .order('updated_at', { ascending: false })
+        .limit(50),
+      supabase.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
+    ]).then(([{ data, error }, { data: wikiFields }]) => {
+      if (!error && data) {
+        const wikiIds = new Set((wikiFields ?? []).map((r) => r.entry_id))
+        setGroups(groupByDate(data.filter((e) => !wikiIds.has(e.id))))
+      }
+      setLoading(false)
+    })
   }, [])
 
   return (

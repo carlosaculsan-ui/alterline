@@ -74,12 +74,26 @@ function IconSidebarToggle() {
   )
 }
 
+function IconBook() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
+      <path d="M2 3.5C2 3.5 4 3 7.5 4.5V13C4 11.5 2 12 2 12V3.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M13 3.5C13 3.5 11 3 7.5 4.5V13C11 11.5 13 12 13 12V3.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M7.5 2V4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 const NAV = [
   { to: '/', label: 'Dashboard', icon: <IconGrid /> },
   { to: '/recent', label: 'Recent', icon: <IconClock /> },
 ]
 
-export default function Layout({ children }) {
+const NAV_WIKI = [
+  { to: '/carlopedia', label: 'Carlopedia', icon: <IconBook /> },
+]
+
+export default function Layout({ children, forceLight = false, wide = false }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [dark, setDark] = useState(() => {
@@ -190,6 +204,25 @@ export default function Layout({ children }) {
               key={to}
               to={to}
               end
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] transition-colors ${
+                  isActive
+                    ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
+                    : 'text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c]'
+                }`
+              }
+            >
+              {icon}
+              {label}
+            </NavLink>
+          ))}
+
+          <div className="mx-3 my-1 border-t border-[#e5e5e5] dark:border-[#2a2a2a]" />
+
+          {NAV_WIKI.map(({ to, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] transition-colors ${
                   isActive
@@ -343,8 +376,8 @@ export default function Layout({ children }) {
           </div>
         )}
         {/* Content */}
-        <main className="flex-1 overflow-auto bg-white dark:bg-[#111]">
-          <div className="max-w-5xl mx-auto">
+        <main className={`flex-1 overflow-auto ${forceLight ? 'bg-white' : 'bg-white dark:bg-[#111]'}`}>
+          <div className={wide ? '' : 'max-w-5xl mx-auto'}>
             {children}
           </div>
         </main>

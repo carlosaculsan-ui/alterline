@@ -69,24 +69,27 @@ export default function Dashboard() {
     const timer = setTimeout(async () => {
       setSearchLoading(true)
 
-      const [{ data: pfRows }, { data: titleContent, error }] = await Promise.all([
+      const [{ data: pfRows }, { data: titleContent, error }, { data: wikiFields }] = await Promise.all([
         supabase.from('profile_fields').select('entry_id').ilike('field_value', `%${q}%`),
         supabase.from('entries').select('*, categories(name, color)')
           .or(`title.ilike.%${q}%,content.ilike.%${q}%`)
+          .neq('type', 'carlopedia')
           .order('created_at', { ascending: false })
           .limit(50),
+        supabase.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
       ])
 
-      const pfIds = [...new Set((pfRows ?? []).map((r) => r.entry_id))]
-      let data = titleContent ?? []
+      const wikiIds = new Set((wikiFields ?? []).map((r) => r.entry_id))
+      const pfIds = [...new Set((pfRows ?? []).map((r) => r.entry_id).filter((id) => !wikiIds.has(id)))]
+      let data = (titleContent ?? []).filter((e) => !wikiIds.has(e.id))
 
       if (pfIds.length > 0) {
         const found = new Set(data.map((e) => e.id))
         const missing = pfIds.filter((id) => !found.has(id))
         if (missing.length > 0) {
           const { data: extra } = await supabase
-            .from('entries').select('*, categories(name, color)').in('id', missing)
-          data = [...data, ...(extra ?? [])]
+            .from('entries').select('*, categories(name, color)').in('id', missing).neq('type', 'carlopedia')
+          data = [...data, ...(extra ?? []).filter((e) => !wikiIds.has(e.id))]
         }
       }
 

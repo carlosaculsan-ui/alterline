@@ -1,16 +1,114 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import { TextStyle, FontSize } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import Highlight from '@tiptap/extension-highlight'
+import { Mark, mergeAttributes } from '@tiptap/core'
 import Layout from '../components/Layout'
 import Toast from '../components/Toast'
 import { supabase } from '../lib/supabase'
-import { useCategories } from '../hooks/useCategories'
 
+
+const EntryLink = Mark.create({
+  name: 'entryLink',
+  priority: 1001,
+
+  addAttributes() {
+    return {
+      entryId: {
+        default: null,
+        parseHTML: (el) => el.getAttribute('data-entry-id'),
+        renderHTML: (attrs) => attrs.entryId ? { 'data-entry-id': attrs.entryId } : {},
+      },
+    }
+  },
+
+  parseHTML() {
+    return [{ tag: 'a[data-entry-id]' }]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['a', mergeAttributes({ class: 'entry-link' }, HTMLAttributes), 0]
+  },
+})
+
+function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
+  const [loading, setLoading] = useState(false)
+  const isOnLink = editor.isActive('entryLink')
+  const linkedEntryId = editor.getAttributes('entryLink').entryId
+
+  async function handleCreate(e) {
+    e.preventDefault()
+    if (!range || !range.text.trim()) return
+
+    setLoading(true)
+
+    // Try inserting as carlopedia. If the DB rejects the type, fall back to story.
+    let usedFallback = false
+    let result = await supabase
+      .from('entries')
+      .insert({ title: range.text.trim(), type: 'carlopedia', category_id: null })
+      .select('id')
+      .single()
+
+    if (result.error) {
+      // Fallback: some DBs have a type constraint that doesn't include 'carlopedia'
+      usedFallback = true
+      result = await supabase
+        .from('entries')
+        .insert({ title: range.text.trim(), type: 'story', category_id: null })
+        .select('id')
+        .single()
+    }
+
+    const { data: created, error } = result
+
+    if (!error && created) {
+      // If we fell back to 'story', mark this entry as carlopedia via profile_field
+      if (usedFallback) {
+        await supabase.from('profile_fields').insert({
+          entry_id: created.id,
+          field_key: 'carlopedia',
+          field_value: 'true',
+        })
+      }
+      editor.chain().setTextSelection({ from: range.from, to: range.to }).setMark('entryLink', { entryId: created.id }).run()
+      onSaveAndNavigate(created.id, `/carlopedia/${created.id}`)
+    } else {
+      console.error('[Carlopedia] insert failed:', error)
+      onError?.(`Could not create article: ${error?.message ?? 'unknown error'}`)
+      setLoading(false)
+    }
+  }
+
+  if (isOnLink && linkedEntryId) {
+    return (
+      <div className="flex items-center bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg shadow-xl overflow-hidden">
+        <button
+          onMouseDown={(e) => { e.preventDefault(); onSaveAndNavigate(linkedEntryId) }}
+          className="px-3 py-2 text-[12px] font-medium text-indigo-600 dark:text-indigo-400 hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors whitespace-nowrap"
+        >
+          Open Wikipedia →
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg shadow-xl overflow-hidden">
+      <button
+        onMouseDown={handleCreate}
+        disabled={loading}
+        className="px-3 py-2 text-[12px] font-medium text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222] disabled:opacity-50 transition-colors whitespace-nowrap"
+      >
+        {loading ? 'Creating…' : '+ Create Wikipedia'}
+      </button>
+    </div>
+  )
+}
 
 function ToolBtn({ active, onAction, title, children }) {
   return (
@@ -30,7 +128,7 @@ function ToolBtn({ active, onAction, title, children }) {
 
 const FONT_SIZES = ['8','9','10','11','12','14','16','18','20','24','28','32','36','48','60','72']
 
-function Toolbar({ editor, onBack }) {
+function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting }) {
   const [, forceUpdate] = useState(0)
 
   useEffect(() => {
@@ -46,7 +144,7 @@ function Toolbar({ editor, onBack }) {
   const currentSize = editorSize ? parseInt(editorSize).toString() : '14'
 
   return (
-    <div className="sticky top-0 z-10 -mx-8 px-8 pt-3 bg-white dark:bg-[#111] flex items-center gap-0.5 mb-4 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] flex-wrap">
+    <div className="sticky top-0 z-10 -mx-8 px-8 pt-3 bg-white dark:bg-[#111] flex items-center gap-0.5 mb-6 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e]">
       {onBack && (
         <>
           <button
@@ -60,15 +158,10 @@ function Toolbar({ editor, onBack }) {
       )}
       <select
         value={currentSize}
-        onChange={(e) => {
-          const s = e.target.value
-          editor.chain().focus().setFontSize(`${s}px`).run()
-        }}
+        onChange={(e) => editor.chain().focus().setFontSize(`${e.target.value}px`).run()}
         className="w-16 text-[12px] text-center bg-white dark:bg-[#1c1c1c] text-gray-900 dark:text-white border border-[#e5e5e5] dark:border-[#2a2a2a] rounded px-1.5 py-1 outline-none cursor-pointer mr-1"
       >
-        {FONT_SIZES.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
+        {FONT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
       </select>
 
       <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mx-1 shrink-0" />
@@ -85,39 +178,33 @@ function Toolbar({ editor, onBack }) {
 
       <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mx-1 shrink-0" />
 
-      {/* Text color */}
-      <label
-        className="relative w-7 h-7 flex flex-col items-center justify-center rounded cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#222] transition-colors"
-        title="Text color"
-      >
+      <label className="relative w-7 h-7 flex flex-col items-center justify-center rounded cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#222] transition-colors" title="Text color">
         <span className="text-[13px] font-bold text-gray-900 dark:text-white select-none leading-none">A</span>
-        <span
-          className="absolute bottom-1 left-1.5 right-1.5 h-[2.5px] rounded-full"
-          style={{ backgroundColor: editor.getAttributes('textStyle').color ?? '#888888' }}
-        />
-        <input
-          type="color"
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onInput={(e) => editor.chain().focus().setColor(e.target.value).run()}
-        />
+        <span className="absolute bottom-1 left-1.5 right-1.5 h-[2.5px] rounded-full" style={{ backgroundColor: editor.getAttributes('textStyle').color ?? '#888888' }} />
+        <input type="color" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onInput={(e) => editor.chain().focus().setColor(e.target.value).run()} />
       </label>
 
-      {/* Highlight color */}
-      <label
-        className="relative w-7 h-7 flex items-center justify-center rounded cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#222] transition-colors"
-        title="Highlight color"
-      >
+      <label className="relative w-7 h-7 flex items-center justify-center rounded cursor-pointer hover:bg-[#f0f0f0] dark:hover:bg-[#222] transition-colors" title="Highlight color">
         <svg width="14" height="14" viewBox="0 0 15 15" fill="none" className="text-gray-900 dark:text-white">
           <path d="M2 11.5h3.5L13 4 11 2 3.5 9.5 2 11.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
           <path d="M1 14h5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
         </svg>
-        <input
-          type="color"
-          defaultValue="#fef08a"
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onInput={(e) => editor.chain().focus().setHighlight({ color: e.target.value }).run()}
-        />
+        <input type="color" defaultValue="#fef08a" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onInput={(e) => editor.chain().focus().setHighlight({ color: e.target.value }).run()} />
       </label>
+
+      <div className="flex-1" />
+
+      <button
+        onClick={onDelete}
+        disabled={deleting}
+        className={`text-[13px] disabled:opacity-50 transition-colors ${
+          confirmDelete
+            ? 'text-red-500 dark:text-red-400 font-medium'
+            : 'text-gray-400 dark:text-[#555] hover:text-red-400 dark:hover:text-red-400'
+        }`}
+      >
+        {deleting ? 'Deleting…' : confirmDelete ? 'Confirm?' : 'Delete'}
+      </button>
     </div>
   )
 }
@@ -134,15 +221,11 @@ function IconNoteSm() {
 function LoadingSkeleton() {
   return (
     <div className="px-8 py-8 animate-pulse">
-      <div className="flex justify-between mb-7">
-        <div className="h-3.5 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-24" />
-        <div className="h-3.5 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-20" />
-      </div>
-      <div className="h-7 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-2/3 mb-6" />
       <div className="h-px bg-[#f0f0f0] dark:bg-[#1e1e1e] mb-6" />
-      <div className="space-y-2">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-4 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded" style={{ width: `${85 - i * 10}%` }} />
+      <div className="h-8 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-2/3 mb-8" />
+      <div className="space-y-2.5">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-4 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded" style={{ width: `${92 - i * 8}%` }} />
         ))}
       </div>
     </div>
@@ -166,41 +249,71 @@ export default function EntryPage() {
   const [linkResults, setLinkResults] = useState([])
   const [showLinkResults, setShowLinkResults] = useState(false)
   const [showLinkInput, setShowLinkInput] = useState(false)
-  const [showActionMenu, setShowActionMenu] = useState(false)
-  const [showCategoryPicker, setShowCategoryPicker] = useState(false)
-
-  const { categories } = useCategories()
 
   const lastSaved = useRef('')
   const contentRef = useRef('')
   const titleInputRef = useRef(null)
   const linkInputRef = useRef(null)
-  const categorySelectRef = useRef(null)
   const cancelTitle = useRef(false)
   const contentInitialized = useRef(false)
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ underline: false }),
       Underline,
       TextStyle,
       FontSize,
       Color,
       Highlight.configure({ multicolor: true }),
+      EntryLink,
     ],
     editorProps: {
       attributes: {
         class: 'outline-none min-h-[calc(100vh-260px)] text-[14px] text-gray-900 dark:text-white leading-[1.75]',
       },
+      handleClick(view, pos, event) {
+        const target = event.target.closest('a[data-entry-id]')
+        if (target) {
+          event.preventDefault()
+          const entryId = target.getAttribute('data-entry-id')
+          if (entryId) navigate(`/entry/${entryId}`)
+          return true
+        }
+        return false
+      },
     },
     onUpdate({ editor }) {
-      const html = editor.getHTML()
-      contentRef.current = html
+      contentRef.current = editor.getHTML()
     },
     onBlur() {
       handleContentBlur()
     },
   })
+
+  const [bubbleRect, setBubbleRect] = useState(null)
+  const [bubbleRange, setBubbleRange] = useState(null)
+
+  useEffect(() => {
+    if (!editor) return
+    const update = () => {
+      const { from, to } = editor.state.selection
+      if (from === to) { setBubbleRect(null); setBubbleRange(null); return }
+      const domSel = window.getSelection()
+      if (!domSel || domSel.rangeCount === 0) { setBubbleRect(null); return }
+      const r = domSel.getRangeAt(0).getBoundingClientRect()
+      if (r.width > 0) {
+        setBubbleRect(r)
+        setBubbleRange({ from, to, text: editor.state.doc.textBetween(from, to, '') })
+      } else {
+        setBubbleRect(null)
+        setBubbleRange(null)
+      }
+    }
+    const clear = () => { setBubbleRect(null); setBubbleRange(null) }
+    editor.on('selectionUpdate', update)
+    editor.on('blur', clear)
+    return () => { editor.off('selectionUpdate', update); editor.off('blur', clear) }
+  }, [editor])
 
   useEffect(() => {
     supabase
@@ -225,17 +338,12 @@ export default function EntryPage() {
               row.from_entry_id === id ? row.to_entry_id : row.from_entry_id
             )
             const { data: linkedEntries } = await supabase
-              .from('entries')
-              .select('id, title')
-              .in('id', linkedIds)
+              .from('entries').select('id, title').in('id', linkedIds)
             setLinks(
               linkRows
                 .map((row) => {
                   const otherId = row.from_entry_id === id ? row.to_entry_id : row.from_entry_id
-                  return {
-                    linkId: row.id,
-                    entry: (linkedEntries ?? []).find((e) => e.id === otherId),
-                  }
+                  return { linkId: row.id, entry: (linkedEntries ?? []).find((e) => e.id === otherId) }
                 })
                 .filter((l) => l.entry)
             )
@@ -245,7 +353,6 @@ export default function EntryPage() {
       })
   }, [id])
 
-  // Set editor content once entry loads
   useEffect(() => {
     if (editor && entry && !contentInitialized.current) {
       contentInitialized.current = true
@@ -262,18 +369,14 @@ export default function EntryPage() {
     if (!q) { setLinkResults([]); return }
     const timer = setTimeout(async () => {
       const { data } = await supabase
-        .from('entries')
-        .select('id, title')
-        .ilike('title', `%${q}%`)
-        .neq('id', id)
-        .limit(10)
+        .from('entries').select('id, title')
+        .ilike('title', `%${q}%`).neq('id', id).limit(10)
       const alreadyLinked = new Set(links.map((l) => l.entry.id))
       setLinkResults((data ?? []).filter((e) => !alreadyLinked.has(e.id)).slice(0, 8))
     }, 300)
     return () => clearTimeout(timer)
   }, [linkQuery, id, links])
 
-  // Auto-save every 60s of inactivity
   useEffect(() => {
     if (!entry) return
     const timer = setTimeout(async () => {
@@ -286,7 +389,6 @@ export default function EntryPage() {
     return () => clearTimeout(timer)
   }, [entry])
 
-  // Save on unmount
   useEffect(() => {
     return () => {
       if (contentRef.current !== lastSaved.current) {
@@ -301,6 +403,11 @@ export default function EntryPage() {
     const { error } = await supabase.from('entries').update({ content: html, updated_at: new Date().toISOString() }).eq('id', id)
     if (error) { setToastMsg('Save failed. Try again.'); return }
     lastSaved.current = html
+  }
+
+  function saveAndNavigate(targetId, path) {
+    if (editor) contentRef.current = editor.getHTML()
+    navigate(path ?? `/entry/${targetId}`)
   }
 
   function handleDelete() {
@@ -329,32 +436,15 @@ export default function EntryPage() {
     if (error) { setToastMsg('Save failed. Try again.'); setEntry((prev) => ({ ...prev, title: entry.title })) }
   }
 
-  async function saveCategoryEdit(categoryId) {
-    setShowCategoryPicker(false)
-    const newCatId = categoryId || null
-    if (newCatId === entry.category_id) return
-    const cat = newCatId ? (categories.find((c) => c.id === newCatId) ?? null) : null
-    setEntry((prev) => ({
-      ...prev,
-      category_id: newCatId,
-      categories: cat ? { name: cat.name, color: cat.color } : null,
-    }))
-    const { error } = await supabase.from('entries').update({ category_id: newCatId, updated_at: new Date().toISOString() }).eq('id', id)
-    if (error) setToastMsg('Save failed. Try again.')
-  }
-
   async function addLink(targetEntry) {
     const { data: existing } = await supabase
-      .from('entry_links')
-      .select('id')
+      .from('entry_links').select('id')
       .or(`and(from_entry_id.eq.${id},to_entry_id.eq.${targetEntry.id}),and(from_entry_id.eq.${targetEntry.id},to_entry_id.eq.${id})`)
       .maybeSingle()
     if (existing) return
     const { data: row, error } = await supabase
-      .from('entry_links')
-      .insert({ from_entry_id: id, to_entry_id: targetEntry.id })
-      .select('id')
-      .single()
+      .from('entry_links').insert({ from_entry_id: id, to_entry_id: targetEntry.id })
+      .select('id').single()
     if (!error && row) {
       setLinks((prev) => [...prev, { linkId: row.id, entry: targetEntry }])
       setLinkQuery('')
@@ -368,38 +458,25 @@ export default function EntryPage() {
     setLinks((prev) => prev.filter((l) => l.linkId !== linkId))
   }
 
+  if (!loading && entry?.type === 'carlopedia') {
+    return <Navigate to={`/carlopedia/${id}`} replace />
+  }
+
   return (
     <Layout>
       {loading ? (
         <LoadingSkeleton />
       ) : !entry ? (
         <div className="px-8 py-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors mb-4 block"
-          >
+          <button onClick={() => navigate(-1)} className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors mb-4 block">
             ← Back
           </button>
           <p className="text-[13px] text-gray-400 dark:text-[#555]">Entry not found.</p>
         </div>
       ) : (
         <div className="px-8 py-8">
-          {/* Action bar */}
-          <div className="flex items-center justify-end mb-7">
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className={`text-[13px] disabled:opacity-50 transition-colors ${
-                confirmDelete
-                  ? 'text-red-500 dark:text-red-400 font-medium'
-                  : 'text-gray-400 dark:text-[#555] hover:text-red-400 dark:hover:text-red-400'
-              }`}
-            >
-              {deleting ? 'Deleting…' : confirmDelete ? 'Confirm?' : 'Delete'}
-            </button>
-          </div>
+          <Toolbar editor={editor} onBack={() => navigate(-1)} onDelete={handleDelete} confirmDelete={confirmDelete} deleting={deleting} />
 
-          {/* Title */}
           {editingTitle ? (
             <input
               ref={titleInputRef}
@@ -422,29 +499,10 @@ export default function EntryPage() {
             </h1>
           )}
 
-          {/* Toolbar */}
-          <Toolbar editor={editor} onBack={() => navigate(-1)} />
-
-          {/* Editor */}
           <EditorContent editor={editor} />
 
-          {/* Bottom action area */}
+          {/* Linked entries */}
           <div className="mt-10 pt-6 border-t border-[#f0f0f0] dark:border-[#1e1e1e]">
-
-            {/* Category chip */}
-            {entry.categories && (
-              <div className="flex items-center gap-1.5 mb-3">
-                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: entry.categories.color }} />
-                <span className="text-[12px] text-gray-400 dark:text-[#555]">{entry.categories.name}</span>
-                <button
-                  onClick={() => saveCategoryEdit(null)}
-                  className="text-[14px] leading-none text-gray-300 dark:text-[#444] hover:text-gray-500 dark:hover:text-[#666] transition-colors ml-0.5"
-                  aria-label="Remove category"
-                >×</button>
-              </div>
-            )}
-
-            {/* Linked entries list */}
             {links.length > 0 && (
               <div className="mb-3 space-y-0.5">
                 {links.map(({ linkId, entry: linked }) => (
@@ -459,14 +517,12 @@ export default function EntryPage() {
                     <button
                       onClick={() => removeLink(linkId)}
                       className="opacity-0 group-hover/link:opacity-100 w-5 h-5 flex items-center justify-center rounded text-[14px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#2a2a2a] transition-all shrink-0"
-                      aria-label="Remove link"
                     >×</button>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Link search input */}
             {showLinkInput && (
               <div className="relative mb-4">
                 <input
@@ -508,67 +564,34 @@ export default function EntryPage() {
               </div>
             )}
 
-            {/* Category picker */}
-            {showCategoryPicker && (
-              <div className="mb-4">
-                <select
-                  ref={categorySelectRef}
-                  autoFocus
-                  defaultValue={entry.category_id ?? ''}
-                  onChange={(e) => saveCategoryEdit(e.target.value)}
-                  onBlur={() => setShowCategoryPicker(false)}
-                  className="text-[13px] bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg px-3 py-1.5 text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
-                >
-                  <option value="">No category</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* + action button */}
-            <div className="relative w-fit">
-              {showActionMenu && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowActionMenu(false)} />
-                  <div className="absolute bottom-full left-0 mb-2 z-20 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl py-1 min-w-[160px] overflow-hidden">
-                    <button
-                      onClick={() => { setShowLinkInput(true); setShowActionMenu(false); setTimeout(() => linkInputRef.current?.focus(), 0) }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
-                    >
-                      <IconNoteSm />
-                      Link Entry
-                    </button>
-                    <button
-                      onClick={() => { setShowCategoryPicker(true); setShowActionMenu(false); setTimeout(() => categorySelectRef.current?.focus(), 0) }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 15 15" fill="none" className="shrink-0">
-                        <circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" strokeWidth="1.5" />
-                        <circle cx="7.5" cy="7.5" r="2" fill="currentColor" />
-                      </svg>
-                      Add to Category
-                    </button>
-                  </div>
-                </>
-              )}
+            {!showLinkInput && (
               <button
-                onClick={() => setShowActionMenu((p) => !p)}
-                className={`w-7 h-7 rounded-full border flex items-center justify-center text-[18px] leading-none transition-colors ${
-                  showActionMenu
-                    ? 'border-indigo-400 text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40'
-                    : 'border-[#e5e5e5] dark:border-[#2a2a2a] text-gray-400 dark:text-[#555] hover:border-[#ccc] dark:hover:border-[#444] hover:text-gray-600 dark:hover:text-gray-300'
-                }`}
-                aria-label="Add"
+                onClick={() => { setShowLinkInput(true); setTimeout(() => linkInputRef.current?.focus(), 0) }}
+                className="text-[12px] text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               >
-                +
+                + Link entry
               </button>
-            </div>
+            )}
           </div>
         </div>
       )}
+
       {toastMsg && <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />}
+
+      {bubbleRect && editor && entry && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: bubbleRect.left + bubbleRect.width / 2,
+            top: bubbleRect.top - 8,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          <div className="pointer-events-auto">
+            <EntryLinkBubble editor={editor} range={bubbleRange} onSaveAndNavigate={saveAndNavigate} onError={setToastMsg} />
+          </div>
+        </div>
+      )}
     </Layout>
   )
 }
