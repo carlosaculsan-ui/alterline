@@ -19,7 +19,7 @@ function IconNoteSm() {
 
 function LoadingSkeleton() {
   return (
-    <div className="max-w-2xl mx-auto px-6 py-8 animate-pulse">
+    <div className="px-8 py-8 animate-pulse">
       <div className="flex justify-between mb-7">
         <div className="h-3.5 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-24" />
         <div className="h-3.5 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-20" />
@@ -38,8 +38,6 @@ function LoadingSkeleton() {
 export default function EntryPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { categories } = useCategories()
-
   const [entry, setEntry] = useState(null)
   const [loading, setLoading] = useState(true)
   const [content, setContent] = useState('')
@@ -49,18 +47,24 @@ export default function EntryPage() {
   const confirmDeleteTimer = useRef(null)
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
-  const [editingCategory, setEditingCategory] = useState(false)
   const [previewing, setPreviewing] = useState(false)
 
   const [links, setLinks] = useState([])
   const [linkQuery, setLinkQuery] = useState('')
   const [linkResults, setLinkResults] = useState([])
   const [showLinkResults, setShowLinkResults] = useState(false)
+  const [showLinkInput, setShowLinkInput] = useState(false)
+  const [showActionMenu, setShowActionMenu] = useState(false)
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false)
+
+  const { categories } = useCategories()
 
   const lastSaved = useRef('')
   const contentRef = useRef('')
   const textareaRef = useRef(null)
   const titleInputRef = useRef(null)
+  const linkInputRef = useRef(null)
+  const categorySelectRef = useRef(null)
   const cancelTitle = useRef(false)
 
   useEffect(() => {
@@ -187,7 +191,7 @@ export default function EntryPage() {
   }
 
   async function saveCategoryEdit(categoryId) {
-    setEditingCategory(false)
+    setShowCategoryPicker(false)
     const newCatId = categoryId || null
     if (newCatId === entry.category_id) return
     const cat = newCatId ? (categories.find((c) => c.id === newCatId) ?? null) : null
@@ -216,6 +220,7 @@ export default function EntryPage() {
       setLinks((prev) => [...prev, { linkId: row.id, entry: targetEntry }])
       setLinkQuery('')
       setLinkResults([])
+      setShowLinkInput(false)
     }
   }
 
@@ -229,7 +234,7 @@ export default function EntryPage() {
       {loading ? (
         <LoadingSkeleton />
       ) : !entry ? (
-        <div className="max-w-2xl mx-auto px-6 py-8">
+        <div className="px-8 py-8">
           <button
             onClick={() => navigate(-1)}
             className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors mb-4 block"
@@ -239,7 +244,7 @@ export default function EntryPage() {
           <p className="text-[13px] text-gray-400 dark:text-[#555]">Entry not found.</p>
         </div>
       ) : (
-        <div className="max-w-2xl mx-auto px-6 py-8">
+        <div className="px-8 py-8">
           {/* Action bar */}
           <div className="flex items-center justify-between mb-7">
             <button
@@ -284,45 +289,6 @@ export default function EntryPage() {
             </h1>
           )}
 
-          {/* Category */}
-          <div className="mb-7">
-            {editingCategory ? (
-              <select
-                autoFocus
-                defaultValue={entry.category_id ?? ''}
-                onChange={(e) => saveCategoryEdit(e.target.value)}
-                onBlur={() => setEditingCategory(false)}
-                className="text-[12px] bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-indigo-500 rounded-md px-2 py-0.5 text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
-              >
-                <option value="">No category</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            ) : (
-              <div
-                onClick={() => setEditingCategory(true)}
-                className="flex items-center gap-1.5 cursor-pointer group w-fit"
-              >
-                {entry.categories ? (
-                  <>
-                    <span
-                      className="w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ backgroundColor: entry.categories.color }}
-                    />
-                    <span className="text-[12px] text-gray-400 dark:text-[#555] group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors">
-                      {entry.categories.name}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[12px] text-gray-400 dark:text-[#3a3a3a] group-hover:text-gray-500 dark:group-hover:text-[#555] transition-colors">
-                    Add category…
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
           {/* Content */}
           <div className="flex justify-end mb-2">
             <button
@@ -334,7 +300,7 @@ export default function EntryPage() {
           </div>
           {previewing ? (
             <div
-              className="prose-content min-h-[260px] text-[14px] text-gray-700 dark:text-gray-300"
+              className="prose-content min-h-[calc(100vh-260px)] text-[14px] text-gray-700 dark:text-gray-300"
               dangerouslySetInnerHTML={{ __html: marked(content) }}
             />
           ) : (
@@ -344,23 +310,32 @@ export default function EntryPage() {
               onChange={(e) => setContent(e.target.value)}
               onBlur={handleContentBlur}
               placeholder="Write something…"
-              className="w-full min-h-[260px] bg-transparent text-[14px] text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-[#333] outline-none resize-none leading-[1.75]"
+              className="w-full min-h-[calc(100vh-260px)] bg-transparent text-[14px] text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-[#333] outline-none resize-none leading-[1.75]"
             />
           )}
 
-          {/* Linked entries */}
-          <div className="mt-10 pt-7 border-t border-[#f0f0f0] dark:border-[#1e1e1e]">
-            <div className="text-[10px] uppercase tracking-widest text-gray-400 dark:text-[#444] font-medium mb-3 select-none">
-              Linked Entries
-            </div>
+          {/* Bottom action area */}
+          <div className="mt-10 pt-6 border-t border-[#f0f0f0] dark:border-[#1e1e1e]">
 
+            {/* Category chip */}
+            {entry.categories && (
+              <div className="flex items-center gap-1.5 mb-3">
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: entry.categories.color }} />
+                <span className="text-[12px] text-gray-400 dark:text-[#555]">{entry.categories.name}</span>
+                <button
+                  onClick={() => saveCategoryEdit(null)}
+                  className="text-[14px] leading-none text-gray-300 dark:text-[#444] hover:text-gray-500 dark:hover:text-[#666] transition-colors ml-0.5"
+                  aria-label="Remove category"
+                >×</button>
+              </div>
+            )}
+
+            {/* Linked entries list */}
             {links.length > 0 && (
               <div className="mb-3 space-y-0.5">
                 {links.map(({ linkId, entry: linked }) => (
                   <div key={linkId} className="flex items-center gap-2 group/link rounded-md px-2 py-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#161616] transition-colors">
-                    <span className="text-gray-400 dark:text-[#3a3a3a] shrink-0">
-                      <IconNoteSm />
-                    </span>
+                    <span className="text-gray-400 dark:text-[#3a3a3a] shrink-0"><IconNoteSm /></span>
                     <button
                       onClick={() => navigate(`/entry/${linked.id}`)}
                       className="flex-1 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white truncate transition-colors"
@@ -371,49 +346,110 @@ export default function EntryPage() {
                       onClick={() => removeLink(linkId)}
                       className="opacity-0 group-hover/link:opacity-100 w-5 h-5 flex items-center justify-center rounded text-[14px] leading-none text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#e5e5e5] dark:hover:bg-[#2a2a2a] transition-all shrink-0"
                       aria-label="Remove link"
-                    >
-                      ×
-                    </button>
+                    >×</button>
                   </div>
                 ))}
               </div>
             )}
 
-            <div className="relative">
-              <input
-                type="text"
-                value={linkQuery}
-                onChange={(e) => setLinkQuery(e.target.value)}
-                onFocus={() => setShowLinkResults(true)}
-                onBlur={() => setTimeout(() => setShowLinkResults(false), 150)}
-                onKeyDown={(e) => { if (e.key === 'Escape') { setLinkQuery(''); setShowLinkResults(false) } }}
-                placeholder="Type a name to search and link entries…"
-                className="w-full bg-transparent text-[13px] text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-[#3a3a3a] outline-none border-b border-[#f0f0f0] dark:border-[#1e1e1e] focus:border-indigo-400 dark:focus:border-indigo-500/60 transition-colors py-1.5"
-              />
-              {showLinkResults && linkResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg overflow-hidden shadow-lg">
-                  {linkResults.map((result) => (
-                    <button
-                      key={result.id}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => addLink(result)}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
-                    >
-                      <span className="text-gray-400 dark:text-[#444] shrink-0">
-                        <IconNoteSm />
-                      </span>
-                      <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">
-                        {result.title}
-                      </span>
-                    </button>
+            {/* Link search input */}
+            {showLinkInput && (
+              <div className="relative mb-4">
+                <input
+                  ref={linkInputRef}
+                  type="text"
+                  value={linkQuery}
+                  onChange={(e) => setLinkQuery(e.target.value)}
+                  onFocus={() => setShowLinkResults(true)}
+                  onBlur={() => setTimeout(() => {
+                    setShowLinkResults(false)
+                    if (!linkQuery.trim()) setShowLinkInput(false)
+                  }, 150)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') { setLinkQuery(''); setShowLinkResults(false); setShowLinkInput(false) }
+                  }}
+                  placeholder="Search entries to link…"
+                  className="w-full bg-transparent text-[13px] text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-[#3a3a3a] outline-none border-b border-indigo-400 dark:border-indigo-500/60 py-1.5"
+                />
+                {showLinkResults && linkResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg overflow-hidden shadow-lg">
+                    {linkResults.map((result) => (
+                      <button
+                        key={result.id}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => addLink(result)}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
+                      >
+                        <span className="text-gray-400 dark:text-[#444] shrink-0"><IconNoteSm /></span>
+                        <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">{result.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {showLinkResults && linkQuery.trim() && linkResults.length === 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 z-10 px-3 py-2 text-[12px] text-gray-500 dark:text-[#444] bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg">
+                    No entries found
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Category picker */}
+            {showCategoryPicker && (
+              <div className="mb-4">
+                <select
+                  ref={categorySelectRef}
+                  autoFocus
+                  defaultValue={entry.category_id ?? ''}
+                  onChange={(e) => saveCategoryEdit(e.target.value)}
+                  onBlur={() => setShowCategoryPicker(false)}
+                  className="text-[13px] bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg px-3 py-1.5 text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
+                >
+                  <option value="">No category</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
-                </div>
+                </select>
+              </div>
+            )}
+
+            {/* + action button */}
+            <div className="relative w-fit">
+              {showActionMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowActionMenu(false)} />
+                  <div className="absolute bottom-full left-0 mb-2 z-20 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl py-1 min-w-[160px] overflow-hidden">
+                    <button
+                      onClick={() => { setShowLinkInput(true); setShowActionMenu(false); setTimeout(() => linkInputRef.current?.focus(), 0) }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
+                    >
+                      <IconNoteSm />
+                      Link Entry
+                    </button>
+                    <button
+                      onClick={() => { setShowCategoryPicker(true); setShowActionMenu(false); setTimeout(() => categorySelectRef.current?.focus(), 0) }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 15 15" fill="none" className="shrink-0">
+                        <circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+                        <circle cx="7.5" cy="7.5" r="2" fill="currentColor" />
+                      </svg>
+                      Add to Category
+                    </button>
+                  </div>
+                </>
               )}
-              {showLinkResults && linkQuery.trim() && linkResults.length === 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 z-10 px-3 py-2 text-[12px] text-gray-500 dark:text-[#444] bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg">
-                  No entries found
-                </div>
-              )}
+              <button
+                onClick={() => setShowActionMenu((p) => !p)}
+                className={`w-7 h-7 rounded-full border flex items-center justify-center text-[18px] leading-none transition-colors ${
+                  showActionMenu
+                    ? 'border-indigo-400 text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40'
+                    : 'border-[#e5e5e5] dark:border-[#2a2a2a] text-gray-400 dark:text-[#555] hover:border-[#ccc] dark:hover:border-[#444] hover:text-gray-600 dark:hover:text-gray-300'
+                }`}
+                aria-label="Add attachment"
+              >
+                +
+              </button>
             </div>
           </div>
         </div>
