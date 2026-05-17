@@ -171,7 +171,7 @@ export default function GraphPage() {
     <Layout wide>
       <div className="flex flex-col h-full">
         {/* Filter bar */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-[#e5e5e5] dark:border-[#1e1e1e] shrink-0">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-[#e5e5e5] dark:border-[#1e1e1e] shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
           <span className="text-[11px] uppercase tracking-widest text-gray-400 dark:text-[#555] font-medium select-none mr-1">
             Show
           </span>
@@ -188,7 +188,7 @@ export default function GraphPage() {
               {label}
             </button>
           ))}
-          <span className="ml-auto text-[11px] text-gray-400 dark:text-[#555] select-none">
+          <span className="ml-auto text-[11px] text-gray-400 dark:text-[#555] select-none shrink-0 hidden sm:block">
             {graphData.nodes.length} {graphData.nodes.length === 1 ? 'entry' : 'entries'} · {graphData.links.length} {graphData.links.length === 1 ? 'connection' : 'connections'}
           </span>
         </div>

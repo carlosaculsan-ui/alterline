@@ -242,12 +242,12 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting, onAIToggle
   const currentSize = editorSize ? parseInt(editorSize).toString() : '14'
 
   return (
-    <div className="sticky top-0 z-10 -mx-4 px-4 sm:-mx-8 sm:px-8 pt-3 bg-white dark:bg-[#111] flex items-center gap-0.5 mb-6 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e]">
+    <div className="sticky top-0 z-10 -mx-4 px-4 sm:-mx-8 sm:px-8 pt-3 bg-white dark:bg-[#111] flex items-center gap-0.5 mb-6 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
       {onBack && (
         <>
           <button
             onClick={onBack}
-            className="text-[14px] font-medium text-gray-900 dark:text-white hover:opacity-60 transition-opacity mr-4"
+            className="text-[14px] font-medium text-gray-900 dark:text-white hover:opacity-60 transition-opacity mr-4 shrink-0"
           >
             ← Back
           </button>
@@ -257,7 +257,7 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting, onAIToggle
       <select
         value={currentSize}
         onChange={(e) => editor.chain().focus().setFontSize(`${e.target.value}px`).run()}
-        className="w-16 text-[12px] text-center bg-white dark:bg-[#1c1c1c] text-gray-900 dark:text-white border border-[#e5e5e5] dark:border-[#2a2a2a] rounded px-1.5 py-1 outline-none cursor-pointer mr-1"
+        className="w-16 text-[12px] text-center bg-white dark:bg-[#1c1c1c] text-gray-900 dark:text-white border border-[#e5e5e5] dark:border-[#2a2a2a] rounded px-1.5 py-1 outline-none cursor-pointer mr-1 shrink-0"
       >
         {FONT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
       </select>
@@ -294,7 +294,7 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting, onAIToggle
 
       <button
         onClick={onAIToggle}
-        className={`text-[12px] font-medium mr-3 transition-colors ${
+        className={`text-[12px] font-medium mr-3 shrink-0 transition-colors ${
           aiActive
             ? 'text-indigo-600 dark:text-indigo-400'
             : 'text-gray-900 dark:text-[#555] hover:text-indigo-500 dark:hover:text-indigo-400'
@@ -306,7 +306,7 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting, onAIToggle
       <button
         onClick={onDelete}
         disabled={deleting}
-        className={`text-[13px] disabled:opacity-50 transition-colors ${
+        className={`text-[13px] disabled:opacity-50 shrink-0 transition-colors ${
           confirmDelete
             ? 'text-red-500 dark:text-red-400 font-medium'
             : 'text-gray-400 dark:text-[#555] hover:text-red-400 dark:hover:text-red-400'

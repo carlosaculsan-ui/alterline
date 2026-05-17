@@ -63,12 +63,12 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting }) {
   const currentSize = editorSize ? parseInt(editorSize).toString() : '15'
 
   return (
-    <div className="sticky top-0 z-10 bg-white dark:bg-[#111] border-b border-[#f0f0f0] dark:border-[#1e1e1e] px-4 py-2.5 sm:px-8 flex items-center gap-0.5">
+    <div className="sticky top-0 z-10 bg-white dark:bg-[#111] border-b border-[#f0f0f0] dark:border-[#1e1e1e] px-4 py-2.5 sm:px-8 flex items-center gap-0.5 overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
       {onBack && (
         <>
           <button
             onClick={onBack}
-            className="text-[14px] font-medium text-gray-900 dark:text-white hover:opacity-60 transition-opacity mr-4"
+            className="text-[14px] font-medium text-gray-900 dark:text-white hover:opacity-60 transition-opacity mr-4 shrink-0"
           >
             ← Back
           </button>
@@ -116,7 +116,7 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting }) {
       <button
         onClick={onDelete}
         disabled={deleting}
-        className={`text-[13px] disabled:opacity-50 transition-colors ${
+        className={`text-[13px] disabled:opacity-50 shrink-0 transition-colors ${
           confirmDelete
             ? 'text-red-500 dark:text-red-400 font-medium'
             : 'text-gray-900 dark:text-[#555] hover:text-red-400 dark:hover:text-red-400'

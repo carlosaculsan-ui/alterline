@@ -14,7 +14,7 @@ function getDisplayName(user) {
 
 function LoadingSkeleton() {
   return (
-    <div className="p-6 grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">
+    <div className="p-4 sm:p-6 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="p-4 rounded-xl border border-[#e8e8e8] dark:border-[#1e1e1e] animate-pulse">
           <div className="w-7 h-7 rounded-lg bg-[#f0f0f0] dark:bg-[#1e1e1e] mb-3" />

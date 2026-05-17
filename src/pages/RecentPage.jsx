@@ -6,7 +6,7 @@ import { useWorld } from '../contexts/WorldContext'
 
 function LoadingSkeleton() {
   return (
-    <div className="px-6 py-8 animate-pulse">
+    <div className="px-4 py-6 sm:px-6 sm:py-8 animate-pulse">
       <div>
         <div className="h-3 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-16 mb-4" />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
