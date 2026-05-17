@@ -3,12 +3,12 @@ import { supabase } from '../lib/supabase'
 import { useWorld } from '../contexts/WorldContext'
 
 export function useCategories() {
-  const { activeWorldId } = useWorld()
+  const { activeWorldId, loading: worldLoading } = useWorld()
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!activeWorldId) return
+    if (!activeWorldId || worldLoading) return
     setLoading(true)
     supabase
       .from('categories')

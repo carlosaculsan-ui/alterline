@@ -27,10 +27,9 @@ export function WorldProvider({ children }) {
       return
     }
 
-    const list = data ?? []
+    let list = data ?? []
 
     if (list.length === 0) {
-      // First ever load — create default world and migrate existing data
       const { data: newWorld, error: insertErr } = await supabase
         .from('worlds')
         .insert({ name: 'My World', color: '#6366f1', user_id: user.id })
@@ -43,20 +42,22 @@ export function WorldProvider({ children }) {
         return
       }
 
-      if (newWorld) {
-        await Promise.all([
-          supabase.from('entries').update({ world_id: newWorld.id }).is('world_id', null),
-          supabase.from('categories').update({ world_id: newWorld.id }).is('world_id', null),
-        ])
-        setWorlds([newWorld])
-        persistActiveWorldId(newWorld.id)
-      }
-    } else {
-      setWorlds(list)
-      const stored = localStorage.getItem('alterline-world')
-      if (!stored || !list.find((w) => w.id === stored)) {
-        persistActiveWorldId(list[0].id)
-      }
+      if (newWorld) list = [newWorld]
+    }
+
+    if (list.length > 0) {
+      // Migrate any orphaned rows — idempotent, safe to run every load
+      const anchor = list[0].id
+      await Promise.all([
+        supabase.from('entries').update({ world_id: anchor }).is('world_id', null),
+        supabase.from('categories').update({ world_id: anchor }).is('world_id', null),
+      ])
+    }
+
+    setWorlds(list)
+    const stored = localStorage.getItem('alterline-world')
+    if (!stored || !list.find((w) => w.id === stored)) {
+      persistActiveWorldId(list[0].id)
     }
     setLoading(false)
   }

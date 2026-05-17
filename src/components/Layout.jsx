@@ -156,6 +156,10 @@ export default function Layout({ children, forceLight = false, wide = false }) {
   }, [dark])
 
   useEffect(() => {
+    document.title = activeWorld ? `${activeWorld.name} — alterline` : 'alterline'
+  }, [activeWorld])
+
+  useEffect(() => {
     setMobileMenuOpen(false)
   }, [location.pathname])
 
@@ -300,7 +304,13 @@ export default function Layout({ children, forceLight = false, wide = false }) {
               {worlds.map((world) => (
                 <button
                   key={world.id}
-                  onClick={() => { setActiveWorldId(world.id); setShowWorldSwitcher(false) }}
+                  onClick={() => {
+                    if (world.id !== activeWorldId) {
+                      setActiveWorldId(world.id)
+                      if (/^\/(entry|carlopedia)\//.test(location.pathname)) navigate('/')
+                    }
+                    setShowWorldSwitcher(false)
+                  }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-colors ${
                     world.id === activeWorldId
                       ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'

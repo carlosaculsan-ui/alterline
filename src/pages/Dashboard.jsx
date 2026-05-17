@@ -42,12 +42,12 @@ function SearchSkeleton() {
   )
 }
 
-function EmptyState() {
+function EmptyState({ worldName }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-12">
       <div className="text-[36px] text-gray-200 dark:text-[#2a2a2a] mb-3 select-none">✦</div>
       <div className="text-[15px] font-medium text-gray-900 dark:text-white mb-1">
-        No entries yet
+        Nothing in {worldName} yet
       </div>
       <div className="text-[13px] text-gray-600 dark:text-gray-300">
         Hit "New Entry" to start building your universe
@@ -59,7 +59,7 @@ function EmptyState() {
 export default function Dashboard() {
   const user = useAuth()
   const name = getDisplayName(user)
-  const { activeWorldId } = useWorld()
+  const { activeWorldId, activeWorld } = useWorld()
   const { entries, loading, hasMore, loadingMore, loadMore, deleteEntry, updateEntryFolder } = useEntries()
   const { categories: folders } = useCategories()
 
@@ -123,7 +123,7 @@ export default function Dashboard() {
     <Layout>
       <div className="p-4 sm:p-6">
         {name && <h2 className="text-[22px] font-bold text-gray-900 dark:text-white mb-6">Welcome back, {name}.</h2>}
-        <EmptyState />
+        <EmptyState worldName={activeWorld?.name ?? 'this world'} />
       </div>
     </Layout>
   )

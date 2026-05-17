@@ -27,15 +27,15 @@ function LoadingSkeleton() {
   )
 }
 
-function EmptyState() {
+function EmptyState({ worldName }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-12">
       <div className="text-[36px] text-gray-200 dark:text-[#2a2a2a] mb-3 select-none">✦</div>
       <div className="text-[14px] font-medium text-gray-900 dark:text-white mb-1">
-        Nothing here yet
+        Nothing in {worldName} yet
       </div>
       <div className="text-[12px] text-gray-600 dark:text-gray-300">
-        Your recent entries will appear here
+        Hit "New Entry" to add the first one
       </div>
     </div>
   )
@@ -73,7 +73,7 @@ function groupByDate(entries) {
 }
 
 export default function RecentPage() {
-  const { activeWorldId } = useWorld()
+  const { activeWorldId, activeWorld } = useWorld()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -101,7 +101,7 @@ export default function RecentPage() {
       {loading ? (
         <LoadingSkeleton />
       ) : groups.length === 0 ? (
-        <EmptyState />
+        <EmptyState worldName={activeWorld?.name ?? 'this world'} />
       ) : (
         <div className="px-4 py-6 sm:px-6 sm:py-8">
           {groups.map(([label, entries]) => (

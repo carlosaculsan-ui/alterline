@@ -26,7 +26,7 @@ function buildEntriesQuery(excludeIds, worldId) {
 }
 
 export function useEntries() {
-  const { activeWorldId } = useWorld()
+  const { activeWorldId, loading: worldLoading } = useWorld()
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [hasMore, setHasMore] = useState(false)
@@ -34,7 +34,7 @@ export function useEntries() {
   const wikiIds = useRef([])
 
   useEffect(() => {
-    if (!activeWorldId) return
+    if (!activeWorldId || worldLoading) return
     setLoading(true)
     setEntries([])
     async function load() {
