@@ -95,9 +95,23 @@ function IconBook() {
   )
 }
 
+function IconGraph() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
+      <circle cx="7.5" cy="7.5" r="1.8" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="2" cy="3" r="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="13" cy="3" r="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="2" cy="12" r="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="13" cy="12" r="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M3.2 3.8L6.5 6.5M11.8 3.8L8.5 6.5M3.2 11.2L6.5 8.5M11.8 11.2L8.5 8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 const NAV = [
   { to: '/', label: 'Dashboard', icon: <IconGrid /> },
   { to: '/recent', label: 'Recent', icon: <IconClock /> },
+  { to: '/graph', label: 'Graph', icon: <IconGraph /> },
 ]
 
 const NAV_WIKI = [
@@ -683,7 +697,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
         )}
         {/* Content */}
         <main className={`flex-1 overflow-auto ${forceLight ? 'bg-white' : 'bg-white dark:bg-[#111]'}`}>
-          <div className={wide ? '' : 'max-w-5xl mx-auto'}>
+          <div className={wide ? 'h-full' : 'max-w-5xl mx-auto'}>
             {children}
           </div>
         </main>

@@ -491,6 +491,13 @@ export default function EntryPage() {
       .run()
     setMention(null)
     setMentionResults([])
+    // Persist @mention as a graph edge (fire-and-forget, mirrors addLink duplicate-check)
+    supabase.from('entry_links').select('id')
+      .or(`and(from_entry_id.eq.${id},to_entry_id.eq.${entry.id}),and(from_entry_id.eq.${entry.id},to_entry_id.eq.${id})`)
+      .maybeSingle()
+      .then(({ data: existing }) => {
+        if (!existing) supabase.from('entry_links').insert({ from_entry_id: id, to_entry_id: entry.id }).then(() => {})
+      })
   }
 
   useEffect(() => {

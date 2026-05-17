@@ -11,7 +11,8 @@
       "Bash(node -e \"const { FontSize } = require\\('./node_modules/@tiptap/extension-text-style/dist/index.js'\\); console.log\\(JSON.stringify\\(Object.keys\\(FontSize.config\\)\\)\\)\")",
       "Bash(node -e \"const { FontSize } = require\\('./node_modules/@tiptap/extension-text-style/dist/index.js'\\); const cmds = FontSize.config.addCommands\\(\\); console.log\\(Object.keys\\(cmds\\)\\)\")",
       "Bash(npx tsc *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npm uninstall *)"
     ]
   }
 }

@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import EntryPage from './pages/EntryPage'
 import CategoryPage from './pages/CategoryPage'
 import RecentPage from './pages/RecentPage'
+import GraphPage from './pages/GraphPage'
 import CarlopediaPage from './pages/CarlopediaPage'
 import CarlopediaEntryPage from './pages/CarlopediaEntryPage'
 import TutorialsPage from './pages/TutorialsPage'
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/entry/:id" element={<KeyedEntryPage />} />
           <Route path="/category/:id" element={<CategoryPage />} />
           <Route path="/recent" element={<RecentPage />} />
+          <Route path="/graph" element={<GraphPage />} />
           <Route path="/carlopedia" element={<CarlopediaPage />} />
           <Route path="/carlopedia/:id" element={<KeyedCarlopediaEntryPage />} />
         </Route>
