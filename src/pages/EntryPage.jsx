@@ -355,6 +355,20 @@ export default function EntryPage() {
   const cancelTitle = useRef(false)
   const contentInitialized = useRef(false)
 
+  // @mention suggestion
+  const { activeWorldId } = useWorld()
+  const [mention, setMentionRaw] = useState(null)
+  const [mentionResults, setMentionResultsRaw] = useState([])
+  const [mentionIndex, setMentionIndexRaw] = useState(0)
+  const mentionRef = useRef(null)
+  const mentionResultsRef = useRef([])
+  const mentionIndexRef = useRef(0)
+  const doInsertMention = useRef(null)
+  const checkMentionRef = useRef(null)
+  function setMention(m) { mentionRef.current = m; setMentionRaw(m) }
+  function setMentionResults(r) { mentionResultsRef.current = r; setMentionResultsRaw(r) }
+  function setMentionIndex(i) { mentionIndexRef.current = i; setMentionIndexRaw(i) }
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ underline: false }),
@@ -379,12 +393,42 @@ export default function EntryPage() {
         }
         return false
       },
+      handleKeyDown(view, event) {
+        if (!mentionRef.current) return false
+        const results = mentionResultsRef.current
+        if (event.key === 'ArrowDown') {
+          if (results.length === 0) return false
+          const next = Math.min(mentionIndexRef.current + 1, results.length - 1)
+          mentionIndexRef.current = next; setMentionIndexRaw(next)
+          return true
+        }
+        if (event.key === 'ArrowUp') {
+          if (results.length === 0) return false
+          const next = Math.max(mentionIndexRef.current - 1, 0)
+          mentionIndexRef.current = next; setMentionIndexRaw(next)
+          return true
+        }
+        if (event.key === 'Enter' && results.length > 0) {
+          doInsertMention.current?.(results[mentionIndexRef.current])
+          return true
+        }
+        if (event.key === 'Escape' && mentionRef.current) {
+          mentionRef.current = null; setMentionRaw(null)
+          return true
+        }
+        return false
+      },
     },
     onUpdate({ editor }) {
       contentRef.current = editor.getHTML()
+      checkMentionRef.current?.(editor)
+    },
+    onSelectionUpdate({ editor }) {
+      checkMentionRef.current?.(editor)
     },
     onBlur() {
       handleContentBlur()
+      mentionRef.current = null; setMentionRaw(null)
     },
   })
 
@@ -412,6 +456,74 @@ export default function EntryPage() {
     editor.on('blur', clear)
     return () => { editor.off('selectionUpdate', update); editor.off('blur', clear) }
   }, [editor])
+
+  // @mention: detect trigger pattern and fetch suggestions
+  checkMentionRef.current = function checkMentionTrigger(ed) {
+    const { selection, doc } = ed.state
+    if (!selection.empty) { setMention(null); return }
+    const { $from } = selection
+    const textBefore = doc.textBetween(Math.max(0, $from.pos - 60), $from.pos, '\n', '￼')
+    const match = /@([^@\n]{0,40})$/.exec(textBefore)
+    if (match) {
+      const from = $from.pos - match[0].length
+      const coords = ed.view.coordsAtPos($from.pos)
+      setMention({ query: match[1], from, to: $from.pos, coords })
+      setMentionIndex(0)
+    } else {
+      setMention(null)
+    }
+  }
+
+  doInsertMention.current = function insertMention(entry) {
+    const m = mentionRef.current
+    if (!m || !editor) return
+    const title = entry.title
+    editor.chain()
+      .focus()
+      .deleteRange({ from: m.from, to: m.to })
+      .insertContentAt(m.from, {
+        type: 'text',
+        text: title,
+        marks: [{ type: 'entryLink', attrs: { entryId: entry.id } }],
+      })
+      .setTextSelection(m.from + title.length)
+      .unsetMark('entryLink')
+      .run()
+    setMention(null)
+    setMentionResults([])
+  }
+
+  useEffect(() => {
+    if (!mention || !activeWorldId) { setMentionResults([]); return }
+    const q = mention.query.trim()
+    const timer = setTimeout(async () => {
+      const [{ data: typed }, { data: pfRows }] = await Promise.all([
+        (() => {
+          let query = supabase.from('entries').select('id, title')
+            .eq('world_id', activeWorldId).eq('type', 'carlopedia').limit(6)
+          if (q) query = query.ilike('title', `%${q}%`)
+          return query
+        })(),
+        supabase.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
+      ])
+      let results = typed ?? []
+      const pfIds = (pfRows ?? []).map((r) => r.entry_id)
+      if (pfIds.length > 0) {
+        const seen = new Set(results.map((e) => e.id))
+        const missing = pfIds.filter((id) => !seen.has(id))
+        if (missing.length > 0) {
+          let fbQuery = supabase.from('entries').select('id, title')
+            .eq('world_id', activeWorldId).in('id', missing).limit(6)
+          if (q) fbQuery = fbQuery.ilike('title', `%${q}%`)
+          const { data: fb } = await fbQuery
+          results = [...results, ...(fb ?? [])]
+        }
+      }
+      results.sort((a, b) => a.title.localeCompare(b.title))
+      setMentionResults(results.slice(0, 6))
+    }, q ? 120 : 0)
+    return () => clearTimeout(timer)
+  }, [mention?.query, activeWorldId])
 
   useEffect(() => {
     Promise.all([
@@ -676,6 +788,34 @@ export default function EntryPage() {
       )}
 
       {toastMsg && <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />}
+
+      {mention && (
+        <div
+          className="fixed z-[60] bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden w-56 py-1"
+          style={{ left: mention.coords.left, top: mention.coords.bottom + 6 }}
+        >
+          {mentionResults.length === 0 ? (
+            <div className="px-3 py-2 text-[12px] text-gray-400 dark:text-[#555]">
+              {mention.query.trim() ? 'No articles found' : 'Type to search Carlopedia…'}
+            </div>
+          ) : (
+            mentionResults.map((entry, i) => (
+              <button
+                key={entry.id}
+                onMouseDown={(e) => { e.preventDefault(); doInsertMention.current?.(entry) }}
+                className={`w-full text-left px-3 py-2 text-[13px] flex items-center gap-2 transition-colors ${
+                  i === mentionIndex
+                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
+                    : 'text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a]'
+                }`}
+              >
+                <span className="text-[10px] opacity-40 shrink-0">@</span>
+                <span className="truncate">{entry.title}</span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
 
       {bubbleRect && editor && entry && (
         <div
