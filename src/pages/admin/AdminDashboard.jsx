@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+} from 'recharts'
 import AdminLayout from './AdminLayout'
 import { supabaseAdmin } from '../../lib/supabaseAdmin'
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 function StatCard({ label, value, sub }) {
   return (
@@ -17,6 +22,16 @@ function StatCard({ label, value, sub }) {
   )
 }
 
+function CustomTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg px-3 py-2 shadow-lg">
+      <div className="text-[12px] text-gray-500 dark:text-[#777] mb-0.5">{label}</div>
+      <div className="text-[14px] font-semibold text-gray-900 dark:text-white">{payload[0].value} entries</div>
+    </div>
+  )
+}
+
 function typeLabel(type) {
   if (type === 'carlopedia') return 'Carlopedia'
   if (type === 'story') return 'Story'
@@ -28,25 +43,32 @@ function fmt(iso) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+function buildMonthlyData(entries) {
+  const year = new Date().getFullYear()
+  const counts = Array(12).fill(0)
+  entries.forEach((e) => {
+    const d = new Date(e.created_at)
+    if (d.getFullYear() === year) counts[d.getMonth()]++
+  })
+  return MONTHS.map((month, i) => ({ month, count: counts[i] }))
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [stats, setStats] = useState({
-    users: null,
-    total: null,
-    stories: null,
-    carlopedia: null,
-    categories: null,
-    links: null,
-    newUsersWeek: null,
-    newEntriesWeek: null,
+    users: null, total: null, stories: null, carlopedia: null,
+    categories: null, links: null, newUsersWeek: null, newEntriesWeek: null,
   })
   const [recent, setRecent] = useState(null)
   const [userMap, setUserMap] = useState({})
+  const [monthlyData, setMonthlyData] = useState(null)
+  const [activeBar, setActiveBar] = useState(null)
 
   useEffect(() => {
     async function load() {
       const weekAgo = new Date()
       weekAgo.setDate(weekAgo.getDate() - 7)
+      const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString()
 
       const [
         { data: usersData },
@@ -57,6 +79,7 @@ export default function AdminDashboard() {
         { count: links },
         { count: newEntriesWeek },
         { data: recentData },
+        { data: yearEntries },
       ] = await Promise.all([
         supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
         supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }),
@@ -65,11 +88,8 @@ export default function AdminDashboard() {
         supabaseAdmin.from('categories').select('*', { count: 'exact', head: true }),
         supabaseAdmin.from('entry_links').select('*', { count: 'exact', head: true }),
         supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString()),
-        supabaseAdmin
-          .from('entries')
-          .select('id, title, type, user_id, created_at, updated_at')
-          .order('updated_at', { ascending: false })
-          .limit(12),
+        supabaseAdmin.from('entries').select('id, title, type, user_id, created_at, updated_at').order('updated_at', { ascending: false }).limit(12),
+        supabaseAdmin.from('entries').select('created_at').gte('created_at', yearStart),
       ])
 
       const users = usersData?.users ?? []
@@ -77,15 +97,16 @@ export default function AdminDashboard() {
       users.forEach((u) => { map[u.id] = u.email })
       setUserMap(map)
 
-      const newUsersWeek = users.filter(
-        (u) => new Date(u.created_at) >= new Date(weekAgo)
-      ).length
+      const newUsersWeek = users.filter((u) => new Date(u.created_at) >= new Date(weekAgo)).length
 
       setStats({ users: users.length, total, stories, carlopedia, categories, links, newUsersWeek, newEntriesWeek })
       setRecent(recentData ?? [])
+      setMonthlyData(buildMonthlyData(yearEntries ?? []))
     }
     load()
   }, [])
+
+  const currentYear = new Date().getFullYear()
 
   return (
     <AdminLayout>
@@ -95,7 +116,7 @@ export default function AdminDashboard() {
           <p className="mt-1 text-[13px] text-gray-500 dark:text-[#777]">Platform-wide stats across all users</p>
         </div>
 
-        {/* Stats */}
+        {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
           <StatCard label="Total Users" value={stats.users} />
           <StatCard label="New Users" value={stats.newUsersWeek} sub="this week" />
@@ -105,6 +126,54 @@ export default function AdminDashboard() {
           <StatCard label="Carlopedia Articles" value={stats.carlopedia} />
           <StatCard label="Categories" value={stats.categories} />
           <StatCard label="Entry Links" value={stats.links} />
+        </div>
+
+        {/* Monthly activity chart */}
+        <div className="border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl p-6 bg-white dark:bg-[#141414] mb-10">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-[15px] font-semibold text-gray-900 dark:text-white">Monthly Entry Activity</h2>
+              <p className="text-[12px] text-gray-500 dark:text-[#777] mt-0.5">Entries created per month — {currentYear}</p>
+            </div>
+          </div>
+
+          {monthlyData === null ? (
+            <div className="h-48 flex items-center justify-center text-[13px] text-gray-500 dark:text-[#777]">Loading…</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={monthlyData} barSize={28} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 11, fill: 'currentColor' }}
+                  tickLine={false}
+                  axisLine={false}
+                  className="text-gray-500 dark:text-[#777]"
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 11, fill: 'currentColor' }}
+                  tickLine={false}
+                  axisLine={false}
+                  className="text-gray-500 dark:text-[#777]"
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                <Bar
+                  dataKey="count"
+                  radius={[4, 4, 0, 0]}
+                  onMouseEnter={(_, index) => setActiveBar(index)}
+                  onMouseLeave={() => setActiveBar(null)}
+                >
+                  {monthlyData.map((_, index) => (
+                    <Cell
+                      key={index}
+                      fill={activeBar === index ? '#4f46e5' : '#6366f1'}
+                      opacity={activeBar !== null && activeBar !== index ? 0.4 : 1}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* Recent activity */}

@@ -8,10 +8,15 @@ function fmt(iso) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function Avatar({ email }) {
+function getDisplayName(user) {
+  return user?.user_metadata?.full_name || user?.email?.split('@')[0] || user?.email || '?'
+}
+
+function Avatar({ user }) {
+  const name = getDisplayName(user)
   return (
     <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 text-white text-[13px] font-semibold select-none">
-      {email?.[0]?.toUpperCase() ?? '?'}
+      {name[0]?.toUpperCase() ?? '?'}
     </div>
   )
 }
@@ -136,9 +141,12 @@ export default function AdminUsers() {
                   <div className={`grid grid-cols-[1fr_100px_80px_80px_120px] gap-4 items-center px-5 py-3.5 ${i < users.length - 1 || expandedUser === user.id ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
                     {/* Email + avatar */}
                     <div className="flex items-center gap-3 min-w-0">
-                      <Avatar email={user.email} />
+                      <Avatar user={user} />
                       <div className="min-w-0">
-                        <div className="text-[13px] font-medium text-gray-900 dark:text-white truncate">{user.email}</div>
+                        <div className="text-[13px] font-medium text-gray-900 dark:text-white truncate">
+                          {getDisplayName(user)}
+                        </div>
+                        <div className="text-[11px] text-gray-500 dark:text-[#777] truncate">{user.email}</div>
                         {user.email === 'carlosaculsan123@gmail.com' && (
                           <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Owner</span>
                         )}

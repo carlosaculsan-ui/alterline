@@ -472,11 +472,16 @@ export default function Layout({ children, forceLight = false, wide = false }) {
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
             >
               <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 text-white text-[15px] font-semibold select-none">
-                {user.email[0].toUpperCase()}
+                {(user.user_metadata?.full_name || user.email)[0].toUpperCase()}
               </div>
-              <span className="flex-1 text-left text-[14px] text-gray-900 dark:text-white truncate min-w-0 font-medium">
-                {user.email}
-              </span>
+              <div className="flex-1 text-left min-w-0">
+                <div className="text-[13px] text-gray-900 dark:text-white font-medium truncate">
+                  {user.user_metadata?.full_name || user.email.split('@')[0]}
+                </div>
+                <div className="text-[11px] text-gray-500 dark:text-[#777] truncate">
+                  {user.email}
+                </div>
+              </div>
               <svg width="14" height="14" viewBox="0 0 15 15" fill="none" className="shrink-0 text-gray-900 dark:text-white opacity-40">
                 <circle cx="7.5" cy="3.5" r="1.2" fill="currentColor" />
                 <circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" />

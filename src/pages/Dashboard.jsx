@@ -3,6 +3,12 @@ import Layout from '../components/Layout'
 import EntryCard from '../components/EntryCard'
 import { useEntries } from '../hooks/useEntries'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+
+function getDisplayName(user) {
+  if (!user) return ''
+  return user.user_metadata?.full_name || user.email?.split('@')[0] || ''
+}
 
 function LoadingSkeleton() {
   return (
@@ -49,6 +55,8 @@ function EmptyState() {
 }
 
 export default function Dashboard() {
+  const user = useAuth()
+  const name = getDisplayName(user)
   const { entries, loading, hasMore, loadingMore, loadMore, deleteEntry } = useEntries()
 
   const [query, setQuery] = useState('')
@@ -106,11 +114,27 @@ export default function Dashboard() {
   const visible = isSearching ? searchResults : entries
 
   if (loading) return <Layout><LoadingSkeleton /></Layout>
-  if (entries.length === 0) return <Layout><EmptyState /></Layout>
+  if (entries.length === 0) return (
+    <Layout>
+      <div className="p-4 sm:p-6">
+        {name && <h2 className="text-[22px] font-bold text-gray-900 dark:text-white mb-6">Welcome back, {name}.</h2>}
+        <EmptyState />
+      </div>
+    </Layout>
+  )
 
   return (
     <Layout>
       <div className="p-4 sm:p-6">
+        {/* Welcome message */}
+        {!isSearching && name && (
+          <div className="mb-6">
+            <h2 className="text-[22px] font-bold text-gray-900 dark:text-white">
+              Welcome back, {name}.
+            </h2>
+          </div>
+        )}
+
         {/* Search input */}
         <div className="flex items-center gap-3 mb-6 pb-5 border-b border-[#f0f0f0] dark:border-[#1e1e1e]">
           <svg width="16" height="16" viewBox="0 0 15 15" fill="none" className="shrink-0 text-gray-500 dark:text-gray-400">
