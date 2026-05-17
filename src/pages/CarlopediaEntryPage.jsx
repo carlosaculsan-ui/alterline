@@ -351,6 +351,7 @@ export default function CarlopediaEntryPage() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [toastMsg, setToastMsg] = useState(null)
+  const [backlinks, setBacklinks] = useState([])
 
   const contentRef = useRef('')
   const lastSaved = useRef('')
@@ -433,6 +434,12 @@ export default function CarlopediaEntryPage() {
           })
           setInfoboxFields(fieldMap)
           setInfoboxFieldIds(fieldIdMap)
+
+          const { data: backlinkRows } = await supabase
+            .from('entry_links')
+            .select('entries!entry_links_from_entry_id_fkey(id, title, type)')
+            .eq('to_entry_id', id)
+          setBacklinks((backlinkRows ?? []).map((r) => r.entries).filter(Boolean))
         }
         setLoading(false)
       })
@@ -594,6 +601,29 @@ export default function CarlopediaEntryPage() {
             <EditorContent editor={editor} />
             <div style={{ clear: 'both' }} />
           </div>
+
+          {backlinks.length > 0 && (
+            <div className="mt-10 pt-6 border-t border-[#a2a9b1]">
+              <h2 className="text-[13px] uppercase tracking-widest text-gray-400 font-semibold mb-3 select-none">
+                Referenced in
+              </h2>
+              <ul className="space-y-1">
+                {backlinks.map((bl) => (
+                  <li key={bl.id}>
+                    <button
+                      onClick={() => navigate(bl.type === 'carlopedia' ? `/carlopedia/${bl.id}` : `/entry/${bl.id}`)}
+                      className="text-[14px] text-blue-600 hover:underline text-left"
+                    >
+                      {bl.title}
+                    </button>
+                    {bl.type !== 'carlopedia' && (
+                      <span className="ml-2 text-[11px] text-gray-400 select-none">story</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
         </div>
       </div>

@@ -128,9 +128,14 @@ export default function LoginPage() {
 
       {/* Left panel — character scene */}
       <div style={{ width: '50%', backgroundColor: '#0b0b0b', position: 'relative', display: isMobile ? 'none' : 'flex', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-        <span style={{ position: 'absolute', top: 32, fontSize: 15, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#444', fontWeight: 500, userSelect: 'none' }}>
-          Alterline
-        </span>
+        <div style={{ position: 'absolute', top: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 15, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#444', fontWeight: 500, userSelect: 'none' }}>
+            Alterline
+          </span>
+          <span style={{ fontSize: 13, color: '#2a2a2a', userSelect: 'none', textAlign: 'center', lineHeight: 1.5, maxWidth: 260 }}>
+            Built for the worlds that only exist in your head.
+          </span>
+        </div>
         <CharacterScene passwordFocused={passwordFocused} />
       </div>
 
@@ -150,7 +155,7 @@ export default function LoginPage() {
           {mode === 'login' ? (
             <>
               <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, margin: '0 0 6px', textAlign: 'center' }}>Welcome back</h1>
-              <p style={{ color: '#666', fontSize: 14, margin: '0 0 32px', textAlign: 'center' }}>Sign in to your universe</p>
+              <p style={{ color: '#666', fontSize: 14, margin: '0 0 32px', textAlign: 'center' }}>Your world has been waiting.</p>
 
               {done ? null : (
                 <form onSubmit={handleSubmit}>

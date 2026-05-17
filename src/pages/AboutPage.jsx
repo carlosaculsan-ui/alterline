@@ -18,7 +18,7 @@ export default function AboutPage() {
         <h1 style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '12px', color: '#111' }}>
           About Alterline
         </h1>
-        <p style={{ fontSize: '16px', color: '#888', marginBottom: '48px' }}>The story behind the tool.</p>
+        <p style={{ fontSize: '16px', color: '#888', marginBottom: '48px' }}>Built for the worlds that only exist in your head.</p>
 
         <div style={{ fontSize: '16px', lineHeight: '1.8', color: '#333' }} className="space-y-6">
           <p>
