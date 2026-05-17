@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
@@ -15,6 +15,33 @@ const INPUT = {
   color: 'white',
   outline: 'none',
   boxSizing: 'border-box',
+}
+
+function EmailIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="2" y="4" width="20" height="16" rx="2"/>
+      <path d="M2 7l10 7 10-7"/>
+    </svg>
+  )
+}
+
+function EyeOpenIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  )
+}
+
+function EyeClosedIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  )
 }
 
 function GoogleIcon() {
@@ -38,6 +65,14 @@ export default function LoginPage() {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   if (user) return <Navigate to="/" replace />
 
@@ -70,7 +105,7 @@ export default function LoginPage() {
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
 
       {/* Left panel — character scene */}
-      <div style={{ width: '50%', backgroundColor: '#0b0b0b', position: 'relative', display: 'flex', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+      <div style={{ width: '50%', backgroundColor: '#0b0b0b', position: 'relative', display: isMobile ? 'none' : 'flex', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
         <span style={{ position: 'absolute', top: 32, fontSize: 15, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#444', fontWeight: 500, userSelect: 'none' }}>
           Alterline
         </span>
@@ -78,8 +113,8 @@ export default function LoginPage() {
       </div>
 
       {/* Right panel — login form */}
-      <div style={{ width: '50%', backgroundColor: '#141414', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflowY: 'auto' }}>
-        <div style={{ width: 340, padding: '40px 0' }}>
+      <div style={{ width: isMobile ? '100%' : '50%', backgroundColor: '#141414', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflowY: 'auto' }}>
+        <div style={{ width: '100%', maxWidth: 340, padding: isMobile ? '40px 24px' : '40px 0' }}>
 
           {/* Logo mark */}
           <div style={{ width: 44, height: 44, backgroundColor: 'white', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 28, marginLeft: 'auto', marginRight: 'auto' }}>
@@ -92,36 +127,52 @@ export default function LoginPage() {
 
           {mode === 'login' ? (
             <>
-              <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, margin: '0 0 6px' }}>Welcome back</h1>
-              <p style={{ color: '#666', fontSize: 14, margin: '0 0 32px' }}>Sign in to your universe</p>
+              <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, margin: '0 0 6px', textAlign: 'center' }}>Welcome back</h1>
+              <p style={{ color: '#666', fontSize: 14, margin: '0 0 32px', textAlign: 'center' }}>Sign in to your universe</p>
 
               {done ? null : (
                 <form onSubmit={handleSubmit}>
                   <div style={{ marginBottom: 16 }}>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Email</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      required
-                      autoFocus
-                      placeholder="you@example.com"
-                      style={INPUT}
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#555', display: 'flex', pointerEvents: 'none' }}>
+                        <EmailIcon />
+                      </span>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        required
+                        autoFocus
+                        placeholder="you@example.com"
+                        style={{ ...INPUT, paddingRight: 36 }}
+                      />
+                    </div>
                   </div>
 
                   <div style={{ marginBottom: 12 }}>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Password</label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      onFocus={() => setPasswordFocused(true)}
-                      onBlur={() => setPasswordFocused(false)}
-                      required
-                      placeholder="••••••••"
-                      style={INPUT}
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        onFocus={() => setPasswordFocused(true)}
+                        onBlur={() => setPasswordFocused(false)}
+                        required
+                        placeholder="••••••••"
+                        style={{ ...INPUT, paddingRight: 42 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(v => !v)}
+                        style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#555', display: 'flex', padding: 0 }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#aaa'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#555'}
+                      >
+                        {showPassword ? <EyeOpenIcon /> : <EyeClosedIcon />}
+                      </button>
+                    </div>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
@@ -214,20 +265,36 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit}>
                   <div style={{ marginBottom: 16 }}>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Email</label>
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus placeholder="you@example.com" style={INPUT} />
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#555', display: 'flex', pointerEvents: 'none' }}>
+                        <EmailIcon />
+                      </span>
+                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus placeholder="you@example.com" style={{ ...INPUT, paddingRight: 36 }} />
+                    </div>
                   </div>
                   <div style={{ marginBottom: 24 }}>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Password</label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      onFocus={() => setPasswordFocused(true)}
-                      onBlur={() => setPasswordFocused(false)}
-                      required
-                      placeholder="••••••••"
-                      style={INPUT}
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        onFocus={() => setPasswordFocused(true)}
+                        onBlur={() => setPasswordFocused(false)}
+                        required
+                        placeholder="••••••••"
+                        style={{ ...INPUT, paddingRight: 42 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(v => !v)}
+                        style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#555', display: 'flex', padding: 0 }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#aaa'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#555'}
+                      >
+                        {showPassword ? <EyeOpenIcon /> : <EyeClosedIcon />}
+                      </button>
+                    </div>
                   </div>
 
                   {error && <p style={{ fontSize: 13, color: '#f87171', margin: '0 0 16px' }}>{error}</p>}
