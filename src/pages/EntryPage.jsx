@@ -239,7 +239,7 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting }) {
   const currentSize = editorSize ? parseInt(editorSize).toString() : '14'
 
   return (
-    <div className="sticky top-0 z-10 -mx-8 px-8 pt-3 bg-white dark:bg-[#111] flex items-center gap-0.5 mb-6 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e]">
+    <div className="sticky top-0 z-10 -mx-4 px-4 sm:-mx-8 sm:px-8 pt-3 bg-white dark:bg-[#111] flex items-center gap-0.5 mb-6 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e]">
       {onBack && (
         <>
           <button
@@ -315,7 +315,7 @@ function IconNoteSm() {
 
 function LoadingSkeleton() {
   return (
-    <div className="px-8 py-8 animate-pulse">
+    <div className="px-4 py-6 sm:px-8 sm:py-8 animate-pulse">
       <div className="h-px bg-[#f0f0f0] dark:bg-[#1e1e1e] mb-6" />
       <div className="h-8 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-2/3 mb-8" />
       <div className="space-y-2.5">
@@ -564,14 +564,14 @@ export default function EntryPage() {
       {loading ? (
         <LoadingSkeleton />
       ) : !entry ? (
-        <div className="px-8 py-8">
+        <div className="px-4 py-6 sm:px-8 sm:py-8">
           <button onClick={() => navigate(-1)} className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors mb-4 block">
             ← Back
           </button>
           <p className="text-[13px] text-gray-400 dark:text-[#555]">Entry not found.</p>
         </div>
       ) : (
-        <div className="px-8 py-8">
+        <div className="px-4 py-6 sm:px-8 sm:py-8">
           <Toolbar editor={editor} onBack={() => navigate(-1)} onDelete={handleDelete} confirmDelete={confirmDelete} deleting={deleting} />
 
           {editingTitle ? (

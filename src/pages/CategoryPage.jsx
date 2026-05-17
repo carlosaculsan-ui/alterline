@@ -66,11 +66,11 @@ export default function CategoryPage() {
       {loading ? (
         <LoadingSkeleton />
       ) : !category ? (
-        <div className="px-6 py-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8">
           <p className="text-[13px] text-gray-400 dark:text-[#555]">Category not found.</p>
         </div>
       ) : (
-        <div className="px-6 py-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8">
           {/* Heading */}
           <div className="flex items-center gap-2.5 mb-7">
             <span

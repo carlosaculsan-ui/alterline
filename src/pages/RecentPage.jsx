@@ -98,7 +98,7 @@ export default function RecentPage() {
       ) : groups.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="px-6 py-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8">
           {groups.map(([label, entries]) => (
             <div key={label} className="mb-8 last:mb-0">
               <div className="text-[11px] uppercase tracking-widest text-gray-400 dark:text-[#444] font-medium mb-3 select-none">

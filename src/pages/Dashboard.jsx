@@ -110,7 +110,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Search input */}
         <div className="flex items-center gap-3 mb-6 pb-5 border-b border-[#f0f0f0] dark:border-[#1e1e1e]">
           <svg width="16" height="16" viewBox="0 0 15 15" fill="none" className="shrink-0 text-gray-500 dark:text-gray-400">

@@ -2,117 +2,259 @@ import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import CharacterScene from '../components/CharacterScene'
+
+const INPUT = {
+  width: '100%',
+  height: 42,
+  backgroundColor: '#1c1c1c',
+  border: '1px solid #2e2e2e',
+  borderRadius: 8,
+  padding: '0 12px',
+  fontSize: 14,
+  color: 'white',
+  outline: 'none',
+  boxSizing: 'border-box',
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908C16.658 14.232 17.64 11.924 17.64 9.2z" fill="#4285F4"/>
+      <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+      <path d="M3.964 10.706A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/>
+      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 7.294C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+    </svg>
+  )
+}
 
 export default function LoginPage() {
   const user = useAuth()
-  const [mode, setMode] = useState('login') // 'login' | 'signup'
+  const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(false)
+  const [passwordFocused, setPasswordFocused] = useState(false)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
 
   if (user) return <Navigate to="/" replace />
 
+  function switchMode(next) {
+    setMode(next)
+    setError(null)
+    setDone(false)
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
     setLoading(true)
-
     if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(error.message)
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password })
+      if (err) setError(err.message)
     } else {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) setError(error.message)
+      const { error: err } = await supabase.auth.signUp({ email, password })
+      if (err) setError(err.message)
       else setDone(true)
     }
     setLoading(false)
   }
 
+  async function handleGoogle() {
+    await supabase.auth.signInWithOAuth({ provider: 'google' })
+  }
+
   return (
-    <div className="min-h-screen bg-white dark:bg-[#111] flex items-center justify-center px-4">
-      <div className="w-full max-w-[360px]">
-        {/* Logo */}
-        <div className="flex items-center gap-2.5 mb-8 justify-center">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="shrink-0 text-gray-900 dark:text-white">
-            <path d="M4 21L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <path d="M14 3L20 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <path d="M7 13H17" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span
-            className="text-gray-900 dark:text-white"
-            style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif", fontSize: '16px', fontWeight: 700, letterSpacing: '0.1em' }}
-          >
-            Alterline
-          </span>
-        </div>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
 
-        <div className="border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl p-6">
-          <h1 className="text-[18px] font-semibold text-gray-900 dark:text-white mb-5">
-            {mode === 'login' ? 'Welcome back' : 'Create account'}
-          </h1>
+      {/* Left panel — character scene */}
+      <div style={{ width: '50%', backgroundColor: '#0b0b0b', position: 'relative', display: 'flex', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+        <span style={{ position: 'absolute', top: 32, fontSize: 15, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#444', fontWeight: 500, userSelect: 'none' }}>
+          Alterline
+        </span>
+        <CharacterScene passwordFocused={passwordFocused} />
+      </div>
 
-          {done ? (
-            <div className="text-[14px] text-gray-900 dark:text-white">
-              Check your email to confirm your account, then come back to log in.
-            </div>
+      {/* Right panel — login form */}
+      <div style={{ width: '50%', backgroundColor: '#141414', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflowY: 'auto' }}>
+        <div style={{ width: 340, padding: '40px 0' }}>
+
+          {/* Logo mark */}
+          <div style={{ width: 44, height: 44, backgroundColor: 'white', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 28, marginLeft: 'auto', marginRight: 'auto' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M4 21L10 3" stroke="#111" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M14 3L20 21" stroke="#111" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M7 13H17" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+
+          {mode === 'login' ? (
+            <>
+              <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, margin: '0 0 6px' }}>Welcome back</h1>
+              <p style={{ color: '#666', fontSize: 14, margin: '0 0 32px' }}>Sign in to your universe</p>
+
+              {done ? null : (
+                <form onSubmit={handleSubmit}>
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Email</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      required
+                      autoFocus
+                      placeholder="you@example.com"
+                      style={INPUT}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Password</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      onFocus={() => setPasswordFocused(true)}
+                      onBlur={() => setPasswordFocused(false)}
+                      required
+                      placeholder="••••••••"
+                      style={INPUT}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
+                      <input
+                        type="checkbox"
+                        checked={remember}
+                        onChange={e => setRemember(e.target.checked)}
+                        style={{ width: 14, height: 14, accentColor: 'white', cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: 13, color: '#777' }}>Remember me</span>
+                    </label>
+                    <button
+                      type="button"
+                      style={{ fontSize: 13, color: '#777', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#aaa'}
+                      onMouseLeave={e => e.currentTarget.style.color = '#777'}
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
+                  {error && <p style={{ fontSize: 13, color: '#f87171', margin: '0 0 16px' }}>{error}</p>}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{ width: '100%', height: 42, backgroundColor: 'white', color: '#111', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, marginBottom: 20, transition: 'opacity 0.15s' }}
+                    onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = '#e8e8e8' }}
+                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'white' }}
+                  >
+                    {loading ? '…' : 'Sign in'}
+                  </button>
+                </form>
+              )}
+
+              {!done && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                    <div style={{ flex: 1, height: 1, backgroundColor: '#272727' }} />
+                    <span style={{ fontSize: 12, color: '#444' }}>or</span>
+                    <div style={{ flex: 1, height: 1, backgroundColor: '#272727' }} />
+                  </div>
+
+                  <button
+                    onClick={handleGoogle}
+                    style={{ width: '100%', height: 42, backgroundColor: 'transparent', border: '1px solid #2e2e2e', borderRadius: 8, fontSize: 14, fontWeight: 500, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 28 }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.backgroundColor = '#1e1e1e' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#2e2e2e'; e.currentTarget.style.backgroundColor = 'transparent' }}
+                  >
+                    <GoogleIcon />
+                    Continue with Google
+                  </button>
+
+                  <p style={{ textAlign: 'center', fontSize: 13, color: '#555', margin: 0 }}>
+                    Don&apos;t have an account?{' '}
+                    <button
+                      onClick={() => switchMode('signup')}
+                      style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 13, fontWeight: 500 }}
+                    >
+                      Sign up
+                    </button>
+                  </p>
+                </>
+              )}
+
+              {done && (
+                <p style={{ fontSize: 14, color: '#aaa', lineHeight: 1.6 }}>
+                  Check your email to confirm your account, then{' '}
+                  <button onClick={() => switchMode('login')} style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 14 }}>
+                    sign in
+                  </button>.
+                </p>
+              )}
+            </>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div>
-                <label className="block text-[12px] font-medium text-gray-900 dark:text-white mb-1">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoFocus
-                  placeholder="you@example.com"
-                  className="w-full px-3 py-2 text-[14px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg text-gray-900 dark:text-white placeholder-[#aaa] dark:placeholder-[#555] outline-none focus:border-indigo-400 dark:focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-[12px] font-medium text-gray-900 dark:text-white mb-1">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="••••••••"
-                  className="w-full px-3 py-2 text-[14px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg text-gray-900 dark:text-white placeholder-[#aaa] dark:placeholder-[#555] outline-none focus:border-indigo-400 dark:focus:border-indigo-500 transition-colors"
-                />
-              </div>
+            /* Signup mode */
+            <>
+              <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, margin: '0 0 6px' }}>Create account</h1>
+              <p style={{ color: '#666', fontSize: 14, margin: '0 0 32px' }}>Join your universe today</p>
 
-              {error && (
-                <div className="text-[13px] text-red-500 dark:text-red-400">{error}</div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-2 rounded-lg text-[14px] font-medium bg-indigo-600 hover:bg-indigo-700 text-white transition-colors disabled:opacity-50 mt-1"
-              >
-                {loading ? '…' : mode === 'login' ? 'Log in' : 'Sign up'}
-              </button>
-            </form>
-          )}
-
-          {!done && (
-            <div className="mt-4 text-center text-[13px] text-gray-900 dark:text-white">
-              {mode === 'login' ? (
-                <>No account?{' '}
-                  <button onClick={() => { setMode('signup'); setError(null) }} className="text-indigo-600 dark:text-indigo-400 hover:opacity-75 transition-opacity">
-                    Sign up
-                  </button>
-                </>
+              {done ? (
+                <p style={{ fontSize: 14, color: '#aaa', lineHeight: 1.6 }}>
+                  Check your email to confirm your account, then{' '}
+                  <button onClick={() => switchMode('login')} style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 14 }}>
+                    sign in
+                  </button>.
+                </p>
               ) : (
-                <>Already have one?{' '}
-                  <button onClick={() => { setMode('login'); setError(null); setDone(false) }} className="text-indigo-600 dark:text-indigo-400 hover:opacity-75 transition-opacity">
-                    Log in
+                <form onSubmit={handleSubmit}>
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Email</label>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus placeholder="you@example.com" style={INPUT} />
+                  </div>
+                  <div style={{ marginBottom: 24 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Password</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      onFocus={() => setPasswordFocused(true)}
+                      onBlur={() => setPasswordFocused(false)}
+                      required
+                      placeholder="••••••••"
+                      style={INPUT}
+                    />
+                  </div>
+
+                  {error && <p style={{ fontSize: 13, color: '#f87171', margin: '0 0 16px' }}>{error}</p>}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{ width: '100%', height: 42, backgroundColor: 'white', color: '#111', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, marginBottom: 28 }}
+                    onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = '#e8e8e8' }}
+                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'white' }}
+                  >
+                    {loading ? '…' : 'Create account'}
                   </button>
-                </>
+
+                  <p style={{ textAlign: 'center', fontSize: 13, color: '#555', margin: 0 }}>
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => switchMode('login')}
+                      style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 13, fontWeight: 500 }}
+                    >
+                      Sign in
+                    </button>
+                  </p>
+                </form>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>

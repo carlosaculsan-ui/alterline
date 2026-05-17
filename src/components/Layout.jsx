@@ -76,6 +76,14 @@ function IconSidebarToggle() {
   )
 }
 
+function IconHamburger() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0">
+      <path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function IconBook() {
   return (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
@@ -113,6 +121,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
     return localStorage.getItem('alterline-theme') !== 'light'
   })
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [showEntryModal, setShowEntryModal] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -137,6 +146,10 @@ export default function Layout({ children, forceLight = false, wide = false }) {
     }
     localStorage.setItem('alterline-theme', dark ? 'dark' : 'light')
   }, [dark])
+
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [location.pathname])
 
   useEffect(() => {
     if (editingId) editInputRef.current?.focus()
@@ -195,8 +208,16 @@ export default function Layout({ children, forceLight = false, wide = false }) {
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
+      {/* Mobile backdrop */}
+      {mobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/40"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-[280px]' : 'w-0'} shrink-0 flex flex-col bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a] overflow-hidden transition-[width] duration-200`}>
+      <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto shrink-0 flex flex-col w-[280px] bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a] overflow-hidden transition-transform lg:transition-[width] duration-200 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${sidebarOpen ? '' : 'lg:w-0'}`}>
         {/* Logo */}
         <div className="px-5 py-[18px] border-b border-[#e5e5e5] dark:border-[#2a2a2a] flex items-center justify-between min-w-[280px]">
           <div className="flex items-center gap-3">
@@ -213,7 +234,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
             </span>
           </div>
           <button
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => { setSidebarOpen(false); setMobileMenuOpen(false) }}
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#ebebeb] dark:hover:bg-[#222] p-1.5 rounded-md transition-colors"
             aria-label="Close sidebar"
           >
@@ -225,7 +246,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
         <nav className="px-2 pt-4 pb-2 space-y-1">
           {/* New Entry */}
           <button
-            onClick={() => setShowEntryModal(true)}
+            onClick={() => { setMobileMenuOpen(false); setShowEntryModal(true) }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
           >
             <IconPlus />
@@ -237,6 +258,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
               key={to}
               to={to}
               end
+              onClick={() => setMobileMenuOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] transition-colors ${
                   isActive
@@ -256,6 +278,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
             <NavLink
               key={to}
               to={to}
+              onClick={() => setMobileMenuOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] transition-colors ${
                   isActive
@@ -321,7 +344,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
                     </div>
                   ) : (
                     <div
-                      onClick={() => navigate(`/category/${cat.id}`)}
+                      onClick={() => { setMobileMenuOpen(false); navigate(`/category/${cat.id}`) }}
                       className={`flex w-full items-center gap-2.5 px-3 py-2 pr-[52px] rounded-md text-[14px] transition-colors cursor-pointer select-none ${
                         isActive
                           ? 'bg-[#ebebeb] dark:bg-[#222] text-gray-900 dark:text-white'
@@ -374,7 +397,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
             })}
           </div>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => { setMobileMenuOpen(false); setShowModal(true) }}
             className="mt-1 w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
           >
             <IconPlus />
@@ -452,9 +475,40 @@ export default function Layout({ children, forceLight = false, wide = false }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Sidebar reopen button */}
+        {/* Mobile top bar */}
+        <div className="lg:hidden shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] bg-white dark:bg-[#111]">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="text-gray-900 dark:text-white p-1.5 hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] rounded-md transition-colors"
+            aria-label="Open menu"
+          >
+            <IconHamburger />
+          </button>
+          <div className="flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0 text-gray-900 dark:text-white">
+              <path d="M4 21L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M14 3L20 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M7 13H17" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span
+              className="text-gray-900 dark:text-white"
+              style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif", fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em' }}
+            >
+              Alterline
+            </span>
+          </div>
+          <button
+            onClick={() => setShowEntryModal(true)}
+            className="text-gray-900 dark:text-white p-1.5 hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] rounded-md transition-colors"
+            aria-label="New Entry"
+          >
+            <IconPlus />
+          </button>
+        </div>
+
+        {/* Desktop sidebar reopen button */}
         {!sidebarOpen && (
-          <div className="absolute top-3 left-3 z-10">
+          <div className="hidden lg:block absolute top-3 left-3 z-10">
             <button
               onClick={() => setSidebarOpen(true)}
               className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#ebebeb] dark:hover:bg-[#222] p-1.5 rounded-md transition-colors"
@@ -491,7 +545,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
       {showLearnMore && learnMorePos && createPortal(
         <div
           ref={learnMorePortalRef}
-          style={{ position: 'fixed', top: learnMorePos.top, left: learnMorePos.left + 8, zIndex: 9999 }}
+          style={{ position: 'fixed', top: learnMorePos.top, left: Math.min(learnMorePos.left + 8, window.innerWidth - 200), zIndex: 9999 }}
           className="w-48 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl py-1"
         >
           {[

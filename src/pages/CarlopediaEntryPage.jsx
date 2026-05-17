@@ -63,7 +63,7 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting }) {
   const currentSize = editorSize ? parseInt(editorSize).toString() : '15'
 
   return (
-    <div className="sticky top-0 z-10 bg-white dark:bg-[#111] border-b border-[#f0f0f0] dark:border-[#1e1e1e] px-8 py-2.5 flex items-center gap-0.5">
+    <div className="sticky top-0 z-10 bg-white dark:bg-[#111] border-b border-[#f0f0f0] dark:border-[#1e1e1e] px-4 py-2.5 sm:px-8 flex items-center gap-0.5">
       {onBack && (
         <>
           <button
@@ -180,8 +180,7 @@ function WikiInfobox({ entryId, entryTitle, photo, onPhotoClick, onPhotoRemove, 
 
   return (
     <div
-      className="mb-4 ml-6 w-[290px] border border-[#a2a9b1] bg-[#f8f9fa] text-sm"
-      style={{ float: 'right', clear: 'right' }}
+      className="mb-4 w-full sm:float-right sm:clear-right sm:ml-6 sm:w-[290px] border border-[#a2a9b1] bg-[#f8f9fa] text-sm"
     >
       {/* Name header */}
       <div className="bg-[#cee0f3] text-center font-bold py-1.5 px-3 text-gray-900 text-[14px] border-b border-[#a2a9b1]">
@@ -320,7 +319,7 @@ async function compressImage(file) {
 
 function LoadingSkeleton() {
   return (
-    <div className="bg-white pl-5 pr-8 py-8 animate-pulse max-w-[900px]">
+    <div className="bg-white pl-4 pr-4 py-6 sm:pl-5 sm:pr-8 sm:py-8 animate-pulse max-w-[900px]">
       <div className="h-9 bg-[#f0f0f0] rounded w-2/3 mb-4" />
       <div className="h-px bg-[#f0f0f0] mb-6" />
       <div className="flex gap-6">
@@ -532,7 +531,7 @@ export default function CarlopediaEntryPage() {
   if (loading) return <Layout wide><LoadingSkeleton /></Layout>
   if (!entry) return (
     <Layout wide>
-      <div className="px-8 py-8">
+      <div className="px-4 py-6 sm:px-8 sm:py-8">
         <button onClick={() => navigate('/carlopedia')} className="text-[13px] text-gray-900 dark:text-[#555] hover:opacity-60 transition-opacity mb-4 block">← Carlopedia</button>
         <p className="text-[13px] text-gray-900 dark:text-[#555]">Article not found.</p>
       </div>
@@ -547,7 +546,7 @@ export default function CarlopediaEntryPage() {
 
       {/* White article canvas */}
       <div className="bg-white" style={{ minHeight: 'calc(100vh - 56px)' }}>
-        <div className="pl-5 pr-8 py-8">
+        <div className="pl-4 pr-4 py-6 sm:pl-5 sm:pr-8 sm:py-8">
 
           {/* Title */}
           {editingTitle ? (

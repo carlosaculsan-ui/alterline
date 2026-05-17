@@ -82,7 +82,7 @@ export default function CarlopediaPage() {
 
   return (
     <Layout>
-      <div className="max-w-[720px] mx-auto px-8 py-10">
+      <div className="max-w-[720px] mx-auto px-4 py-6 sm:px-8 sm:py-10">
 
         {/* Header */}
         <div className="flex items-end justify-between mb-1">
