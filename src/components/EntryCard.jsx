@@ -25,10 +25,11 @@ function stripHtml(html) {
   return html ? html.replace(/<[^>]*>/g, '').trim() : ''
 }
 
-export default function EntryCard({ entry, onDelete }) {
+export default function EntryCard({ entry, onDelete, folders = [], onMoveToFolder }) {
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
   const [showColors, setShowColors] = useState(false)
+  const [showFolders, setShowFolders] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [cardColorId, setCardColorId] = useState(
     () => localStorage.getItem(`alterline-card-color-${entry.id}`) ?? 'default'
@@ -50,6 +51,7 @@ export default function EntryCard({ entry, onDelete }) {
   function closeMenu() {
     setShowMenu(false)
     setShowColors(false)
+    setShowFolders(false)
     setConfirmDelete(false)
   }
 
@@ -106,7 +108,7 @@ export default function EntryCard({ entry, onDelete }) {
               <span className="text-[12px] text-gray-900 dark:text-white truncate">{entry.categories.name}</span>
             </>
           ) : (
-            <span className="text-[12px] text-gray-900 dark:text-white opacity-40">—</span>
+            <span className="text-[12px] text-gray-900 dark:text-white opacity-30">No folder</span>
           )}
         </div>
         <div className="text-[12px] text-gray-900 dark:text-white opacity-50">{date}</div>
@@ -141,8 +143,48 @@ export default function EntryCard({ entry, onDelete }) {
             >
               {confirmDelete ? 'Confirm delete?' : 'Delete'}
             </button>
+            {onMoveToFolder && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowFolders((p) => !p); setShowColors(false); setConfirmDelete(false) }}
+                  className="w-full px-3 py-2 text-left text-[13px] text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
+                >
+                  Move to folder
+                </button>
+                {showFolders && (
+                  <div className="border-t border-[#f0f0f0] dark:border-[#2a2a2a]">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onMoveToFolder(entry.id, null); closeMenu() }}
+                      className={`w-full px-3 py-2 text-left text-[13px] flex items-center gap-2 transition-colors ${
+                        !entry.category_id
+                          ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
+                          : 'text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222]'
+                      }`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-[#555] shrink-0" />
+                      No folder
+                    </button>
+                    {folders.map((folder) => (
+                      <button
+                        key={folder.id}
+                        onClick={(e) => { e.stopPropagation(); onMoveToFolder(entry.id, folder.id, folder); closeMenu() }}
+                        className={`w-full px-3 py-2 text-left text-[13px] flex items-center gap-2 transition-colors ${
+                          entry.category_id === folder.id
+                            ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
+                            : 'text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222]'
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: folder.color }} />
+                        {folder.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
             <button
-              onClick={(e) => { e.stopPropagation(); setShowColors((p) => !p); setConfirmDelete(false) }}
+              onClick={(e) => { e.stopPropagation(); setShowColors((p) => !p); setShowFolders(false); setConfirmDelete(false) }}
               className="w-full px-3 py-2 text-left text-[13px] text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
             >
               Change color

@@ -81,5 +81,16 @@ export function useEntries() {
     if (!error) setEntries((prev) => prev.filter((e) => e.id !== id))
   }
 
-  return { entries, loading, hasMore, loadingMore, loadMore, createEntry, deleteEntry }
+  async function updateEntryFolder(entryId, folderId, folderMeta) {
+    const { error } = await supabase.from('entries').update({ category_id: folderId }).eq('id', entryId)
+    if (!error) {
+      setEntries((prev) => prev.map((e) =>
+        e.id === entryId
+          ? { ...e, category_id: folderId, categories: folderMeta ?? null }
+          : e
+      ))
+    }
+  }
+
+  return { entries, loading, hasMore, loadingMore, loadMore, createEntry, deleteEntry, updateEntryFolder }
 }

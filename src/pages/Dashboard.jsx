@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import Layout from '../components/Layout'
 import EntryCard from '../components/EntryCard'
 import { useEntries } from '../hooks/useEntries'
+import { useCategories } from '../hooks/useCategories'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -57,7 +58,8 @@ function EmptyState() {
 export default function Dashboard() {
   const user = useAuth()
   const name = getDisplayName(user)
-  const { entries, loading, hasMore, loadingMore, loadMore, deleteEntry } = useEntries()
+  const { entries, loading, hasMore, loadingMore, loadMore, deleteEntry, updateEntryFolder } = useEntries()
+  const { categories: folders } = useCategories()
 
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
@@ -180,7 +182,13 @@ export default function Dashboard() {
           <>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-3">
               {visible.map((entry) => (
-                <EntryCard key={entry.id} entry={entry} onDelete={deleteEntry} />
+                <EntryCard
+                  key={entry.id}
+                  entry={entry}
+                  onDelete={deleteEntry}
+                  folders={folders}
+                  onMoveToFolder={updateEntryFolder}
+                />
               ))}
             </div>
             {!isSearching && hasMore && (

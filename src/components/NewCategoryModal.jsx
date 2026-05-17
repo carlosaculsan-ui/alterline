@@ -32,7 +32,7 @@ export default function NewCategoryModal({ onConfirm, onClose }) {
     >
       <div className="bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-2xl w-[300px] p-5">
         <div className="text-[14px] font-semibold text-gray-900 dark:text-white mb-4">
-          New category
+          New folder
         </div>
 
         <label className="block text-[11px] uppercase tracking-wider text-gray-400 dark:text-[#555] mb-1.5">
@@ -44,7 +44,7 @@ export default function NewCategoryModal({ onConfirm, onClose }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleConfirm()}
-          placeholder="e.g. Characters"
+          placeholder="e.g. Chapter 1"
           className="w-full bg-[#f5f5f5] dark:bg-[#222] border border-[#e5e5e5] dark:border-[#333] rounded-lg px-3 py-2 text-[13px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none focus:border-indigo-500 transition-colors mb-4"
         />
 

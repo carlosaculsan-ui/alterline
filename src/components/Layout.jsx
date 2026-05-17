@@ -296,7 +296,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
         {/* Categories */}
         <div className="flex-1 overflow-y-auto px-2 pt-5 pb-3">
           <div className="px-3 mb-3 text-[11px] uppercase tracking-widest text-gray-500 dark:text-gray-400 font-medium select-none">
-            Categories
+            Folders
           </div>
           <div className="space-y-1">
             {categories.map((cat) => {
@@ -401,7 +401,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
             className="mt-1 w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
           >
             <IconPlus />
-            New category
+            New folder
           </button>
         </div>
 
