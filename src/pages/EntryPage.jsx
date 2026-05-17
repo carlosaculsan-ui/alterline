@@ -9,6 +9,7 @@ import Highlight from '@tiptap/extension-highlight'
 import { Mark, mergeAttributes } from '@tiptap/core'
 import Layout from '../components/Layout'
 import Toast from '../components/Toast'
+import AIPanel from '../components/AIPanel'
 import { supabase } from '../lib/supabase'
 import { useWorld } from '../contexts/WorldContext'
 
@@ -225,7 +226,7 @@ function ToolBtn({ active, onAction, title, children }) {
 
 const FONT_SIZES = ['8','9','10','11','12','14','16','18','20','24','28','32','36','48','60','72']
 
-function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting }) {
+function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting, onAIToggle, aiActive }) {
   const [, forceUpdate] = useState(0)
 
   useEffect(() => {
@@ -292,6 +293,17 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting }) {
       <div className="flex-1" />
 
       <button
+        onClick={onAIToggle}
+        className={`text-[12px] font-medium mr-3 transition-colors ${
+          aiActive
+            ? 'text-indigo-600 dark:text-indigo-400'
+            : 'text-gray-900 dark:text-[#555] hover:text-indigo-500 dark:hover:text-indigo-400'
+        }`}
+      >
+        ✦ AI
+      </button>
+
+      <button
         onClick={onDelete}
         disabled={deleting}
         className={`text-[13px] disabled:opacity-50 transition-colors ${
@@ -355,8 +367,10 @@ export default function EntryPage() {
   const cancelTitle = useRef(false)
   const contentInitialized = useRef(false)
 
+  const [showAI, setShowAI] = useState(false)
+
   // @mention suggestion
-  const { activeWorldId } = useWorld()
+  const { activeWorldId, activeWorld } = useWorld()
   const [mention, setMentionRaw] = useState(null)
   const [mentionResults, setMentionResultsRaw] = useState([])
   const [mentionIndex, setMentionIndexRaw] = useState(0)
@@ -693,7 +707,7 @@ export default function EntryPage() {
         </div>
       ) : (
         <div className="px-4 py-6 sm:px-8 sm:py-8">
-          <Toolbar editor={editor} onBack={() => navigate(-1)} onDelete={handleDelete} confirmDelete={confirmDelete} deleting={deleting} />
+          <Toolbar editor={editor} onBack={() => navigate(-1)} onDelete={handleDelete} confirmDelete={confirmDelete} deleting={deleting} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} />
 
           {editingTitle ? (
             <input
@@ -795,6 +809,16 @@ export default function EntryPage() {
       )}
 
       {toastMsg && <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />}
+
+      {showAI && (
+        <AIPanel
+          worldId={activeWorldId}
+          worldName={activeWorld?.name}
+          entryTitle={entry?.title}
+          getContent={() => contentRef.current}
+          onClose={() => setShowAI(false)}
+        />
+      )}
 
       {mention && (
         <div
