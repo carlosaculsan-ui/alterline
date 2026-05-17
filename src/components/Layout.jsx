@@ -7,6 +7,7 @@ import NewEntryModal from './NewEntryModal'
 import Toast from './Toast'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useWorld } from '../contexts/WorldContext'
 
 const COLORS = [
   '#5DCAA5', '#85B7EB', '#F0997B', '#ED93B1',
@@ -117,6 +118,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuth()
+  const { worlds, activeWorld, activeWorldId, setActiveWorldId, createWorld } = useWorld()
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('alterline-theme') !== 'light'
   })
@@ -137,6 +139,12 @@ export default function Layout({ children, forceLight = false, wide = false }) {
   const userMenuRef = useRef(null)
   const learnMoreRef = useRef(null)
   const learnMorePortalRef = useRef(null)
+  const [showWorldSwitcher, setShowWorldSwitcher] = useState(false)
+  const [showNewWorld, setShowNewWorld] = useState(false)
+  const [newWorldName, setNewWorldName] = useState('')
+  const [newWorldColor, setNewWorldColor] = useState(COLORS[0])
+  const [creatingWorld, setCreatingWorld] = useState(false)
+  const worldSwitcherRef = useRef(null)
 
   useEffect(() => {
     if (dark) {
@@ -168,6 +176,33 @@ export default function Layout({ children, forceLight = false, wide = false }) {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [showUserMenu])
+
+  useEffect(() => {
+    if (!showWorldSwitcher) return
+    function handleClick(e) {
+      if (!worldSwitcherRef.current?.contains(e.target)) {
+        setShowWorldSwitcher(false)
+        setShowNewWorld(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showWorldSwitcher])
+
+  async function handleCreateWorld(e) {
+    e.preventDefault()
+    if (!newWorldName.trim() || creatingWorld) return
+    setCreatingWorld(true)
+    const world = await createWorld(newWorldName.trim(), newWorldColor)
+    if (world) {
+      setActiveWorldId(world.id)
+      setShowWorldSwitcher(false)
+      setShowNewWorld(false)
+      setNewWorldName('')
+      setNewWorldColor(COLORS[0])
+    }
+    setCreatingWorld(false)
+  }
 
   async function saveEdit() {
     if (cancelEditRef.current) {
@@ -240,6 +275,105 @@ export default function Layout({ children, forceLight = false, wide = false }) {
           >
             <IconSidebarToggle />
           </button>
+        </div>
+
+        {/* World switcher */}
+        <div className="px-3 py-2 border-b border-[#e5e5e5] dark:border-[#2a2a2a] relative min-w-[280px]" ref={worldSwitcherRef}>
+          <button
+            onClick={() => { setShowWorldSwitcher((v) => !v); setShowNewWorld(false) }}
+            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors group"
+          >
+            <span
+              className="w-2.5 h-2.5 rounded-full shrink-0"
+              style={{ backgroundColor: activeWorld?.color ?? '#6366f1' }}
+            />
+            <span className="flex-1 text-left text-[13px] font-semibold text-gray-900 dark:text-white truncate">
+              {activeWorld?.name ?? '…'}
+            </span>
+            <svg width="12" height="12" viewBox="0 0 15 15" fill="none" className="shrink-0 text-gray-900 dark:text-white opacity-40">
+              <path d="M3.5 5.5L7.5 9.5L11.5 5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          {showWorldSwitcher && (
+            <div className="absolute top-full left-3 right-3 mt-1 z-50 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl py-1 overflow-hidden">
+              {worlds.map((world) => (
+                <button
+                  key={world.id}
+                  onClick={() => { setActiveWorldId(world.id); setShowWorldSwitcher(false) }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-colors ${
+                    world.id === activeWorldId
+                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
+                      : 'text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525]'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: world.color }} />
+                  <span className="flex-1 text-left truncate font-medium">{world.name}</span>
+                  {world.id === activeWorldId && (
+                    <svg width="12" height="12" viewBox="0 0 15 15" fill="none" className="shrink-0">
+                      <path d="M2 7.5L6 11.5L13 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+
+              <div className="mx-3 my-1 border-t border-[#f0f0f0] dark:border-[#2a2a2a]" />
+
+              {showNewWorld ? (
+                <form onSubmit={handleCreateWorld} className="px-3 py-2">
+                  <input
+                    autoFocus
+                    type="text"
+                    value={newWorldName}
+                    onChange={(e) => setNewWorldName(e.target.value)}
+                    placeholder="World name…"
+                    className="w-full bg-[#f5f5f5] dark:bg-[#222] border border-[#e5e5e5] dark:border-[#333] rounded-lg px-2.5 py-1.5 text-[12px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none focus:border-indigo-500 transition-colors mb-2"
+                  />
+                  <div className="flex gap-1.5 mb-2 flex-wrap">
+                    {COLORS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setNewWorldColor(c)}
+                        className="w-4 h-4 rounded-full transition-transform hover:scale-110"
+                        style={{
+                          backgroundColor: c,
+                          outline: newWorldColor === c ? `2px solid ${c}` : 'none',
+                          outlineOffset: '2px',
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="submit"
+                      disabled={!newWorldName.trim() || creatingWorld}
+                      className="flex-1 py-1 rounded-md text-[12px] font-medium bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white transition-colors"
+                    >
+                      {creatingWorld ? '…' : 'Create'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewWorld(false)}
+                      className="px-2 py-1 rounded-md text-[12px] text-gray-500 dark:text-[#666] hover:bg-[#f0f0f0] dark:hover:bg-[#252525] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <button
+                  onClick={() => setShowNewWorld(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors"
+                >
+                  <svg width="11" height="11" viewBox="0 0 13 13" fill="none" className="shrink-0">
+                    <path d="M6.5 1V12M1 6.5H12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+                  New world
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Nav */}

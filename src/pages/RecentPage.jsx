@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import EntryCard from '../components/EntryCard'
 import { supabase } from '../lib/supabase'
+import { useWorld } from '../contexts/WorldContext'
 
 function LoadingSkeleton() {
   return (
@@ -72,12 +73,16 @@ function groupByDate(entries) {
 }
 
 export default function RecentPage() {
+  const { activeWorldId } = useWorld()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!activeWorldId) return
+    setLoading(true)
     Promise.all([
       supabase.from('entries').select('*, categories(name, color)')
+        .eq('world_id', activeWorldId)
         .neq('type', 'carlopedia')
         .order('updated_at', { ascending: false })
         .limit(50),
@@ -89,7 +94,7 @@ export default function RecentPage() {
       }
       setLoading(false)
     })
-  }, [])
+  }, [activeWorldId])
 
   return (
     <Layout>

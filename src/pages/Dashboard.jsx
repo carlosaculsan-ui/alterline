@@ -5,6 +5,7 @@ import { useEntries } from '../hooks/useEntries'
 import { useCategories } from '../hooks/useCategories'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useWorld } from '../contexts/WorldContext'
 
 function getDisplayName(user) {
   if (!user) return ''
@@ -58,6 +59,7 @@ function EmptyState() {
 export default function Dashboard() {
   const user = useAuth()
   const name = getDisplayName(user)
+  const { activeWorldId } = useWorld()
   const { entries, loading, hasMore, loadingMore, loadMore, deleteEntry, updateEntryFolder } = useEntries()
   const { categories: folders } = useCategories()
 
@@ -82,6 +84,7 @@ export default function Dashboard() {
       const [{ data: pfRows }, { data: titleContent, error }, { data: wikiFields }] = await Promise.all([
         supabase.from('profile_fields').select('entry_id').ilike('field_value', `%${q}%`),
         supabase.from('entries').select('*, categories(name, color)')
+          .eq('world_id', activeWorldId)
           .or(`title.ilike.%${q}%,content.ilike.%${q}%`)
           .neq('type', 'carlopedia')
           .order('created_at', { ascending: false })
@@ -98,7 +101,7 @@ export default function Dashboard() {
         const missing = pfIds.filter((id) => !found.has(id))
         if (missing.length > 0) {
           const { data: extra } = await supabase
-            .from('entries').select('*, categories(name, color)').in('id', missing).neq('type', 'carlopedia')
+            .from('entries').select('*, categories(name, color)').eq('world_id', activeWorldId).in('id', missing).neq('type', 'carlopedia')
           data = [...data, ...(extra ?? []).filter((e) => !wikiIds.has(e.id))]
         }
       }
@@ -109,7 +112,7 @@ export default function Dashboard() {
     }, 150)
 
     return () => clearTimeout(timer)
-  }, [query])
+  }, [query, activeWorldId])
 
   const trimmed = query.trim()
   const isSearching = !!trimmed

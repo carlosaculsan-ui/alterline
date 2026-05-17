@@ -10,6 +10,7 @@ import { Mark, mergeAttributes } from '@tiptap/core'
 import Layout from '../components/Layout'
 import Toast from '../components/Toast'
 import { supabase } from '../lib/supabase'
+import { useWorld } from '../contexts/WorldContext'
 
 
 const EntryLink = Mark.create({
@@ -36,6 +37,7 @@ const EntryLink = Mark.create({
 })
 
 function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
+  const { activeWorldId } = useWorld()
   const [loading, setLoading] = useState(false)
   const [mode, setMode] = useState('default') // 'default' | 'search'
   const [searchQuery, setSearchQuery] = useState('')
@@ -91,7 +93,7 @@ function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
     let usedFallback = false
     let result = await supabase
       .from('entries')
-      .insert({ title: range.text.trim(), type: 'carlopedia', category_id: null })
+      .insert({ title: range.text.trim(), type: 'carlopedia', category_id: null, world_id: activeWorldId })
       .select('id')
       .single()
 
@@ -99,7 +101,7 @@ function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
       usedFallback = true
       result = await supabase
         .from('entries')
-        .insert({ title: range.text.trim(), type: 'story', category_id: null })
+        .insert({ title: range.text.trim(), type: 'story', category_id: null, world_id: activeWorldId })
         .select('id')
         .single()
     }

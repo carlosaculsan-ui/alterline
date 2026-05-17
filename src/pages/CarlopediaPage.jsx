@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { supabase } from '../lib/supabase'
+import { useWorld } from '../contexts/WorldContext'
 
 function LoadingSkeleton() {
   return (
@@ -17,6 +18,7 @@ function LoadingSkeleton() {
 
 export default function CarlopediaPage() {
   const navigate = useNavigate()
+  const { activeWorldId } = useWorld()
   const [articles, setArticles] = useState([])
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
@@ -25,10 +27,11 @@ export default function CarlopediaPage() {
   const newInputRef = useRef(null)
 
   useEffect(() => {
+    if (!activeWorldId) return
+    setLoading(true)
     async function load() {
-      // Fetch entries with type='carlopedia' AND entries marked via profile_field (fallback)
       const [{ data: typed }, { data: wikiFields }] = await Promise.all([
-        supabase.from('entries').select('id, title, updated_at').eq('type', 'carlopedia'),
+        supabase.from('entries').select('id, title, updated_at').eq('type', 'carlopedia').eq('world_id', activeWorldId),
         supabase.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
       ])
 
@@ -40,7 +43,7 @@ export default function CarlopediaPage() {
         const missing = fallbackIds.filter((id) => !existing.has(id))
         if (missing.length > 0) {
           const { data: extras } = await supabase
-            .from('entries').select('id, title, updated_at').in('id', missing)
+            .from('entries').select('id, title, updated_at').eq('world_id', activeWorldId).in('id', missing)
           all = [...all, ...(extras ?? [])]
         }
       }
@@ -50,7 +53,7 @@ export default function CarlopediaPage() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [activeWorldId])
 
   useEffect(() => {
     if (showNew) newInputRef.current?.focus()
@@ -62,7 +65,7 @@ export default function CarlopediaPage() {
     setCreating(true)
     const { data, error } = await supabase
       .from('entries')
-      .insert({ title, type: 'carlopedia', category_id: null })
+      .insert({ title, type: 'carlopedia', category_id: null, world_id: activeWorldId })
       .select('id')
       .single()
     if (!error && data) {

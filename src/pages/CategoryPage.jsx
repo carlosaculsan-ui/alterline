@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import EntryCard from '../components/EntryCard'
 import { supabase } from '../lib/supabase'
+import { useWorld } from '../contexts/WorldContext'
 
 function LoadingSkeleton() {
   return (
@@ -42,16 +43,19 @@ function EmptyState({ name }) {
 
 export default function CategoryPage() {
   const { id } = useParams()
+  const { activeWorldId } = useWorld()
   const [category, setCategory] = useState(null)
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!activeWorldId) return
     Promise.all([
       supabase.from('categories').select('*').eq('id', id).single(),
       supabase
         .from('entries')
         .select('*, categories(name, color)')
+        .eq('world_id', activeWorldId)
         .eq('category_id', id)
         .order('created_at', { ascending: false }),
     ]).then(([{ data: cat }, { data: ents }]) => {

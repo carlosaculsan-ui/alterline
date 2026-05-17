@@ -22,7 +22,9 @@ const CARD_COLORS = [
 ]
 
 function stripHtml(html) {
-  return html ? html.replace(/<[^>]*>/g, '').trim() : ''
+  if (!html) return ''
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  return doc.body.textContent?.trim() ?? ''
 }
 
 export default function EntryCard({ entry, onDelete, folders = [], onMoveToFolder }) {

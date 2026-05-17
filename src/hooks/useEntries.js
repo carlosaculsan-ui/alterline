@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { useWorld } from '../contexts/WorldContext'
 
 const PAGE_SIZE = 50
 
@@ -11,10 +12,11 @@ async function getCarlopediaIds() {
   return (data ?? []).map((r) => r.entry_id)
 }
 
-function buildEntriesQuery(excludeIds) {
+function buildEntriesQuery(excludeIds, worldId) {
   let q = supabase
     .from('entries')
     .select('*, categories(name, color)')
+    .eq('world_id', worldId)
     .neq('type', 'carlopedia')
     .order('created_at', { ascending: false })
   if (excludeIds.length > 0) {
@@ -24,6 +26,7 @@ function buildEntriesQuery(excludeIds) {
 }
 
 export function useEntries() {
+  const { activeWorldId } = useWorld()
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [hasMore, setHasMore] = useState(false)
@@ -31,9 +34,12 @@ export function useEntries() {
   const wikiIds = useRef([])
 
   useEffect(() => {
+    if (!activeWorldId) return
+    setLoading(true)
+    setEntries([])
     async function load() {
       wikiIds.current = await getCarlopediaIds()
-      const { data, error } = await buildEntriesQuery(wikiIds.current).limit(PAGE_SIZE)
+      const { data, error } = await buildEntriesQuery(wikiIds.current, activeWorldId).limit(PAGE_SIZE)
       if (!error && data) {
         setEntries(data)
         setHasMore(data.length === PAGE_SIZE)
@@ -41,12 +47,12 @@ export function useEntries() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [activeWorldId])
 
   async function loadMore() {
     if (loadingMore || !hasMore) return
     setLoadingMore(true)
-    const { data, error } = await buildEntriesQuery(wikiIds.current)
+    const { data, error } = await buildEntriesQuery(wikiIds.current, activeWorldId)
       .range(entries.length, entries.length + PAGE_SIZE - 1)
     if (!error && data) {
       setEntries((prev) => [...prev, ...data])
@@ -58,7 +64,7 @@ export function useEntries() {
   async function createEntry(data, fields = []) {
     const { data: created, error } = await supabase
       .from('entries')
-      .insert(data)
+      .insert({ ...data, world_id: activeWorldId })
       .select('*, categories(name, color)')
       .single()
     if (!error && created) {

@@ -1,25 +1,30 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useWorld } from '../contexts/WorldContext'
 
 export function useCategories() {
+  const { activeWorldId } = useWorld()
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!activeWorldId) return
+    setLoading(true)
     supabase
       .from('categories')
       .select('*')
+      .eq('world_id', activeWorldId)
       .order('created_at', { ascending: true })
       .then(({ data, error }) => {
         if (!error && data) setCategories(data)
         setLoading(false)
       })
-  }, [])
+  }, [activeWorldId])
 
   async function createCategory(name, color) {
     const { data, error } = await supabase
       .from('categories')
-      .insert({ name, color })
+      .insert({ name, color, world_id: activeWorldId })
       .select()
       .single()
     if (!error && data) setCategories((prev) => [...prev, data])
