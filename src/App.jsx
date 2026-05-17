@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import EntryPage from './pages/EntryPage'
@@ -11,6 +12,8 @@ import CarlopediaEntryPage from './pages/CarlopediaEntryPage'
 import TutorialsPage from './pages/TutorialsPage'
 import PrivacyPage from './pages/PrivacyPage'
 import AboutPage from './pages/AboutPage'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminUsers from './pages/admin/AdminUsers'
 
 function KeyedEntryPage() {
   const { id } = useParams()
@@ -37,6 +40,10 @@ export default function App() {
           <Route path="/recent" element={<RecentPage />} />
           <Route path="/carlopedia" element={<CarlopediaPage />} />
           <Route path="/carlopedia/:id" element={<KeyedCarlopediaEntryPage />} />
+        </Route>
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

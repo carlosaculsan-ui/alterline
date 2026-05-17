@@ -441,6 +441,20 @@ export default function Layout({ children, forceLight = false, wide = false }) {
                 </button>
               </div>
 
+              {user?.email === 'carlosaculsan123@gmail.com' && (
+                <button
+                  onClick={() => { setShowUserMenu(false); navigate('/admin') }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-800 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors"
+                >
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
+                    <rect x="1.5" y="1.5" width="5" height="5" rx="0.8" stroke="currentColor" strokeWidth="1.3" />
+                    <rect x="8.5" y="1.5" width="5" height="5" rx="0.8" stroke="currentColor" strokeWidth="1.3" />
+                    <rect x="1.5" y="8.5" width="5" height="5" rx="0.8" stroke="currentColor" strokeWidth="1.3" />
+                    <rect x="8.5" y="8.5" width="5" height="5" rx="0.8" stroke="currentColor" strokeWidth="1.3" />
+                  </svg>
+                  Admin panel
+                </button>
+              )}
               <div className="mx-3 my-1 border-t border-[#f0f0f0] dark:border-[#2a2a2a]" />
               <button
                 onClick={async () => { setShowUserMenu(false); await supabase.auth.signOut(); navigate('/login') }}
