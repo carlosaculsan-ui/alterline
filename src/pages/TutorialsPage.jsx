@@ -1,0 +1,132 @@
+function Step({ n, text }) {
+  return (
+    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '10px' }}>
+      <span style={{ minWidth: '22px', height: '22px', borderRadius: '50%', background: '#f0f0f0', color: '#555', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '1px' }}>{n}</span>
+      <p style={{ fontSize: '15px', color: '#444', lineHeight: '1.7', margin: 0 }}>{text}</p>
+    </div>
+  )
+}
+
+function Section({ title, subtitle, children }) {
+  return (
+    <div style={{ marginBottom: '52px' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111', marginBottom: '4px' }}>{title}</h2>
+      {subtitle && <p style={{ fontSize: '14px', color: '#999', marginBottom: '20px' }}>{subtitle}</p>}
+      {!subtitle && <div style={{ marginBottom: '20px' }} />}
+      {children}
+    </div>
+  )
+}
+
+function Tip({ children }) {
+  return (
+    <div style={{ background: '#f9f9f9', border: '1px solid #ececec', borderRadius: '8px', padding: '12px 16px', fontSize: '14px', color: '#555', lineHeight: '1.6', marginTop: '12px' }}>
+      <strong style={{ color: '#111' }}>Tip: </strong>{children}
+    </div>
+  )
+}
+
+function Tag({ children }) {
+  return (
+    <code style={{ background: '#f0f0f0', color: '#333', padding: '1px 7px', borderRadius: '4px', fontSize: '13px', fontFamily: 'monospace' }}>{children}</code>
+  )
+}
+
+export default function TutorialsPage() {
+  return (
+    <div className="min-h-screen bg-white" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div className="max-w-[720px] mx-auto px-8 py-16">
+
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 mb-14">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M4 21L10 3" stroke="#111" strokeWidth="2" strokeLinecap="round" />
+            <path d="M14 3L20 21" stroke="#111" strokeWidth="2" strokeLinecap="round" />
+            <path d="M7 13H17" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          <span style={{ fontFamily: "'Space Grotesk', Inter, system-ui, sans-serif", fontSize: '15px', fontWeight: 700, letterSpacing: '0.1em', color: '#111' }}>
+            Alterline
+          </span>
+        </div>
+
+        <h1 style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '12px', color: '#111' }}>
+          Tutorials
+        </h1>
+        <p style={{ fontSize: '16px', color: '#888', marginBottom: '56px', lineHeight: '1.6' }}>
+          Everything you need to know to get the most out of Alterline.
+        </p>
+
+        {/* TOC */}
+        <div style={{ background: '#fafafa', border: '1px solid #ececec', borderRadius: '10px', padding: '20px 24px', marginBottom: '56px' }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Contents</p>
+          {[
+            '1. Creating your first entry',
+            '2. Organizing with categories',
+            '3. The rich text editor',
+            '4. Linking entries together',
+            '5. Carlopedia — your personal encyclopedia',
+            '6. Dark mode',
+          ].map((item) => (
+            <p key={item} style={{ fontSize: '14px', color: '#555', marginBottom: '6px' }}>{item}</p>
+          ))}
+        </div>
+
+        <Section title="1. Creating your first entry" subtitle="Entries are the core unit of Alterline — a story, a character, a note, anything.">
+          <Step n="1" text='Click "New Entry" in the left sidebar.' />
+          <Step n="2" text="Give your entry a title. You can optionally assign it a category and add custom fields (like a character's age or a location's region)." />
+          <Step n="3" text="Click Create. You'll land directly in the entry editor, ready to write." />
+          <Tip>Entries support full rich text — bold, italic, colors, highlights, and more. See section 3 for the full editor breakdown.</Tip>
+        </Section>
+
+        <Section title="2. Organizing with categories" subtitle="Categories let you group entries by type — Characters, Locations, Factions, etc.">
+          <Step n="1" text='Click "New category" at the bottom of the sidebar.' />
+          <Step n="2" text="Give it a name and pick a color dot." />
+          <Step n="3" text="Assign entries to a category when creating them, or leave them uncategorized — both work fine." />
+          <Step n="4" text="Click a category in the sidebar to filter the dashboard to only those entries." />
+          <Tip>You can rename or delete a category by hovering over it in the sidebar — the edit and delete icons appear on the right.</Tip>
+        </Section>
+
+        <Section title="3. The rich text editor" subtitle="The editor supports a full formatting toolbar at the top of every entry.">
+          <div style={{ fontSize: '15px', color: '#444', lineHeight: '1.8' }} className="space-y-2">
+            <p><strong style={{ color: '#111' }}>Font size</strong> — Select text, then choose a size from the dropdown on the left of the toolbar.</p>
+            <p><strong style={{ color: '#111' }}>Bold, Italic, Underline</strong> — Standard formatting. Works on selected text.</p>
+            <p><strong style={{ color: '#111' }}>Text color</strong> — The <Tag>A</Tag> button opens a color picker for the selected text.</p>
+            <p><strong style={{ color: '#111' }}>Highlight</strong> — The marker button highlights selected text with a background color.</p>
+            <p><strong style={{ color: '#111' }}>Headings</strong> — Use <Tag>H1</Tag> / <Tag>H2</Tag> / <Tag>H3</Tag> to structure long entries.</p>
+            <p><strong style={{ color: '#111' }}>Lists</strong> — Bullet and numbered lists for quick notes or structured content.</p>
+          </div>
+          <Tip>All formatting is saved automatically as you type. There's no manual save button.</Tip>
+        </Section>
+
+        <Section title="4. Linking entries together" subtitle="Entries can reference each other — the foundation of a connected knowledge base.">
+          <Step n="1" text="Inside any story entry, select a word or phrase you want to link." />
+          <Step n="2" text='A bubble menu appears. Click "+ Link entry" or "+ Create Carlopedia" depending on what you want to do.' />
+          <Step n="3" text="To link to an existing Carlopedia article, choose Link entry and search by name." />
+          <Step n="4" text="To create a new Carlopedia article from the selected text, click Create Carlopedia — it creates the article and links it in one step." />
+          <Step n="5" text="Linked text appears highlighted in the entry. Click it to jump to that article." />
+        </Section>
+
+        <Section title="5. Carlopedia — your personal encyclopedia" subtitle="A Wikipedia-style article for every person, place, or thing in your world.">
+          <Step n="1" text='Navigate to "Carlopedia" in the sidebar.' />
+          <Step n="2" text='Click "+ New article" to create a blank article, or create one directly from a story by selecting text.' />
+          <Step n="3" text="Each article has a title, a body (full rich text), and an infobox on the right — similar to Wikipedia's sidebar cards." />
+          <Step n="4" text="The infobox supports a photo, a caption, and editable rows: Born, Died, Nationality, Occupation, and Known for. Click any field to edit it inline." />
+          <Step n="5" text="To upload a photo, click the photo area inside the infobox." />
+          <Tip>Carlopedia articles are separate from regular entries and won't appear in the main Dashboard grid — they live in their own section.</Tip>
+        </Section>
+
+        <Section title="6. Dark mode" subtitle="Alterline supports light and dark mode, saved to your browser.">
+          <p style={{ fontSize: '15px', color: '#444', lineHeight: '1.7' }}>
+            Click your account button at the bottom of the sidebar, then choose <strong style={{ color: '#111' }}>Light mode</strong> or <strong style={{ color: '#111' }}>Dark mode</strong> to toggle. Your preference is saved locally and persists across sessions.
+          </p>
+        </Section>
+
+        <div style={{ marginTop: '32px', paddingTop: '32px', borderTop: '1px solid #f0f0f0' }}>
+          <p style={{ fontSize: '14px', color: '#aaa' }}>
+            Alterline &nbsp;·&nbsp; Built by Carlo Saculsan
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}

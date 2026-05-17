@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import NewCategoryModal from './NewCategoryModal'
@@ -121,6 +122,12 @@ export default function Layout({ children, forceLight = false, wide = false }) {
   const { categories, createCategory, updateCategory, deleteCategory } = useCategories()
   const editInputRef = useRef(null)
   const cancelEditRef = useRef(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showLearnMore, setShowLearnMore] = useState(false)
+  const [learnMorePos, setLearnMorePos] = useState(null)
+  const userMenuRef = useRef(null)
+  const learnMoreRef = useRef(null)
+  const learnMorePortalRef = useRef(null)
 
   useEffect(() => {
     if (dark) {
@@ -134,6 +141,20 @@ export default function Layout({ children, forceLight = false, wide = false }) {
   useEffect(() => {
     if (editingId) editInputRef.current?.focus()
   }, [editingId])
+
+  useEffect(() => {
+    if (!showUserMenu) return
+    function handleClick(e) {
+      const inMenu = userMenuRef.current?.contains(e.target)
+      const inPortal = learnMorePortalRef.current?.contains(e.target)
+      if (!inMenu && !inPortal) {
+        setShowUserMenu(false)
+        setShowLearnMore(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showUserMenu])
 
   async function saveEdit() {
     if (cancelEditRef.current) {
@@ -361,22 +382,69 @@ export default function Layout({ children, forceLight = false, wide = false }) {
           </button>
         </div>
 
-        {/* Theme toggle + logout */}
-        <div className="p-3 border-t border-[#e5e5e5] dark:border-[#2a2a2a] space-y-1">
-          <button
-            onClick={() => setDark((d) => !d)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
-          >
-            {dark ? <IconSun /> : <IconMoon />}
-            {dark ? 'Light mode' : 'Dark mode'}
-          </button>
+        {/* User menu */}
+        <div className="p-3 border-t border-[#e5e5e5] dark:border-[#2a2a2a] relative" ref={userMenuRef}>
+          {/* Popover */}
+          {showUserMenu && user && (
+            <div className="absolute bottom-full left-0 right-0 mb-2 mx-0 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-lg py-1">
+              <div className="px-4 py-2.5 text-[12px] text-gray-500 dark:text-[#777] truncate border-b border-[#f0f0f0] dark:border-[#2a2a2a] mb-1">
+                {user.email}
+              </div>
+              <button
+                onClick={() => { setDark((d) => !d) }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-800 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors"
+              >
+                {dark ? <IconSun /> : <IconMoon />}
+                {dark ? 'Light mode' : 'Dark mode'}
+              </button>
+              {/* Learn more */}
+              <div ref={learnMoreRef}>
+                <button
+                  onClick={() => {
+                    const rect = learnMoreRef.current?.getBoundingClientRect()
+                    if (rect) setLearnMorePos({ top: rect.top, left: rect.right })
+                    setShowLearnMore((v) => !v)
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-800 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors"
+                >
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
+                    <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.3" />
+                    <path d="M7.5 5v.5M7.5 7v3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  </svg>
+                  <span className="flex-1 text-left">Learn more</span>
+                  <svg width="12" height="12" viewBox="0 0 15 15" fill="none" className="shrink-0 opacity-40">
+                    <path d="M5.5 3.5L9.5 7.5L5.5 11.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mx-3 my-1 border-t border-[#f0f0f0] dark:border-[#2a2a2a]" />
+              <button
+                onClick={async () => { setShowUserMenu(false); await supabase.auth.signOut(); navigate('/login') }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-800 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors"
+              >
+                <IconLogOut />
+                Log out
+              </button>
+            </div>
+          )}
+          {/* Trigger */}
           {user && (
             <button
-              onClick={async () => { await supabase.auth.signOut(); navigate('/login') }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
+              onClick={() => { setShowUserMenu((v) => !v); setShowLearnMore(false) }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
             >
-              <IconLogOut />
-              Log out
+              <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 text-white text-[15px] font-semibold select-none">
+                {user.email[0].toUpperCase()}
+              </div>
+              <span className="flex-1 text-left text-[14px] text-gray-900 dark:text-white truncate min-w-0 font-medium">
+                {user.email}
+              </span>
+              <svg width="14" height="14" viewBox="0 0 15 15" fill="none" className="shrink-0 text-gray-900 dark:text-white opacity-40">
+                <circle cx="7.5" cy="3.5" r="1.2" fill="currentColor" />
+                <circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" />
+                <circle cx="7.5" cy="11.5" r="1.2" fill="currentColor" />
+              </svg>
             </button>
           )}
         </div>
@@ -418,6 +486,30 @@ export default function Layout({ children, forceLight = false, wide = false }) {
         />
       )}
       {toastMsg && <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />}
+
+      {/* Learn more portal — renders at body level to escape sidebar overflow:hidden */}
+      {showLearnMore && learnMorePos && createPortal(
+        <div
+          ref={learnMorePortalRef}
+          style={{ position: 'fixed', top: learnMorePos.top, left: learnMorePos.left + 8, zIndex: 9999 }}
+          className="w-48 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl py-1"
+        >
+          {[
+            { label: 'Tutorials', path: '/tutorials' },
+            { label: 'Privacy policy', path: '/privacy' },
+            { label: 'About Alterline', path: '/about' },
+          ].map(({ label, path }) => (
+            <button
+              key={path}
+              onClick={() => { setShowLearnMore(false); setShowUserMenu(false); window.open(path, '_blank') }}
+              className="w-full flex items-center px-4 py-2 text-[13px] text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors text-left"
+            >
+              {label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
