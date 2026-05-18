@@ -84,10 +84,15 @@ export function WorldProvider({ children }) {
     return null
   }
 
+  async function updateWorld(id, name, color) {
+    const { error } = await supabase.from('worlds').update({ name, color }).eq('id', id)
+    if (!error) setWorlds((prev) => prev.map((w) => (w.id === id ? { ...w, name, color } : w)))
+  }
+
   const activeWorld = worlds.find((w) => w.id === activeWorldId) ?? worlds[0] ?? null
 
   return (
-    <WorldContext.Provider value={{ worlds, activeWorld, activeWorldId, setActiveWorldId, createWorld, loading }}>
+    <WorldContext.Provider value={{ worlds, activeWorld, activeWorldId, setActiveWorldId, createWorld, updateWorld, loading }}>
       {children}
     </WorldContext.Provider>
   )

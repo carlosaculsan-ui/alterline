@@ -47,7 +47,7 @@ export function useEntries() {
       setLoading(false)
     }
     load()
-  }, [activeWorldId])
+  }, [activeWorldId, worldLoading])
 
   async function loadMore() {
     if (loadingMore || !hasMore) return

@@ -63,9 +63,12 @@ export default function TutorialsPage() {
             '1. Creating your first entry',
             '2. Organizing with categories',
             '3. The rich text editor',
-            '4. Linking entries together',
+            '4. Linking entries with @mentions',
             '5. Carlopedia — your personal encyclopedia',
-            '6. Dark mode',
+            '6. Relationship graph',
+            '7. Backlinks',
+            '8. AI writing assistant',
+            '9. Dark mode',
           ].map((item) => (
             <p key={item} style={{ fontSize: '14px', color: '#555', marginBottom: '6px' }}>{item}</p>
           ))}
@@ -98,12 +101,12 @@ export default function TutorialsPage() {
           <Tip>All formatting is saved automatically as you type. There's no manual save button.</Tip>
         </Section>
 
-        <Section title="4. Linking entries together" subtitle="Entries can reference each other — the foundation of a connected knowledge base.">
-          <Step n="1" text="Inside any story entry, select a word or phrase you want to link." />
-          <Step n="2" text='A bubble menu appears. Click "+ Link entry" or "+ Create Carlopedia" depending on what you want to do.' />
-          <Step n="3" text="To link to an existing Carlopedia article, choose Link entry and search by name." />
-          <Step n="4" text="To create a new Carlopedia article from the selected text, click Create Carlopedia — it creates the article and links it in one step." />
-          <Step n="5" text="Linked text appears highlighted in the entry. Click it to jump to that article." />
+        <Section title="4. Linking entries with @mentions" subtitle="Connect your entries to Carlopedia articles inline as you write.">
+          <Step n="1" text='Type @ anywhere in the story editor. A dropdown appears listing your Carlopedia articles.' />
+          <Step n="2" text="Start typing the article name to filter the list, then press Enter or click to insert the mention." />
+          <Step n="3" text="The mention appears as a highlighted link inside your entry. Click it to jump to that Carlopedia article." />
+          <Step n="4" text="Alternatively, select any word or phrase and use the bubble menu to link it to an existing entry or create a new Carlopedia article in one step." />
+          <Tip>Every @mention automatically creates an edge in the Relationship Graph — no extra steps needed.</Tip>
         </Section>
 
         <Section title="5. Carlopedia — your personal encyclopedia" subtitle="A Wikipedia-style article for every person, place, or thing in your world.">
@@ -115,7 +118,33 @@ export default function TutorialsPage() {
           <Tip>Carlopedia articles are separate from regular entries and won't appear in the main Dashboard grid — they live in their own section.</Tip>
         </Section>
 
-        <Section title="6. Dark mode" subtitle="Alterline supports light and dark mode, saved to your browser.">
+        <Section title="6. Relationship graph" subtitle="A live map of every connection in your world.">
+          <Step n="1" text='Click "Graph" in the sidebar to open the Relationship Graph.' />
+          <Step n="2" text="Each node is a Carlopedia article. Each edge is an @mention link between entries." />
+          <Step n="3" text="Drag nodes to rearrange the layout. The graph uses a force-directed simulation, so nodes naturally repel each other and edges pull connected ones together." />
+          <Step n="4" text="Click any node to open that Carlopedia article." />
+          <Tip>The more @mentions you add in your stories, the richer the graph becomes. It's the fastest way to see which characters and places are most central to your world.</Tip>
+        </Section>
+
+        <Section title="7. Backlinks" subtitle="See every entry that references the one you're reading.">
+          <p style={{ fontSize: '15px', color: '#444', lineHeight: '1.7', marginBottom: '12px' }}>
+            Open any Carlopedia article and look for the <strong style={{ color: '#111' }}>Backlinks</strong> panel. It lists every story entry or article that mentions the current article via an @mention link.
+          </p>
+          <p style={{ fontSize: '15px', color: '#444', lineHeight: '1.7' }}>
+            This means you never have to search for "who mentions this character?" — the answer is always one click away. Click any backlink to jump directly to that entry.
+          </p>
+          <Tip>Backlinks update automatically whenever you add or remove an @mention anywhere in your world.</Tip>
+        </Section>
+
+        <Section title="8. AI writing assistant" subtitle="Context-aware suggestions that know your world.">
+          <Step n="1" text='Open any story entry and click the AI assistant button in the editor toolbar (the sparkle icon).' />
+          <Step n="2" text="Type a prompt — ask it to continue a scene, suggest dialogue, describe a location, or brainstorm ideas." />
+          <Step n="3" text="The assistant has access to your world context: the entries and Carlopedia articles you've written. Suggestions stay consistent with what you've already established." />
+          <Step n="4" text="Accept the suggestion to insert it at the cursor, or dismiss it and keep writing." />
+          <Tip>The AI assistant works best when your Carlopedia articles are detailed. The more context your world has, the more grounded the suggestions will be.</Tip>
+        </Section>
+
+        <Section title="9. Dark mode" subtitle="Alterline supports light and dark mode, saved to your browser.">
           <p style={{ fontSize: '15px', color: '#444', lineHeight: '1.7' }}>
             Click your account button at the bottom of the sidebar, then choose <strong style={{ color: '#111' }}>Light mode</strong> or <strong style={{ color: '#111' }}>Dark mode</strong> to toggle. Your preference is saved locally and persists across sessions.
           </p>

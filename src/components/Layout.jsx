@@ -132,7 +132,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuth()
-  const { worlds, activeWorld, activeWorldId, setActiveWorldId, createWorld } = useWorld()
+  const { worlds, activeWorld, activeWorldId, setActiveWorldId, createWorld, updateWorld } = useWorld()
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('alterline-theme') !== 'light'
   })
@@ -158,6 +158,8 @@ export default function Layout({ children, forceLight = false, wide = false }) {
   const [newWorldName, setNewWorldName] = useState('')
   const [newWorldColor, setNewWorldColor] = useState(COLORS[0])
   const [creatingWorld, setCreatingWorld] = useState(false)
+  const [renamingWorldId, setRenamingWorldId] = useState(null)
+  const [renameValue, setRenameValue] = useState('')
   const worldSwitcherRef = useRef(null)
 
   useEffect(() => {
@@ -220,6 +222,15 @@ export default function Layout({ children, forceLight = false, wide = false }) {
       setNewWorldColor(COLORS[0])
     }
     setCreatingWorld(false)
+  }
+
+  async function handleRenameWorld(id) {
+    const trimmed = renameValue.trim()
+    const world = worlds.find((w) => w.id === id)
+    setRenamingWorldId(null)
+    if (trimmed && world && trimmed !== world.name) {
+      await updateWorld(id, trimmed, world.color)
+    }
   }
 
   async function saveEdit() {
@@ -316,29 +327,62 @@ export default function Layout({ children, forceLight = false, wide = false }) {
           {showWorldSwitcher && (
             <div className="absolute top-full left-3 right-3 mt-1 z-50 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl py-1 overflow-hidden">
               {worlds.map((world) => (
-                <button
-                  key={world.id}
-                  onClick={() => {
-                    if (world.id !== activeWorldId) {
-                      setActiveWorldId(world.id)
-                      if (/^\/(entry|carlopedia)\//.test(location.pathname)) navigate('/')
-                    }
-                    setShowWorldSwitcher(false)
-                  }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-colors ${
-                    world.id === activeWorldId
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
-                      : 'text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525]'
-                  }`}
-                >
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: world.color }} />
-                  <span className="flex-1 text-left truncate font-medium">{world.name}</span>
-                  {world.id === activeWorldId && (
-                    <svg width="12" height="12" viewBox="0 0 15 15" fill="none" className="shrink-0">
-                      <path d="M2 7.5L6 11.5L13 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                <div key={world.id} className="relative group">
+                  {renamingWorldId === world.id ? (
+                    <div className="flex items-center gap-2 px-3 py-1.5">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: world.color }} />
+                      <input
+                        autoFocus
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { e.preventDefault(); handleRenameWorld(world.id) }
+                          if (e.key === 'Escape') setRenamingWorldId(null)
+                        }}
+                        onBlur={() => handleRenameWorld(world.id)}
+                        className="flex-1 bg-[#f5f5f5] dark:bg-[#222] border border-indigo-400 rounded-md px-2 py-0.5 text-[12px] text-gray-900 dark:text-white outline-none"
+                      />
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (world.id !== activeWorldId) {
+                          setActiveWorldId(world.id)
+                          if (/^\/(entry|carlopedia)\//.test(location.pathname)) navigate('/')
+                        }
+                        setShowWorldSwitcher(false)
+                      }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-colors ${
+                        world.id === activeWorldId
+                          ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
+                          : 'text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525]'
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: world.color }} />
+                      <span className="flex-1 text-left truncate font-medium">{world.name}</span>
+                      {world.id === activeWorldId && (
+                        <svg width="12" height="12" viewBox="0 0 15 15" fill="none" className="shrink-0">
+                          <path d="M2 7.5L6 11.5L13 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
                   )}
-                </button>
+                  {renamingWorldId !== world.id && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setRenamingWorldId(world.id)
+                        setRenameValue(world.name)
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-gray-400 dark:text-[#666] hover:text-gray-700 dark:hover:text-white transition-all"
+                      title="Rename"
+                    >
+                      <svg width="11" height="11" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10.5 1.5L13.5 4.5L5 13H2V10L10.5 1.5Z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               ))}
 
               <div className="mx-3 my-1 border-t border-[#f0f0f0] dark:border-[#2a2a2a]" />

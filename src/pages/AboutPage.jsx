@@ -28,13 +28,19 @@ export default function AboutPage() {
             The problem was simple: world-building generates a lot of material. Characters, locations, timelines, factions, lore, contradictions, half-formed ideas. Notebooks get lost. Docs sprawl. Nothing talks to each other.
           </p>
           <p>
-            Alterline was built to fix that. It's a private notebook where entries can link to each other — a story can reference a character, a character can link to their home city, a city can link to the faction that controls it. Everything stays connected.
+            Alterline was built to fix that. It's a private notebook where entries can link to each other — a story can reference a character, a character can link to their home city, a city can link to the faction that controls it. Everything stays connected. The <strong style={{ color: '#111' }}>Relationship Graph</strong> makes those connections visible: a live, force-directed map of every link in your world, so you can see the shape of your fiction at a glance.
           </p>
           <p>
-            <strong style={{ color: '#111' }}>Carlopedia</strong> — the encyclopedia built into Alterline — takes this further. Each subject in your world gets its own article: a name, a photo, a structured infobox, and as much prose as you need. It looks and feels like Wikipedia, but it's entirely yours.
+            <strong style={{ color: '#111' }}>Carlopedia</strong> — the encyclopedia built into Alterline — takes this further. Each subject in your world gets its own article: a name, a photo, a structured infobox, and as much prose as you need. It looks and feels like Wikipedia, but it's entirely yours. Type <strong style={{ color: '#111' }}>@</strong> anywhere in the story editor to mention a Carlopedia article inline — the link is created automatically.
           </p>
           <p>
-            What started as a tool for one person's fiction projects turned into something more general: a personal knowledge base that works the way a writer thinks. No folders, no tags, no friction — just entries, links, and ideas.
+            The <strong style={{ color: '#111' }}>Backlinks panel</strong> shows every entry that references the one you're currently reading. So when you open a character's article, you immediately see every story, location, or faction that mentions them — without having to search.
+          </p>
+          <p>
+            When the words don't come, the <strong style={{ color: '#111' }}>AI writing assistant</strong> can help. It's built directly into the editor and knows your world — the entries you've written, the details you've established — so suggestions stay consistent with what already exists. It's not there to write for you. It's there to help you get unstuck.
+          </p>
+          <p>
+            What started as a tool for one person's fiction projects turned into something more general: a personal knowledge base that works the way a writer thinks. No folders, no tags, no friction — just entries, links, and ideas. It works on any device, desktop or mobile, so your world is always within reach.
           </p>
         </div>
 
