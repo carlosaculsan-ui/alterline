@@ -1,6 +1,16 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #1c1c1c inset !important;
+  -webkit-text-fill-color: white !important;
+  border: 1px solid #2e2e2e !important;
+  caret-color: white;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .prose-content { line-height: 1.75; }
 .prose-content h1 { font-size: 1.4rem; font-weight: 700; margin: 1.25rem 0 0.5rem; }
 .prose-content h2 { font-size: 1.15rem; font-weight: 600; margin: 1.1rem 0 0.4rem; }

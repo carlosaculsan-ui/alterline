@@ -226,7 +226,7 @@ export default function LoginPage() {
                   <div style={{ marginBottom: 16 }}>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Email</label>
                     <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#555', display: 'flex', pointerEvents: 'none' }}>
+                      <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: email ? 'white' : '#555', display: 'flex', pointerEvents: 'none', transition: 'color 150ms' }}>
                         <EmailIcon />
                       </span>
                       <input
@@ -257,9 +257,9 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(v => !v)}
-                        style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#555', display: 'flex', padding: 0 }}
+                        style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: password ? 'white' : '#555', display: 'flex', padding: 0, transition: 'color 150ms' }}
                         onMouseEnter={e => e.currentTarget.style.color = '#aaa'}
-                        onMouseLeave={e => e.currentTarget.style.color = '#555'}
+                        onMouseLeave={e => e.currentTarget.style.color = password ? 'white' : '#555'}
                       >
                         {showPassword ? <EyeOpenIcon /> : <EyeClosedIcon />}
                       </button>
@@ -350,7 +350,7 @@ export default function LoginPage() {
                 <div style={{ marginBottom: 14 }}>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Email</label>
                   <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#555', display: 'flex', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: email ? 'white' : '#555', display: 'flex', pointerEvents: 'none', transition: 'color 150ms' }}>
                       <EmailIcon />
                     </span>
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus placeholder="you@example.com" style={{ ...INPUT, paddingRight: 36 }} />
@@ -396,9 +396,9 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(v => !v)}
-                      style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#555', display: 'flex', padding: 0 }}
+                      style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: confirmPassword ? 'white' : '#555', display: 'flex', padding: 0, transition: 'color 150ms' }}
                       onMouseEnter={e => e.currentTarget.style.color = '#aaa'}
-                      onMouseLeave={e => e.currentTarget.style.color = '#555'}
+                      onMouseLeave={e => e.currentTarget.style.color = confirmPassword ? 'white' : '#555'}
                     >
                       {showConfirmPassword ? <EyeOpenIcon /> : <EyeClosedIcon />}
                     </button>
@@ -438,7 +438,7 @@ export default function LoginPage() {
                   onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e8e8e8'}
                   onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
                 >
-                  Next
+                  Sign up
                 </button>
 
                 <p style={{ textAlign: 'center', fontSize: 13, color: '#555', margin: 0 }}>
