@@ -208,15 +208,18 @@ function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
   )
 }
 
-function ToolBtn({ active, onAction, title, children }) {
+function ToolBtn({ active, onAction, title, children, disabled }) {
   return (
     <button
-      onMouseDown={(e) => { e.preventDefault(); onAction() }}
+      onMouseDown={(e) => { e.preventDefault(); if (!disabled) onAction() }}
       title={title}
+      disabled={disabled}
       className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${
-        active
-          ? 'bg-[#ebebeb] dark:bg-[#2a2a2a] text-gray-900 dark:text-white'
-          : 'text-gray-900 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#222]'
+        disabled
+          ? 'text-gray-900 dark:text-white opacity-25 cursor-default'
+          : active
+            ? 'bg-[#ebebeb] dark:bg-[#2a2a2a] text-gray-900 dark:text-white'
+            : 'text-gray-900 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#222]'
       }`}
     >
       {children}
@@ -254,6 +257,19 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive }) {
           <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mr-4 shrink-0" />
         </>
       )}
+      <ToolBtn onAction={() => editor.chain().focus().undo().run()} title="Undo" disabled={!editor.can().undo()}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 7v6h6" /><path d="M3 13C5 7 10 4 16 6c3 1 5 3 6 6" />
+        </svg>
+      </ToolBtn>
+      <ToolBtn onAction={() => editor.chain().focus().redo().run()} title="Redo" disabled={!editor.can().redo()}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 7v6h-6" /><path d="M21 13C19 7 14 4 8 6c-3 1-5 3-6 6" />
+        </svg>
+      </ToolBtn>
+
+      <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mx-1 shrink-0" />
+
       <select
         value={currentSize}
         onChange={(e) => editor.chain().focus().setFontSize(`${e.target.value}px`).run()}
@@ -289,6 +305,37 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive }) {
         </svg>
         <input type="color" defaultValue="#fef08a" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onInput={(e) => editor.chain().focus().setHighlight({ color: e.target.value }).run()} />
       </label>
+
+      <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mx-1 shrink-0" />
+
+      <ToolBtn active={editor.isActive('heading', { level: 1 })} onAction={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} title="Heading 1">
+        <span className="text-[11px] font-bold">H1</span>
+      </ToolBtn>
+      <ToolBtn active={editor.isActive('heading', { level: 2 })} onAction={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title="Heading 2">
+        <span className="text-[11px] font-bold">H2</span>
+      </ToolBtn>
+      <ToolBtn active={editor.isActive('heading', { level: 3 })} onAction={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} title="Heading 3">
+        <span className="text-[11px] font-bold">H3</span>
+      </ToolBtn>
+
+      <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mx-1 shrink-0" />
+
+      <ToolBtn active={editor.isActive('bulletList')} onAction={() => editor.chain().focus().toggleBulletList().run()} title="Bullet list">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none" />
+          <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+        </svg>
+      </ToolBtn>
+      <ToolBtn active={editor.isActive('orderedList')} onAction={() => editor.chain().focus().toggleOrderedList().run()} title="Numbered list">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="10" y1="6" x2="21" y2="6" /><line x1="10" y1="12" x2="21" y2="12" /><line x1="10" y1="18" x2="21" y2="18" />
+          <text x="2" y="8" fontSize="7" fontWeight="bold" fill="currentColor" stroke="none">1</text>
+          <text x="2" y="14" fontSize="7" fontWeight="bold" fill="currentColor" stroke="none">2</text>
+          <text x="2" y="20" fontSize="7" fontWeight="bold" fill="currentColor" stroke="none">3</text>
+        </svg>
+      </ToolBtn>
 
       <div className="flex-1" />
 
