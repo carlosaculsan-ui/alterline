@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 
 function IconNote() {
   return (
@@ -32,7 +33,7 @@ export default function EntryCard({ entry, onDelete, folders = [], onMoveToFolde
   const [showMenu, setShowMenu] = useState(false)
   const [showColors, setShowColors] = useState(false)
   const [showFolders, setShowFolders] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [cardColorId, setCardColorId] = useState(
     () => localStorage.getItem(`alterline-card-color-${entry.id}`) ?? 'default'
   )
@@ -54,14 +55,6 @@ export default function EntryCard({ entry, onDelete, folders = [], onMoveToFolde
     setShowMenu(false)
     setShowColors(false)
     setShowFolders(false)
-    setConfirmDelete(false)
-  }
-
-  function handleDelete(e) {
-    e.stopPropagation()
-    if (!confirmDelete) { setConfirmDelete(true); return }
-    closeMenu()
-    onDelete?.(entry.id)
   }
 
   function handleColorPick(e, color) {
@@ -113,18 +106,75 @@ export default function EntryCard({ entry, onDelete, folders = [], onMoveToFolde
             <span className="text-[12px] text-gray-900 dark:text-white opacity-30">No folder</span>
           )}
         </div>
-        <div className="text-[12px] text-gray-900 dark:text-white opacity-50">{date}</div>
+        <div className="text-[12px] text-gray-900 dark:text-white opacity-50 mt-1">{date}</div>
       </div>
 
-      {/* 3-dot button */}
-      {onDelete && (
+      {/* Hover action buttons */}
+      <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Trash */}
+        {onDelete && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowDeleteModal(true) }}
+            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+            aria-label="Delete entry"
+            title="Delete entry"
+          >
+            <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+              <path d="M8 1h4a1 1 0 0 1 1 1H7a1 1 0 0 1 1-1Z" fill="currentColor" />
+              <path d="M3 4h14v1.5H3V4Z" fill="currentColor" />
+              <path d="M5 7h10l-1 11H6L5 7Z" fill="currentColor" />
+            </svg>
+          </button>
+        )}
+        {/* 3-dot */}
         <button
           onClick={openMenu}
-          className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition-all text-gray-900 dark:text-white text-[16px] leading-none"
+          className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-black/10 dark:hover:bg-white/10 transition-all text-gray-900 dark:text-white text-[16px] leading-none"
           aria-label="Options"
         >
           ···
         </button>
+      </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-[#1c1c1c] rounded-2xl shadow-2xl w-full max-w-[380px] p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center mb-4">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" className="text-red-500">
+                <path d="M8 1h4a1 1 0 0 1 1 1H7a1 1 0 0 1 1-1Z" fill="currentColor" />
+                <path d="M3 4h14v1.5H3V4Z" fill="currentColor" />
+                <path d="M5 7h10l-1 11H6L5 7Z" fill="currentColor" />
+              </svg>
+            </div>
+            <h3 className="text-[16px] font-semibold text-gray-900 dark:text-white mb-1">Delete entry?</h3>
+            <p className="text-[13px] text-gray-600 dark:text-gray-300 mb-6">
+              <span className="font-medium text-gray-900 dark:text-white">"{entry.title}"</span> will be permanently deleted and cannot be recovered.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 px-4 py-2 rounded-lg text-[13px] font-medium border border-[#e5e5e5] dark:border-[#2a2a2a] text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowDeleteModal(false); onDelete?.(entry.id) }}
+                className="flex-1 px-4 py-2 rounded-lg text-[13px] font-medium bg-red-500 hover:bg-red-600 text-white transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Menu */}
@@ -135,20 +185,10 @@ export default function EntryCard({ entry, onDelete, folders = [], onMoveToFolde
             className="absolute top-8 right-2 z-20 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden min-w-[160px]"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={handleDelete}
-              className={`w-full px-3 py-2 text-left text-[13px] transition-colors ${
-                confirmDelete
-                  ? 'text-red-500 dark:text-red-400 font-medium bg-red-50 dark:bg-red-950/30'
-                  : 'text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222]'
-              }`}
-            >
-              {confirmDelete ? 'Confirm delete?' : 'Delete'}
-            </button>
             {onMoveToFolder && (
               <>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setShowFolders((p) => !p); setShowColors(false); setConfirmDelete(false) }}
+                  onClick={(e) => { e.stopPropagation(); setShowFolders((p) => !p); setShowColors(false) }}
                   className="w-full px-3 py-2 text-left text-[13px] text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
                 >
                   Move to folder
@@ -186,7 +226,7 @@ export default function EntryCard({ entry, onDelete, folders = [], onMoveToFolde
             )}
 
             <button
-              onClick={(e) => { e.stopPropagation(); setShowColors((p) => !p); setShowFolders(false); setConfirmDelete(false) }}
+              onClick={(e) => { e.stopPropagation(); setShowColors((p) => !p); setShowFolders(false) }}
               className="w-full px-3 py-2 text-left text-[13px] text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
             >
               Change color

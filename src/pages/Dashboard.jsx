@@ -67,6 +67,18 @@ export default function Dashboard() {
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
   const searchGen = useRef(0)
+  const [greetingVisible, setGreetingVisible] = useState(
+    () => !sessionStorage.getItem('alterline-greeted')
+  )
+
+  useEffect(() => {
+    if (loading || !greetingVisible) return
+    const fadeTimer = setTimeout(() => {
+      setGreetingVisible(false)
+      sessionStorage.setItem('alterline-greeted', '1')
+    }, 5000)
+    return () => clearTimeout(fadeTimer)
+  }, [loading, greetingVisible])
 
   useEffect(() => {
     const q = query.trim()
@@ -122,7 +134,19 @@ export default function Dashboard() {
   if (entries.length === 0) return (
     <Layout>
       <div className="p-4 sm:p-6">
-        {name && <h2 className="text-[22px] font-bold text-gray-900 dark:text-white mb-6">Welcome back, {name}.</h2>}
+        {name && (
+          <div
+            style={{
+              overflow: 'hidden',
+              maxHeight: greetingVisible ? '60px' : '0px',
+              opacity: greetingVisible ? 1 : 0,
+              marginBottom: greetingVisible ? '24px' : '0px',
+              transition: 'opacity 600ms ease, max-height 600ms ease, margin-bottom 600ms ease',
+            }}
+          >
+            <h2 className="text-[25px] font-bold text-gray-900 dark:text-white text-center">Welcome back, {name}.</h2>
+          </div>
+        )}
         <EmptyState worldName={activeWorld?.name ?? 'this world'} />
       </div>
     </Layout>
@@ -133,8 +157,16 @@ export default function Dashboard() {
       <div className="p-4 sm:p-6">
         {/* Welcome message */}
         {!isSearching && name && (
-          <div className="mb-6">
-            <h2 className="text-[22px] font-bold text-gray-900 dark:text-white">
+          <div
+            style={{
+              overflow: 'hidden',
+              maxHeight: greetingVisible ? '60px' : '0px',
+              opacity: greetingVisible ? 1 : 0,
+              marginBottom: greetingVisible ? '24px' : '0px',
+              transition: 'opacity 600ms ease, max-height 600ms ease, margin-bottom 600ms ease',
+            }}
+          >
+            <h2 className="text-[25px] font-bold text-gray-900 dark:text-white text-center">
               Welcome back, {name}.
             </h2>
           </div>

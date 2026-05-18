@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate, Navigate } from 'react-router-dom'
+import { useParams, useNavigate, Navigate, useSearchParams } from 'react-router-dom'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -226,7 +226,7 @@ function ToolBtn({ active, onAction, title, children }) {
 
 const FONT_SIZES = ['8','9','10','11','12','14','16','18','20','24','28','32','36','48','60','72']
 
-function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting, onAIToggle, aiActive }) {
+function Toolbar({ editor, onBack, onAIToggle, aiActive }) {
   const [, forceUpdate] = useState(0)
 
   useEffect(() => {
@@ -294,26 +294,19 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting, onAIToggle
 
       <button
         onClick={onAIToggle}
-        className={`text-[12px] font-medium mr-3 shrink-0 transition-colors ${
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-semibold mr-3 shrink-0 transition-all ${
           aiActive
-            ? 'text-indigo-600 dark:text-indigo-400'
-            : 'text-gray-900 dark:text-[#555] hover:text-indigo-500 dark:hover:text-indigo-400'
+            ? 'bg-pink-500 text-white shadow-sm'
+            : 'bg-pink-50 dark:bg-pink-950/50 text-pink-500 dark:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-900/60'
         }`}
       >
-        ✦ AI
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L13.8 8.2L20 10L13.8 11.8L12 18L10.2 11.8L4 10L10.2 8.2L12 2Z" />
+          <path d="M19 16L19.9 18.1L22 19L19.9 19.9L19 22L18.1 19.9L16 19L18.1 18.1L19 16Z" opacity="0.7" />
+        </svg>
+        AI
       </button>
 
-      <button
-        onClick={onDelete}
-        disabled={deleting}
-        className={`text-[13px] disabled:opacity-50 shrink-0 transition-colors ${
-          confirmDelete
-            ? 'text-red-500 dark:text-red-400 font-medium'
-            : 'text-gray-400 dark:text-[#555] hover:text-red-400 dark:hover:text-red-400'
-        }`}
-      >
-        {deleting ? 'Deleting…' : confirmDelete ? 'Confirm?' : 'Delete'}
-      </button>
     </div>
   )
 }
@@ -367,7 +360,8 @@ export default function EntryPage() {
   const cancelTitle = useRef(false)
   const contentInitialized = useRef(false)
 
-  const [showAI, setShowAI] = useState(false)
+  const [searchParams] = useSearchParams()
+  const [showAI, setShowAI] = useState(() => searchParams.get('ai') === '1')
 
   // @mention suggestion
   const { activeWorldId, activeWorld } = useWorld()
@@ -707,7 +701,7 @@ export default function EntryPage() {
         </div>
       ) : (
         <div className="px-4 py-6 sm:px-8 sm:py-8">
-          <Toolbar editor={editor} onBack={() => navigate(-1)} onDelete={handleDelete} confirmDelete={confirmDelete} deleting={deleting} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} />
+          <Toolbar editor={editor} onBack={() => navigate(-1)} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} />
 
           {editingTitle ? (
             <input

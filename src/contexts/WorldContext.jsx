@@ -89,10 +89,27 @@ export function WorldProvider({ children }) {
     if (!error) setWorlds((prev) => prev.map((w) => (w.id === id ? { ...w, name, color } : w)))
   }
 
+  async function deleteWorld(id) {
+    const { data: entryRows } = await supabase.from('entries').select('id').eq('world_id', id)
+    const entryIds = (entryRows ?? []).map((r) => r.id)
+    if (entryIds.length > 0) {
+      await supabase.from('profile_fields').delete().in('entry_id', entryIds)
+    }
+    await supabase.from('entries').delete().eq('world_id', id)
+    await supabase.from('categories').delete().eq('world_id', id)
+    const { error } = await supabase.from('worlds').delete().eq('id', id)
+    if (!error) {
+      const remaining = worlds.filter((w) => w.id !== id)
+      setWorlds(remaining)
+      if (activeWorldId === id && remaining.length > 0) persistActiveWorldId(remaining[0].id)
+    }
+    return !error
+  }
+
   const activeWorld = worlds.find((w) => w.id === activeWorldId) ?? worlds[0] ?? null
 
   return (
-    <WorldContext.Provider value={{ worlds, activeWorld, activeWorldId, setActiveWorldId, createWorld, updateWorld, loading }}>
+    <WorldContext.Provider value={{ worlds, activeWorld, activeWorldId, setActiveWorldId, createWorld, updateWorld, deleteWorld, loading }}>
       {children}
     </WorldContext.Provider>
   )

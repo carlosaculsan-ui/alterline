@@ -132,7 +132,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuth()
-  const { worlds, activeWorld, activeWorldId, setActiveWorldId, createWorld, updateWorld } = useWorld()
+  const { worlds, activeWorld, activeWorldId, setActiveWorldId, createWorld, updateWorld, deleteWorld } = useWorld()
   const [dark, setDark] = useState(() => {
     return localStorage.getItem('alterline-theme') !== 'light'
   })
@@ -160,6 +160,9 @@ export default function Layout({ children, forceLight = false, wide = false }) {
   const [creatingWorld, setCreatingWorld] = useState(false)
   const [renamingWorldId, setRenamingWorldId] = useState(null)
   const [renameValue, setRenameValue] = useState('')
+  const [deleteWorldTarget, setDeleteWorldTarget] = useState(null)
+  const [deleteConfirmName, setDeleteConfirmName] = useState('')
+  const [deletingWorld, setDeletingWorld] = useState(false)
   const worldSwitcherRef = useRef(null)
 
   useEffect(() => {
@@ -224,6 +227,16 @@ export default function Layout({ children, forceLight = false, wide = false }) {
     setCreatingWorld(false)
   }
 
+  async function handleDeleteWorld() {
+    if (!deleteWorldTarget || deletingWorld) return
+    setDeletingWorld(true)
+    await deleteWorld(deleteWorldTarget.id)
+    setDeletingWorld(false)
+    setDeleteWorldTarget(null)
+    setDeleteConfirmName('')
+    setShowWorldSwitcher(false)
+  }
+
   async function handleRenameWorld(id) {
     const trimmed = renameValue.trim()
     const world = worlds.find((w) => w.id === id)
@@ -284,7 +297,10 @@ export default function Layout({ children, forceLight = false, wide = false }) {
       <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto shrink-0 flex flex-col w-[280px] bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a] overflow-hidden transition-transform lg:transition-[width] duration-200 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${sidebarOpen ? '' : 'lg:w-0'}`}>
         {/* Logo */}
         <div className="px-5 py-[18px] border-b border-[#e5e5e5] dark:border-[#2a2a2a] flex items-center justify-between min-w-[280px]">
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-3 hover:opacity-75 transition-opacity"
+          >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="shrink-0 text-gray-900 dark:text-white">
               <path d="M4 21L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <path d="M14 3L20 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -296,7 +312,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
             >
               Alterline
             </span>
-          </div>
+          </button>
           <button
             onClick={() => { setSidebarOpen(false); setMobileMenuOpen(false) }}
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#ebebeb] dark:hover:bg-[#222] p-1.5 rounded-md transition-colors"
@@ -368,19 +384,28 @@ export default function Layout({ children, forceLight = false, wide = false }) {
                     </button>
                   )}
                   {renamingWorldId !== world.id && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setRenamingWorldId(world.id)
-                        setRenameValue(world.name)
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-gray-400 dark:text-[#666] hover:text-gray-700 dark:hover:text-white transition-all"
-                      title="Rename"
-                    >
-                      <svg width="11" height="11" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M10.5 1.5L13.5 4.5L5 13H2V10L10.5 1.5Z" />
-                      </svg>
-                    </button>
+                    <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 flex items-center transition-all">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setRenamingWorldId(world.id); setRenameValue(world.name) }}
+                        className="p-1 rounded text-gray-400 dark:text-[#666] hover:text-gray-700 dark:hover:text-white transition-colors"
+                        title="Rename"
+                      >
+                        <svg width="11" height="11" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M10.5 1.5L13.5 4.5L5 13H2V10L10.5 1.5Z" />
+                        </svg>
+                      </button>
+                      {worlds.length > 1 && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteWorldTarget(world); setDeleteConfirmName('') }}
+                          className="p-1 rounded text-gray-400 dark:text-[#666] hover:text-red-500 transition-colors"
+                          title="Delete world"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M2 4h11M5 4V2.5h5V4M6 7v4.5M9 7v4.5M3 4l.8 8.5a1 1 0 001 .9h6.4a1 1 0 001-.9L13 4" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
@@ -705,7 +730,10 @@ export default function Layout({ children, forceLight = false, wide = false }) {
           >
             <IconHamburger />
           </button>
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 hover:opacity-75 transition-opacity"
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0 text-gray-900 dark:text-white">
               <path d="M4 21L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <path d="M14 3L20 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -717,7 +745,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
             >
               Alterline
             </span>
-          </div>
+          </button>
           <button
             onClick={() => setShowEntryModal(true)}
             className="text-gray-900 dark:text-white p-1.5 hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] rounded-md transition-colors"
@@ -782,6 +810,53 @@ export default function Layout({ children, forceLight = false, wide = false }) {
               {label}
             </button>
           ))}
+        </div>,
+        document.body
+      )}
+
+      {/* Delete world confirmation modal */}
+      {deleteWorldTarget && createPortal(
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60" onClick={(e) => { if (e.target === e.currentTarget) { setDeleteWorldTarget(null); setDeleteConfirmName('') } }}>
+          <div className="bg-white dark:bg-[#1c1c1c] rounded-2xl border border-[#e5e5e5] dark:border-[#2a2a2a] shadow-2xl w-full max-w-[400px] p-6">
+            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
+              <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 4h11M5 4V2.5h5V4M6 7v4.5M9 7v4.5M3 4l.8 8.5a1 1 0 001 .9h6.4a1 1 0 001-.9L13 4" />
+              </svg>
+            </div>
+            <h2 className="text-[17px] font-bold text-gray-900 dark:text-white mb-2">
+              Delete &ldquo;{deleteWorldTarget.name}&rdquo;?
+            </h2>
+            <p className="text-[13px] text-gray-500 dark:text-[#888] mb-5 leading-relaxed">
+              This will permanently delete <strong className="text-gray-700 dark:text-gray-300">all entries, folders, and Carlopedia articles</strong> inside this world. This cannot be undone.
+            </p>
+            <p className="text-[12px] text-gray-500 dark:text-[#777] mb-2">
+              Type <span className="font-semibold text-gray-900 dark:text-white">{deleteWorldTarget.name}</span> to confirm
+            </p>
+            <input
+              autoFocus
+              type="text"
+              value={deleteConfirmName}
+              onChange={(e) => setDeleteConfirmName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && deleteConfirmName === deleteWorldTarget.name) handleDeleteWorld() }}
+              placeholder={deleteWorldTarget.name}
+              className="w-full bg-[#f5f5f5] dark:bg-[#222] border border-[#e5e5e5] dark:border-[#333] rounded-lg px-3 py-2 text-[13px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none focus:border-red-400 transition-colors mb-4"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setDeleteWorldTarget(null); setDeleteConfirmName('') }}
+                className="flex-1 py-2 rounded-lg text-[13px] font-medium border border-[#e5e5e5] dark:border-[#2a2a2a] text-gray-700 dark:text-gray-300 hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteWorld}
+                disabled={deleteConfirmName !== deleteWorldTarget.name || deletingWorld}
+                className="flex-1 py-2 rounded-lg text-[13px] font-medium bg-red-600 hover:bg-red-500 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {deletingWorld ? 'Deleting…' : 'Delete world'}
+              </button>
+            </div>
+          </div>
         </div>,
         document.body
       )}

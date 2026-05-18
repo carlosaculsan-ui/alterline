@@ -28,6 +28,7 @@ export function AuthProvider({ children }) {
       if (_event === 'SIGNED_OUT') {
         localStorage.removeItem('alterline_persist')
         sessionStorage.removeItem('alterline_persist')
+        sessionStorage.removeItem('alterline-greeted')
       }
       setUser(session?.user ?? null)
     })
