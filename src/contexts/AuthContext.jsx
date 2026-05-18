@@ -8,11 +8,27 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(undefined)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        const provider = session.user?.app_metadata?.provider
+        const persistent = localStorage.getItem('alterline_persist')
+        const temporary = sessionStorage.getItem('alterline_persist')
+        // For email/password logins, enforce remember-me: if the browser was
+        // closed without "remember me", neither marker survives → sign out.
+        if (provider === 'email' && !persistent && !temporary) {
+          await supabase.auth.signOut()
+          setUser(null)
+          return
+        }
+      }
       setUser(session?.user ?? null)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (_event === 'SIGNED_OUT') {
+        localStorage.removeItem('alterline_persist')
+        sessionStorage.removeItem('alterline_persist')
+      }
       setUser(session?.user ?? null)
     })
 

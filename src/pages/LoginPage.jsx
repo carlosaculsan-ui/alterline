@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Navigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import CharacterScene from '../components/CharacterScene'
+import TermsModal from '../components/TermsModal'
 
 const INPUT = {
   width: '100%',
@@ -55,8 +56,29 @@ function GoogleIcon() {
   )
 }
 
+function AnimatedPanel({ children }) {
+  const [entered, setEntered] = useState(false)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      const id2 = requestAnimationFrame(() => setEntered(true))
+      return () => cancelAnimationFrame(id2)
+    })
+    return () => cancelAnimationFrame(id)
+  }, [])
+  return (
+    <div style={{
+      opacity: entered ? 1 : 0,
+      transform: entered ? 'translateY(0)' : 'translateY(8px)',
+      transition: entered ? 'opacity 220ms ease, transform 220ms ease' : 'none',
+    }}>
+      {children}
+    </div>
+  )
+}
+
 export default function LoginPage() {
   const user = useAuth()
+  const navigate = useNavigate()
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -68,7 +90,25 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [transitionKey, setTransitionKey] = useState(0)
+  const [exiting, setExiting] = useState(false)
+  const pendingFn = useRef(null)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+
+  function doTransition(updateFn) {
+    if (exiting) return
+    pendingFn.current = updateFn
+    setExiting(true)
+    setTimeout(() => {
+      pendingFn.current?.()
+      setTransitionKey(k => k + 1)
+      setExiting(false)
+    }, 180)
+  }
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768)
@@ -79,11 +119,16 @@ export default function LoginPage() {
   if (user) return <Navigate to="/" replace />
 
   function switchMode(next) {
-    setMode(next)
-    setError(null)
-    setDone(false)
-    setSignupStep(1)
-    setDisplayName('')
+    doTransition(() => {
+      setMode(next)
+      setError(null)
+      setDone(false)
+      setSignupStep(1)
+      setDisplayName('')
+      setConfirmPassword('')
+      setTermsAccepted(false)
+      setShowTermsModal(false)
+    })
   }
 
   async function handleSubmit(e) {
@@ -91,6 +136,15 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
     const { error: err } = await supabase.auth.signInWithPassword({ email, password })
+    if (!err) {
+      if (remember) {
+        localStorage.setItem('alterline_persist', '1')
+        sessionStorage.removeItem('alterline_persist')
+      } else {
+        sessionStorage.setItem('alterline_persist', '1')
+        localStorage.removeItem('alterline_persist')
+      }
+    }
     if (err) setError(err.message)
     setLoading(false)
   }
@@ -98,8 +152,10 @@ export default function LoginPage() {
   function handleSignupStep1(e) {
     e.preventDefault()
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
+    if (password !== confirmPassword) { setError('Passwords do not match.'); return }
+    if (!termsAccepted) { setError('You must agree to the Terms of Service to continue.'); return }
     setError(null)
-    setSignupStep(2)
+    doTransition(() => setSignupStep(2))
   }
 
   async function handleSignupStep2(e) {
@@ -117,6 +173,8 @@ export default function LoginPage() {
   }
 
   async function handleGoogle() {
+    localStorage.setItem('alterline_persist', '1')
+    sessionStorage.removeItem('alterline_persist')
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
@@ -129,10 +187,10 @@ export default function LoginPage() {
       {/* Left panel — character scene */}
       <div style={{ width: '50%', backgroundColor: '#0b0b0b', position: 'relative', display: isMobile ? 'none' : 'flex', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
         <div style={{ position: 'absolute', top: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 15, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#444', fontWeight: 500, userSelect: 'none' }}>
+          <span style={{ fontSize: 15, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'white', fontWeight: 700, userSelect: 'none' }}>
             Alterline
           </span>
-          <span style={{ fontSize: 13, color: '#2a2a2a', userSelect: 'none', textAlign: 'center', lineHeight: 1.5, maxWidth: 260 }}>
+          <span style={{ fontSize: 13, color: '#ccc', fontWeight: 600, userSelect: 'none', textAlign: 'center', lineHeight: 1.5, maxWidth: 260 }}>
             Built for the worlds that only exist in your head.
           </span>
         </div>
@@ -152,6 +210,12 @@ export default function LoginPage() {
             </svg>
           </div>
 
+          <div style={{
+            opacity: exiting ? 0 : 1,
+            transform: exiting ? 'translateY(-8px)' : 'translateY(0)',
+            transition: exiting ? 'opacity 180ms ease, transform 180ms ease' : 'none',
+          }}>
+          <AnimatedPanel key={transitionKey}>
           {mode === 'login' ? (
             <>
               <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, margin: '0 0 6px', textAlign: 'center' }}>Welcome back</h1>
@@ -214,6 +278,7 @@ export default function LoginPage() {
                     </label>
                     <button
                       type="button"
+                      onClick={() => navigate('/forgot-password')}
                       style={{ fontSize: 13, color: '#777', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                       onMouseEnter={e => e.currentTarget.style.color = '#aaa'}
                       onMouseLeave={e => e.currentTarget.style.color = '#777'}
@@ -276,13 +341,13 @@ export default function LoginPage() {
               )}
             </>
           ) : signupStep === 1 ? (
-            /* Signup step 1 — email + password */
+            /* Signup step 1 — email + password + confirm + terms */
             <>
               <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, margin: '0 0 6px', textAlign: 'center' }}>Create account</h1>
-              <p style={{ color: '#666', fontSize: 14, margin: '0 0 32px', textAlign: 'center' }}>Join your universe today</p>
+              <p style={{ color: '#666', fontSize: 14, margin: '0 0 28px', textAlign: 'center' }}>Join your universe today</p>
 
               <form onSubmit={handleSignupStep1}>
-                <div style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 14 }}>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Email</label>
                   <div style={{ position: 'relative' }}>
                     <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#555', display: 'flex', pointerEvents: 'none' }}>
@@ -291,7 +356,8 @@ export default function LoginPage() {
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus placeholder="you@example.com" style={{ ...INPUT, paddingRight: 36 }} />
                   </div>
                 </div>
-                <div style={{ marginBottom: 24 }}>
+
+                <div style={{ marginBottom: 14 }}>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Password</label>
                   <div style={{ position: 'relative' }}>
                     <input
@@ -316,6 +382,54 @@ export default function LoginPage() {
                   </div>
                 </div>
 
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Confirm Password</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      style={{ ...INPUT, paddingRight: 42 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(v => !v)}
+                      style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#555', display: 'flex', padding: 0 }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#aaa'}
+                      onMouseLeave={e => e.currentTarget.style.color = '#555'}
+                    >
+                      {showConfirmPassword ? <EyeOpenIcon /> : <EyeClosedIcon />}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      readOnly
+                      onClick={() => {
+                        if (termsAccepted) setTermsAccepted(false)
+                        else setShowTermsModal(true)
+                      }}
+                      style={{ width: 14, height: 14, accentColor: 'white', cursor: 'pointer', flexShrink: 0 }}
+                    />
+                    <span style={{ fontSize: 13, color: '#777' }}>
+                      I agree to the{' '}
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); setShowTermsModal(true) }}
+                        style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 13, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 3 }}
+                      >
+                        Terms of Service
+                      </button>
+                    </span>
+                  </label>
+                </div>
+
                 {error && <p style={{ fontSize: 13, color: '#f87171', margin: '0 0 16px' }}>{error}</p>}
 
                 <button
@@ -338,6 +452,13 @@ export default function LoginPage() {
                   </button>
                 </p>
               </form>
+
+              {showTermsModal && (
+                <TermsModal
+                  onAgree={() => { setTermsAccepted(true); setShowTermsModal(false) }}
+                  onClose={() => setShowTermsModal(false)}
+                />
+              )}
             </>
           ) : done ? (
             /* Signup done */
@@ -384,7 +505,7 @@ export default function LoginPage() {
 
                 <button
                   type="button"
-                  onClick={() => { setSignupStep(1); setError(null) }}
+                  onClick={() => doTransition(() => { setSignupStep(1); setError(null) })}
                   style={{ width: '100%', height: 36, background: 'none', border: 'none', color: '#555', fontSize: 13, cursor: 'pointer' }}
                   onMouseEnter={e => e.currentTarget.style.color = '#aaa'}
                   onMouseLeave={e => e.currentTarget.style.color = '#555'}
@@ -394,6 +515,8 @@ export default function LoginPage() {
               </form>
             </>
           )}
+          </AnimatedPanel>
+          </div>
         </div>
       </div>
     </div>
