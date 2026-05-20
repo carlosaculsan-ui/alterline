@@ -28,7 +28,7 @@ function stripHtml(html) {
   return doc.body.textContent?.trim() ?? ''
 }
 
-export default function EntryCard({ entry, onDelete, folders = [], onMoveToFolder }) {
+export default function EntryCard({ entry, onDelete, onDuplicate, folders = [], onMoveToFolder }) {
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
   const [showColors, setShowColors] = useState(false)
@@ -223,6 +223,15 @@ export default function EntryCard({ entry, onDelete, folders = [], onMoveToFolde
                   </div>
                 )}
               </>
+            )}
+
+            {onDuplicate && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDuplicate(entry); closeMenu() }}
+                className="w-full px-3 py-2 text-left text-[13px] text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors"
+              >
+                Duplicate
+              </button>
             )}
 
             <button

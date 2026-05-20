@@ -60,7 +60,16 @@ export default function Dashboard() {
   const user = useAuth()
   const name = getDisplayName(user)
   const { activeWorldId, activeWorld } = useWorld()
-  const { entries, loading, hasMore, loadingMore, loadMore, deleteEntry, updateEntryFolder } = useEntries()
+  const SORT_OPTIONS = [
+    { label: 'Newest',          column: 'created_at',  ascending: false },
+    { label: 'Oldest',          column: 'created_at',  ascending: true  },
+    { label: 'A–Z',             column: 'title',       ascending: true  },
+    { label: 'Recently edited', column: 'updated_at',  ascending: false },
+  ]
+  const [sortIndex, setSortIndex] = useState(0)
+  const sort = SORT_OPTIONS[sortIndex]
+
+  const { entries, loading, hasMore, loadingMore, loadMore, duplicateEntry, deleteEntry, updateEntryFolder } = useEntries(sort)
   const { categories: folders } = useCategories()
 
   const [query, setQuery] = useState('')
@@ -193,6 +202,17 @@ export default function Dashboard() {
               ×
             </button>
           )}
+          {!query && (
+            <select
+              value={sortIndex}
+              onChange={(e) => setSortIndex(Number(e.target.value))}
+              className="text-[12px] bg-transparent text-gray-500 dark:text-[#555] outline-none cursor-pointer shrink-0 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              {SORT_OPTIONS.map((o, i) => (
+                <option key={o.label} value={i}>{o.label}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Result count — only when searching */}
@@ -221,6 +241,7 @@ export default function Dashboard() {
                   key={entry.id}
                   entry={entry}
                   onDelete={deleteEntry}
+                  onDuplicate={duplicateEntry}
                   folders={folders}
                   onMoveToFolder={updateEntryFolder}
                 />

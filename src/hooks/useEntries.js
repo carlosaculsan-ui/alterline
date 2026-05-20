@@ -12,20 +12,20 @@ async function getCarlopediaIds() {
   return (data ?? []).map((r) => r.entry_id)
 }
 
-function buildEntriesQuery(excludeIds, worldId) {
+function buildEntriesQuery(excludeIds, worldId, sort = { column: 'created_at', ascending: false }) {
   let q = supabase
     .from('entries')
     .select('*, categories(name, color)')
     .eq('world_id', worldId)
     .neq('type', 'carlopedia')
-    .order('created_at', { ascending: false })
+    .order(sort.column, { ascending: sort.ascending })
   if (excludeIds.length > 0) {
     q = q.not('id', 'in', `(${excludeIds.join(',')})`)
   }
   return q
 }
 
-export function useEntries() {
+export function useEntries(sort = { column: 'created_at', ascending: false }) {
   const { activeWorldId, loading: worldLoading } = useWorld()
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
@@ -39,7 +39,7 @@ export function useEntries() {
     setEntries([])
     async function load() {
       wikiIds.current = await getCarlopediaIds()
-      const { data, error } = await buildEntriesQuery(wikiIds.current, activeWorldId).limit(PAGE_SIZE)
+      const { data, error } = await buildEntriesQuery(wikiIds.current, activeWorldId, sort).limit(PAGE_SIZE)
       if (!error && data) {
         setEntries(data)
         setHasMore(data.length === PAGE_SIZE)
@@ -47,12 +47,12 @@ export function useEntries() {
       setLoading(false)
     }
     load()
-  }, [activeWorldId, worldLoading])
+  }, [activeWorldId, worldLoading, sort.column, sort.ascending])
 
   async function loadMore() {
     if (loadingMore || !hasMore) return
     setLoadingMore(true)
-    const { data, error } = await buildEntriesQuery(wikiIds.current, activeWorldId)
+    const { data, error } = await buildEntriesQuery(wikiIds.current, activeWorldId, sort)
       .range(entries.length, entries.length + PAGE_SIZE - 1)
     if (!error && data) {
       setEntries((prev) => [...prev, ...data])
@@ -81,6 +81,23 @@ export function useEntries() {
     }
   }
 
+  async function duplicateEntry(entry) {
+    const { data: created, error } = await supabase
+      .from('entries')
+      .insert({
+        title: `${entry.title} (copy)`,
+        content: entry.content ?? '',
+        type: entry.type ?? 'story',
+        category_id: entry.category_id ?? null,
+        world_id: activeWorldId,
+      })
+      .select('*, categories(name, color)')
+      .single()
+    if (!error && created) {
+      setEntries((prev) => [created, ...prev])
+    }
+  }
+
   async function deleteEntry(id) {
     await supabase.from('profile_fields').delete().eq('entry_id', id)
     const { error } = await supabase.from('entries').delete().eq('id', id)
@@ -98,5 +115,5 @@ export function useEntries() {
     }
   }
 
-  return { entries, loading, hasMore, loadingMore, loadMore, createEntry, deleteEntry, updateEntryFolder }
+  return { entries, loading, hasMore, loadingMore, loadMore, createEntry, duplicateEntry, deleteEntry, updateEntryFolder }
 }
