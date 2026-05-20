@@ -10,6 +10,16 @@ export default function ProfileModal({ user, onClose }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [trailEnabled, setTrailEnabled] = useState(
+    () => localStorage.getItem('alterline-cursor-trail') === '1'
+  )
+
+  function toggleTrail() {
+    const next = !trailEnabled
+    setTrailEnabled(next)
+    localStorage.setItem('alterline-cursor-trail', next ? '1' : '0')
+    window.dispatchEvent(new Event('alterline-trail-toggle'))
+  }
 
   async function handleSave() {
     setError('')
@@ -108,6 +118,19 @@ export default function ProfileModal({ user, onClose }) {
             />
           </div>
         </div>
+
+          <div className="border-t border-[#f0f0f0] dark:border-[#2a2a2a] pt-4 flex items-center justify-between gap-4">
+            <div>
+              <div className="text-[11px] font-medium text-gray-500 dark:text-[#666] uppercase tracking-wide">Cursor trail</div>
+              <div className="text-[11px] text-gray-400 dark:text-[#555] mt-0.5">Ink particles that follow your cursor</div>
+            </div>
+            <button
+              onClick={toggleTrail}
+              className={`relative shrink-0 w-9 h-5 rounded-full transition-colors ${trailEnabled ? 'bg-indigo-500' : 'bg-[#e0e0e0] dark:bg-[#333]'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${trailEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+            </button>
+          </div>
 
         {error && <p className="mt-3 text-[12px] text-red-500">{error}</p>}
         {success && <p className="mt-3 text-[12px] text-indigo-500">{success}</p>}

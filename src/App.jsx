@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ErrorBoundary from './components/ErrorBoundary'
+import CursorTrail from './components/CursorTrail'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import LoginPage from './pages/LoginPage'
@@ -33,6 +34,7 @@ function KeyedCarlopediaEntryPage() {
 export default function App() {
   return (
     <ErrorBoundary>
+    <CursorTrail />
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
