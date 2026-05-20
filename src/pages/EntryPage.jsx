@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, useNavigate, Navigate, useSearchParams } from 'react-router-dom'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -12,6 +13,7 @@ import Toast from '../components/Toast'
 import AIPanel from '../components/AIPanel'
 import { supabase } from '../lib/supabase'
 import { useWorld } from '../contexts/WorldContext'
+import { exportAsMarkdown, exportAsHTML, exportAsPDF } from '../utils/exportEntry'
 
 
 const EntryLink = Mark.create({
@@ -229,8 +231,35 @@ function ToolBtn({ active, onAction, title, children, disabled }) {
 
 const FONT_SIZES = ['8','9','10','11','12','14','16','18','20','24','28','32','36','48','60','72']
 
-function Toolbar({ editor, onBack, onAIToggle, aiActive }) {
+function WordCountBar({ editor }) {
+  const [, tick] = useState(0)
+  useEffect(() => {
+    if (!editor) return
+    const update = () => tick(n => n + 1)
+    editor.on('update', update)
+    return () => editor.off('update', update)
+  }, [editor])
+  if (!editor) return null
+  const t = editor.getText()
+  const words = t.trim() ? t.trim().split(/\s+/).length : 0
+  const chars = t.length
+  const mins = Math.max(1, Math.ceil(words / 200))
+  return (
+    <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-[#444] mt-4 mb-2 select-none">
+      <span>{words.toLocaleString()} words</span>
+      <span>·</span>
+      <span>{chars.toLocaleString()} characters</span>
+      <span>·</span>
+      <span>~{mins} min read</span>
+    </div>
+  )
+}
+
+function Toolbar({ editor, onBack, onAIToggle, aiActive, title }) {
   const [, forceUpdate] = useState(0)
+  const [showExport, setShowExport] = useState(false)
+  const exportRef = useRef(null)
+  const exportDropdownRef = useRef(null)
 
   useEffect(() => {
     if (!editor) return
@@ -239,10 +268,31 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive }) {
     return () => editor.off('transaction', update)
   }, [editor])
 
+  useEffect(() => {
+    if (!showExport) return
+    const onMouse = (e) => {
+      const inButton = exportRef.current?.contains(e.target)
+      const inDropdown = exportDropdownRef.current?.contains(e.target)
+      if (!inButton && !inDropdown) setShowExport(false)
+    }
+    const onKey = (e) => { if (e.key === 'Escape') setShowExport(false) }
+    document.addEventListener('mousedown', onMouse)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onMouse); document.removeEventListener('keydown', onKey) }
+  }, [showExport])
+
   if (!editor) return null
 
   const editorSize = editor.getAttributes('textStyle').fontSize
   const currentSize = editorSize ? parseInt(editorSize).toString() : '14'
+
+  function handleExport(format) {
+    const html = editor.getHTML()
+    const t = title || 'Untitled'
+    if (format === 'Markdown') exportAsMarkdown(t, html)
+    else if (format === 'HTML') exportAsHTML(t, html)
+    else if (format === 'PDF') exportAsPDF(t, html)
+  }
 
   return (
     <div className="sticky top-0 z-10 -mx-4 px-4 sm:-mx-8 sm:px-8 pt-3 bg-white dark:bg-[#111] flex items-center gap-0.5 mb-6 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
@@ -338,6 +388,44 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive }) {
       </ToolBtn>
 
       <div className="flex-1" />
+
+      <div className="relative shrink-0 mr-1">
+        <button
+          ref={exportRef}
+          onClick={() => setShowExport(v => !v)}
+          title="Export entry"
+          className={`w-7 h-7 flex items-center justify-center rounded transition-colors text-gray-900 dark:text-white ${showExport ? 'bg-[#ebebeb] dark:bg-[#2a2a2a]' : 'hover:bg-[#f0f0f0] dark:hover:bg-[#222]'}`}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </button>
+        {showExport && exportRef.current && createPortal(
+          <div
+            ref={exportDropdownRef}
+            style={{
+              position: 'fixed',
+              top: exportRef.current.getBoundingClientRect().bottom + 6,
+              right: window.innerWidth - exportRef.current.getBoundingClientRect().right,
+            }}
+            className="w-44 rounded-xl bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] shadow-xl z-[9999] py-1 overflow-hidden"
+          >
+            {['Markdown', 'HTML', 'PDF'].map(fmt => (
+              <button
+                key={fmt}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => { handleExport(fmt); setShowExport(false) }}
+                className="w-full text-left px-4 py-2 text-[13px] text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors"
+              >
+                Export as {fmt}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
+      </div>
 
       <button
         onClick={onAIToggle}
@@ -748,7 +836,7 @@ export default function EntryPage() {
         </div>
       ) : (
         <div className="px-4 py-6 sm:px-8 sm:py-8">
-          <Toolbar editor={editor} onBack={() => navigate(-1)} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} />
+          <Toolbar editor={editor} onBack={() => navigate(-1)} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} title={entry?.title} />
 
           {editingTitle ? (
             <input
@@ -773,6 +861,7 @@ export default function EntryPage() {
           )}
 
           <EditorContent editor={editor} />
+          <WordCountBar editor={editor} />
 
           {/* Linked entries */}
           <div className="mt-10 pt-6 border-t border-[#f0f0f0] dark:border-[#1e1e1e]">
