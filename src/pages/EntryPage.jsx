@@ -232,6 +232,22 @@ function ToolBtn({ active, onAction, title, children, disabled }) {
 
 const FONT_SIZES = ['8','9','10','11','12','14','16','18','20','24','28','32','36','48','60','72']
 
+function useScrollProgress() {
+  const [progress, setProgress] = useState(0)
+  useEffect(() => {
+    const el = document.getElementById('main-scroll')
+    if (!el) return
+    function update() {
+      const { scrollTop, scrollHeight, clientHeight } = el
+      const max = scrollHeight - clientHeight
+      setProgress(max > 0 ? (scrollTop / max) * 100 : 0)
+    }
+    el.addEventListener('scroll', update, { passive: true })
+    return () => el.removeEventListener('scroll', update)
+  }, [])
+  return progress
+}
+
 function WordCountBar({ editor }) {
   const [, tick] = useState(0)
   useEffect(() => {
@@ -549,6 +565,7 @@ function LoadingSkeleton() {
 }
 
 export default function EntryPage() {
+  const scrollProgress = useScrollProgress()
   const { id } = useParams()
   const navigate = useNavigate()
   const [entry, setEntry] = useState(null)
@@ -905,6 +922,20 @@ export default function EntryPage() {
 
   return (
     <Layout>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          height: '2px',
+          width: `${scrollProgress}%`,
+          background: '#6366f1',
+          zIndex: 9999,
+          transition: 'width 80ms linear',
+          pointerEvents: 'none',
+        }}
+      />
       {loading ? (
         <LoadingSkeleton />
       ) : !entry ? (

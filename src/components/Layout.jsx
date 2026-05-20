@@ -780,7 +780,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
           </div>
         )}
         {/* Content */}
-        <main className={`flex-1 overflow-auto ${forceLight ? 'bg-white' : 'bg-white dark:bg-[#111]'}`}>
+        <main id="main-scroll" className={`flex-1 overflow-auto ${forceLight ? 'bg-white' : 'bg-white dark:bg-[#111]'}`}>
           <div className={wide ? 'h-full' : 'max-w-5xl mx-auto'}>
             {children}
           </div>
