@@ -42,6 +42,38 @@ function SearchSkeleton() {
   )
 }
 
+function TypewriterGreeting({ text, onDone }) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+  const onDoneRef = useRef(onDone)
+  useEffect(() => { onDoneRef.current = onDone })
+
+  useEffect(() => {
+    let i = 0
+    setDisplayed('')
+    setDone(false)
+    const id = setInterval(() => {
+      i++
+      setDisplayed(text.slice(0, i))
+      if (i >= text.length) {
+        clearInterval(id)
+        setDone(true)
+        onDoneRef.current?.()
+      }
+    }, 35)
+    return () => clearInterval(id)
+  }, [text])
+
+  return (
+    <>
+      {displayed}
+      {!done && (
+        <span className="inline-block w-[2px] h-[0.85em] bg-current align-middle ml-0.5 opacity-70 animate-pulse" />
+      )}
+    </>
+  )
+}
+
 function EmptyState({ worldName }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-12">
@@ -79,15 +111,16 @@ export default function Dashboard() {
   const [greetingVisible, setGreetingVisible] = useState(
     () => !sessionStorage.getItem('alterline-greeted')
   )
+  const [typingDone, setTypingDone] = useState(false)
 
   useEffect(() => {
-    if (loading || !greetingVisible) return
-    const fadeTimer = setTimeout(() => {
+    if (!typingDone) return
+    const timer = setTimeout(() => {
       setGreetingVisible(false)
       sessionStorage.setItem('alterline-greeted', '1')
-    }, 5000)
-    return () => clearTimeout(fadeTimer)
-  }, [loading, greetingVisible])
+    }, 2500)
+    return () => clearTimeout(timer)
+  }, [typingDone])
 
   useEffect(() => {
     const q = query.trim()
@@ -140,10 +173,19 @@ export default function Dashboard() {
   const visible = isSearching ? searchResults : entries
 
   if (loading) return <Layout><LoadingSkeleton /></Layout>
+
+  const entryNoun = (!hasMore && entries.length === 1) ? 'entry' : 'entries'
+  const countStr = hasMore ? `${entries.length}+` : String(entries.length)
+  const greetingText = name
+    ? entries.length > 0
+      ? `Welcome back, ${name}. Your universe has ${countStr} ${entryNoun}.`
+      : `Welcome back, ${name}.`
+    : ''
+
   if (entries.length === 0) return (
     <Layout>
       <div className="p-4 sm:p-6">
-        {name && (
+        {greetingText && (
           <div
             style={{
               overflow: 'hidden',
@@ -153,7 +195,9 @@ export default function Dashboard() {
               transition: 'opacity 600ms ease, max-height 600ms ease, margin-bottom 600ms ease',
             }}
           >
-            <h2 className="text-[25px] font-bold text-gray-900 dark:text-white text-center">Welcome back, {name}.</h2>
+            <h2 className="text-[25px] font-bold text-gray-900 dark:text-white text-center">
+              <TypewriterGreeting text={greetingText} onDone={() => setTypingDone(true)} />
+            </h2>
           </div>
         )}
         <EmptyState worldName={activeWorld?.name ?? 'this world'} />
@@ -165,7 +209,7 @@ export default function Dashboard() {
     <Layout>
       <div className="p-4 sm:p-6">
         {/* Welcome message */}
-        {!isSearching && name && (
+        {!isSearching && greetingText && (
           <div
             style={{
               overflow: 'hidden',
@@ -176,7 +220,7 @@ export default function Dashboard() {
             }}
           >
             <h2 className="text-[25px] font-bold text-gray-900 dark:text-white text-center">
-              Welcome back, {name}.
+              <TypewriterGreeting text={greetingText} onDone={() => setTypingDone(true)} />
             </h2>
           </div>
         )}
