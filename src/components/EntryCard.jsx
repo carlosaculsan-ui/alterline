@@ -71,12 +71,12 @@ export default function EntryCard({ entry, onDelete, onDuplicate, folders = [], 
   return (
     <div
       onClick={() => navigate(`/entry/${entry.id}`)}
-      className="relative group p-4 rounded-xl border border-[#e8e8e8] dark:border-[#1e1e1e] bg-white dark:bg-[#161616] hover:border-[#d0d0d0] dark:hover:border-[#2a2a2a] hover:shadow-sm dark:hover:shadow-none transition-all cursor-pointer overflow-hidden"
+      className="relative group p-4 rounded-xl border border-[#e8e8e8] dark:border-[#1e1e1e] bg-white dark:bg-[#161616] hover:border-[#d0d0d0] dark:hover:border-[#2a2a2a] hover:shadow-sm dark:hover:shadow-none transition-all cursor-pointer"
     >
       {/* Color overlay */}
       {cardColor.value && (
         <div
-          className="absolute inset-0 dark:opacity-20 pointer-events-none"
+          className="absolute inset-0 rounded-xl dark:opacity-20 pointer-events-none"
           style={{ backgroundColor: cardColor.value }}
         />
       )}
