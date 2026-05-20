@@ -57,6 +57,25 @@ input:-webkit-autofill:focus {
 .dark .ProseMirror code { background: #1e1e1e; }
 .dark select option { background-color: #1c1c1c; color: #fff; }
 
+@media print {
+  /* Fix overflow constraints that clip content */
+  html, body { height: auto !important; overflow: visible !important; }
+  #root > div { height: auto !important; overflow: visible !important; }
+  #root > div > div:last-child { overflow: visible !important; }
+
+  /* Hide navigation chrome */
+  aside { display: none !important; }
+  .sticky { display: none !important; }
+
+  /* Editor */
+  .ProseMirror { min-height: 0 !important; }
+
+  /* Typographic print hints */
+  h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+  p { orphans: 3; widows: 3; }
+  a { text-decoration: underline; }
+}
+
 /* In light mode, white text becomes invisible — remap it to near-black */
 html:not(.dark) .ProseMirror [style*="color: #ffffff"],
 html:not(.dark) .ProseMirror [style*="color:#ffffff"],
