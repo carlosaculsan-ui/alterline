@@ -8,6 +8,7 @@ import { TextStyle, FontSize } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import Highlight from '@tiptap/extension-highlight'
 import { Mark, mergeAttributes } from '@tiptap/core'
+import Link from '@tiptap/extension-link'
 import Layout from '../components/Layout'
 import Toast from '../components/Toast'
 import AIPanel from '../components/AIPanel'
@@ -260,6 +261,11 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive, title }) {
   const [showExport, setShowExport] = useState(false)
   const exportRef = useRef(null)
   const exportDropdownRef = useRef(null)
+  const [showLinkInput, setShowLinkInput] = useState(false)
+  const [linkDraft, setLinkDraft] = useState('')
+  const linkBtnRef = useRef(null)
+  const linkInputRef = useRef(null)
+  const linkPortalRef = useRef(null)
 
   useEffect(() => {
     if (!editor) return
@@ -281,6 +287,20 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive, title }) {
     return () => { document.removeEventListener('mousedown', onMouse); document.removeEventListener('keydown', onKey) }
   }, [showExport])
 
+  useEffect(() => {
+    if (!showLinkInput) return
+    linkInputRef.current?.focus()
+    const onMouse = (e) => {
+      const inBtn = linkBtnRef.current?.contains(e.target)
+      const inPortal = linkPortalRef.current?.contains(e.target)
+      if (!inBtn && !inPortal) setShowLinkInput(false)
+    }
+    const onKey = (e) => { if (e.key === 'Escape') setShowLinkInput(false) }
+    document.addEventListener('mousedown', onMouse)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onMouse); document.removeEventListener('keydown', onKey) }
+  }, [showLinkInput])
+
   if (!editor) return null
 
   const editorSize = editor.getAttributes('textStyle').fontSize
@@ -292,6 +312,24 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive, title }) {
     if (format === 'Markdown') exportAsMarkdown(t, html)
     else if (format === 'HTML') exportAsHTML(t, html)
     else if (format === 'PDF') exportAsPDF(t, html)
+  }
+
+  function openLinkInput() {
+    const existing = editor.getAttributes('link').href ?? ''
+    setLinkDraft(existing)
+    setShowLinkInput(true)
+  }
+
+  function applyLink() {
+    const url = linkDraft.trim()
+    if (!url) {
+      editor.chain().focus().unsetLink().run()
+    } else {
+      const href = url.match(/^https?:\/\//) ? url : `https://${url}`
+      editor.chain().focus().setLink({ href }).run()
+    }
+    setShowLinkInput(false)
+    setLinkDraft('')
   }
 
   return (
@@ -339,6 +377,47 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive, title }) {
       <ToolBtn active={editor.isActive('underline')} onAction={() => editor.chain().focus().toggleUnderline().run()} title="Underline">
         <span className="underline text-[13px]">U</span>
       </ToolBtn>
+      <div className="relative shrink-0">
+        <button
+          ref={linkBtnRef}
+          onMouseDown={(e) => { e.preventDefault(); if (editor.isActive('link')) { editor.chain().focus().unsetLink().run() } else { openLinkInput() } }}
+          title={editor.isActive('link') ? 'Remove link' : 'Add link'}
+          className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${editor.isActive('link') ? 'bg-[#ebebeb] dark:bg-[#2a2a2a] text-gray-900 dark:text-white' : 'text-gray-900 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#222]'}`}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+        </button>
+        {showLinkInput && linkBtnRef.current && createPortal(
+          <div
+            ref={linkPortalRef}
+            style={{
+              position: 'fixed',
+              top: linkBtnRef.current.getBoundingClientRect().bottom + 6,
+              left: linkBtnRef.current.getBoundingClientRect().left,
+            }}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] shadow-xl z-[9999]"
+          >
+            <input
+              ref={linkInputRef}
+              type="url"
+              value={linkDraft}
+              onChange={(e) => setLinkDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyLink() } }}
+              placeholder="https://..."
+              className="w-56 text-[13px] bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none"
+            />
+            <button
+              onMouseDown={(e) => { e.preventDefault(); applyLink() }}
+              className="text-[12px] font-medium text-indigo-600 dark:text-indigo-400 hover:opacity-70 transition-opacity shrink-0"
+            >
+              Apply
+            </button>
+          </div>,
+          document.body
+        )}
+      </div>
 
       <div className="w-px h-4 bg-[#e5e5e5] dark:bg-[#2a2a2a] mx-1 shrink-0" />
 
@@ -521,6 +600,7 @@ export default function EntryPage() {
       Color,
       Highlight.configure({ multicolor: true }),
       EntryLink,
+      Link.configure({ openOnClick: false, HTMLAttributes: { class: 'external-link', target: '_blank', rel: 'noopener noreferrer' } }),
     ],
     editorProps: {
       attributes: {

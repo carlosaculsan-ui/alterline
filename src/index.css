@@ -51,6 +51,8 @@ input:-webkit-autofill:focus {
 .ProseMirror mark { border-radius: 2px; padding: 0 1px; }
 .ProseMirror a.entry-link { color: #6366f1; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .ProseMirror a.entry-link:hover { color: #4f46e5; }
+.ProseMirror a.external-link { color: #0ea5e9; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.ProseMirror a.external-link:hover { color: #0284c7; }
 .dark .ProseMirror blockquote { border-left-color: #2a2a2a; }
 .dark .ProseMirror code { background: #1e1e1e; }
 .dark select option { background-color: #1c1c1c; color: #fff; }

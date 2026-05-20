@@ -5,6 +5,7 @@ import { useCategories } from '../hooks/useCategories'
 import NewCategoryModal from './NewCategoryModal'
 import NewEntryModal from './NewEntryModal'
 import Toast from './Toast'
+import ProfileModal from './ProfileModal'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useWorld } from '../contexts/WorldContext'
@@ -148,6 +149,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
   const editInputRef = useRef(null)
   const cancelEditRef = useRef(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
   const [showLearnMore, setShowLearnMore] = useState(false)
   const [learnMorePos, setLearnMorePos] = useState(null)
   const userMenuRef = useRef(null)
@@ -647,6 +649,16 @@ export default function Layout({ children, forceLight = false, wide = false }) {
                 {dark ? <IconSun /> : <IconMoon />}
                 {dark ? 'Light mode' : 'Dark mode'}
               </button>
+              <button
+                onClick={() => { setShowUserMenu(false); setShowProfile(true) }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-800 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors"
+              >
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
+                  <circle cx="7.5" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.3" />
+                  <path d="M2 13c0-2.5 2.5-4.5 5.5-4.5S13 10.5 13 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+                Profile &amp; settings
+              </button>
               {/* Learn more */}
               <div ref={learnMoreRef}>
                 <button
@@ -860,6 +872,8 @@ export default function Layout({ children, forceLight = false, wide = false }) {
         </div>,
         document.body
       )}
+
+      {showProfile && <ProfileModal user={user} onClose={() => setShowProfile(false)} />}
     </div>
   )
 }

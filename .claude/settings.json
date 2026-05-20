@@ -23,7 +23,9 @@
       "Bash(Sort-Object)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\" -Recurse)",
       "Bash(Select-Object -First 50)",
-      "Bash(Format-Table Name, FullName)"
+      "Bash(Format-Table Name, FullName)",
+      "PowerShell(New-Item -ItemType File -Path \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\pages\\\\PrivacyPage.jsx\")",
+      "PowerShell(New-Item -ItemType File -Force -Path \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\components\\\\ProfileModal.jsx\")"
     ]
   }
 }
