@@ -298,7 +298,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto shrink-0 flex flex-col w-[280px] bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a] overflow-hidden transition-transform lg:transition-[width] duration-200 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${effectiveSidebarOpen ? '' : 'lg:w-0'}`}>
+      <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto shrink-0 flex flex-col w-[280px] bg-[#f9f9f9]/95 dark:bg-[#141414]/80 backdrop-blur-xl border-r border-[#e5e5e5] dark:border-white/[0.06] overflow-hidden transition-transform lg:transition-[width] duration-200 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${effectiveSidebarOpen ? '' : 'lg:w-0'}`}>
         {/* Logo */}
         <div className="px-5 py-[18px] border-b border-[#e5e5e5] dark:border-[#2a2a2a] flex items-center justify-between min-w-[280px]">
           <button
@@ -345,7 +345,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
           </button>
 
           {showWorldSwitcher && (
-            <div className="absolute top-full left-3 right-3 mt-1 z-50 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl py-1 overflow-hidden">
+            <div className="absolute top-full left-3 right-3 mt-1 z-50 bg-white/90 dark:bg-[#1c1c1c]/80 backdrop-blur-xl border border-[#e5e5e5]/80 dark:border-white/[0.08] rounded-xl shadow-xl py-1 overflow-hidden">
               {worlds.map((world) => (
                 <div key={world.id} className="relative group">
                   {renamingWorldId === world.id ? (
@@ -640,7 +640,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
         <div className="p-3 border-t border-[#e5e5e5] dark:border-[#2a2a2a] relative" ref={userMenuRef}>
           {/* Popover */}
           {showUserMenu && user && (
-            <div className="absolute bottom-full left-0 right-0 mb-2 mx-0 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-lg py-1">
+            <div className="absolute bottom-full left-0 right-0 mb-2 mx-0 bg-white/90 dark:bg-[#1c1c1c]/80 backdrop-blur-xl border border-[#e5e5e5]/80 dark:border-white/[0.08] rounded-xl shadow-lg py-1">
               <div className="px-4 py-2.5 text-[12px] text-gray-500 dark:text-[#777] truncate border-b border-[#f0f0f0] dark:border-[#2a2a2a] mb-1">
                 {user.email}
               </div>
@@ -830,8 +830,8 @@ export default function Layout({ children, forceLight = false, wide = false, foc
 
       {/* Delete world confirmation modal */}
       {deleteWorldTarget && createPortal(
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60" onClick={(e) => { if (e.target === e.currentTarget) { setDeleteWorldTarget(null); setDeleteConfirmName('') } }}>
-          <div className="bg-white dark:bg-[#1c1c1c] rounded-2xl border border-[#e5e5e5] dark:border-[#2a2a2a] shadow-2xl w-full max-w-[400px] p-6">
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/30 backdrop-blur-md" onClick={(e) => { if (e.target === e.currentTarget) { setDeleteWorldTarget(null); setDeleteConfirmName('') } }}>
+          <div className="bg-white/95 dark:bg-[#1c1c1c]/95 rounded-2xl border border-black/[0.08] dark:border-white/10 shadow-2xl w-full max-w-[400px] p-6">
             <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
               <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2 4h11M5 4V2.5h5V4M6 7v4.5M9 7v4.5M3 4l.8 8.5a1 1 0 001 .9h6.4a1 1 0 001-.9L13 4" />

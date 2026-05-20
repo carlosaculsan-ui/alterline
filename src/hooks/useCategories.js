@@ -19,7 +19,7 @@ export function useCategories() {
         if (!error && data) setCategories(data)
         setLoading(false)
       })
-  }, [activeWorldId])
+  }, [activeWorldId, worldLoading])
 
   async function createCategory(name, color) {
     const { data, error } = await supabase

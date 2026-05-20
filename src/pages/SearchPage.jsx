@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 
 function ResultsSkeleton() {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="p-4 rounded-xl border border-[#e8e8e8] dark:border-[#1e1e1e] animate-pulse">
           <div className="w-7 h-7 rounded-lg bg-[#f0f0f0] dark:bg-[#1e1e1e] mb-3" />
@@ -78,7 +78,7 @@ export default function SearchPage() {
 
   return (
     <Layout>
-      <div className="px-6 py-7">
+      <div className="px-4 sm:px-6 py-5 sm:py-7">
         {/* Large search input */}
         <div className="flex items-center gap-3 mb-6 pb-5 border-b border-[#f0f0f0] dark:border-[#1e1e1e]">
           <svg
@@ -130,7 +130,7 @@ export default function SearchPage() {
             <div className="text-[11px] text-gray-300 dark:text-[#3a3a3a] mb-4">
               {results.length} result{results.length !== 1 ? 's' : ''}
             </div>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
               {results.map((entry) => (
                 <EntryCard key={entry.id} entry={entry} />
               ))}

@@ -9,7 +9,7 @@ function LoadingSkeleton() {
     <div className="px-4 py-6 sm:px-6 sm:py-8 animate-pulse">
       <div>
         <div className="h-3 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-16 mb-4" />
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
@@ -109,7 +109,7 @@ export default function RecentPage() {
               <div className="text-[11px] uppercase tracking-widest text-gray-400 dark:text-[#444] font-medium mb-3 select-none">
                 {label}
               </div>
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
                 {entries.map((entry) => (
                   <EntryCard key={entry.id} entry={entry} />
                 ))}

@@ -59,12 +59,11 @@ export default function ProfileModal({ user, onClose }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.5)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-md"
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-[#1c1c1c] rounded-2xl shadow-2xl w-full max-w-[420px] p-6"
+        className="bg-white/95 dark:bg-[#1c1c1c]/95 rounded-2xl shadow-2xl border border-black/[0.08] dark:border-white/10 w-full max-w-[420px] p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">

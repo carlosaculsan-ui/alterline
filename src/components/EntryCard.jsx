@@ -110,7 +110,7 @@ export default function EntryCard({ entry, onDelete, onDuplicate, folders = [], 
       </div>
 
       {/* Hover action buttons */}
-      <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
         {/* Trash */}
         {onDelete && (
           <button
@@ -139,12 +139,11 @@ export default function EntryCard({ entry, onDelete, onDuplicate, folders = [], 
       {/* Delete confirmation modal */}
       {showDeleteModal && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.5)' }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-md"
           onClick={() => setShowDeleteModal(false)}
         >
           <div
-            className="bg-white dark:bg-[#1c1c1c] rounded-2xl shadow-2xl w-full max-w-[380px] p-6"
+            className="bg-white/95 dark:bg-[#1c1c1c]/95 rounded-2xl shadow-2xl border border-black/[0.08] dark:border-white/10 w-full max-w-[380px] p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center mb-4">

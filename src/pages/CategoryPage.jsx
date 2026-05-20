@@ -7,13 +7,13 @@ import { useWorld } from '../contexts/WorldContext'
 
 function LoadingSkeleton() {
   return (
-    <div className="px-6 py-8 animate-pulse">
+    <div className="px-4 sm:px-6 py-6 sm:py-8 animate-pulse">
       <div className="flex items-center gap-2.5 mb-8">
         <div className="w-3 h-3 rounded-full bg-[#f0f0f0] dark:bg-[#1e1e1e]" />
         <div className="h-6 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-36" />
         <div className="h-4 bg-[#f0f0f0] dark:bg-[#1e1e1e] rounded w-16 ml-1" />
       </div>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="p-4 rounded-xl border border-[#e8e8e8] dark:border-[#1e1e1e]">
             <div className="w-7 h-7 rounded-lg bg-[#f0f0f0] dark:bg-[#1e1e1e] mb-3" />
@@ -92,7 +92,7 @@ export default function CategoryPage() {
           {entries.length === 0 ? (
             <EmptyState name={category.name} />
           ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
               {entries.map((entry) => (
                 <EntryCard key={entry.id} entry={entry} />
               ))}

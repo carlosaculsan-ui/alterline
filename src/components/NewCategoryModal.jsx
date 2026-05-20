@@ -27,10 +27,10 @@ export default function NewCategoryModal({ onConfirm, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-md"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-2xl w-full max-w-[300px] mx-4 p-5">
+      <div className="bg-white/95 dark:bg-[#1c1c1c]/95 border border-black/[0.08] dark:border-white/10 rounded-xl shadow-2xl w-full max-w-[300px] mx-4 p-5">
         <div className="text-[14px] font-semibold text-gray-900 dark:text-white mb-4">
           New folder
         </div>

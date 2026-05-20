@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Prevent iOS auto-zoom on focused inputs */
+@media (max-width: 768px) {
+  input, textarea, select { font-size: 16px !important; }
+}
+
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
