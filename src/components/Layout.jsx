@@ -129,7 +129,7 @@ function IconLogOut() {
   )
 }
 
-export default function Layout({ children, forceLight = false, wide = false }) {
+export default function Layout({ children, forceLight = false, wide = false, focusMode = false }) {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuth()
@@ -285,10 +285,12 @@ export default function Layout({ children, forceLight = false, wide = false }) {
     }
   }
 
+  const effectiveSidebarOpen = sidebarOpen && !focusMode
+
   return (
     <div className="relative flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
       {/* Mobile backdrop */}
-      {mobileMenuOpen && (
+      {mobileMenuOpen && !focusMode && (
         <div
           className="lg:hidden fixed inset-0 z-40 bg-black/40"
           onClick={() => setMobileMenuOpen(false)}
@@ -296,7 +298,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto shrink-0 flex flex-col w-[280px] bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a] overflow-hidden transition-transform lg:transition-[width] duration-200 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${sidebarOpen ? '' : 'lg:w-0'}`}>
+      <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto shrink-0 flex flex-col w-[280px] bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a] overflow-hidden transition-transform lg:transition-[width] duration-200 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${effectiveSidebarOpen ? '' : 'lg:w-0'}`}>
         {/* Logo */}
         <div className="px-5 py-[18px] border-b border-[#e5e5e5] dark:border-[#2a2a2a] flex items-center justify-between min-w-[280px]">
           <button
@@ -734,7 +736,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}
-        <div className="lg:hidden shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] bg-white dark:bg-[#111]">
+        <div className={`lg:hidden shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] bg-white dark:bg-[#111] ${focusMode ? 'hidden' : ''}`}>
           <button
             onClick={() => setMobileMenuOpen(true)}
             className="text-gray-900 dark:text-white p-1.5 hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] rounded-md transition-colors"
@@ -768,7 +770,7 @@ export default function Layout({ children, forceLight = false, wide = false }) {
         </div>
 
         {/* Desktop sidebar reopen button */}
-        {!sidebarOpen && (
+        {!effectiveSidebarOpen && !focusMode && (
           <div className="hidden lg:block absolute top-3 left-3 z-10">
             <button
               onClick={() => setSidebarOpen(true)}

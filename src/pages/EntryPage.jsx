@@ -272,7 +272,7 @@ function WordCountBar({ editor }) {
   )
 }
 
-function Toolbar({ editor, onBack, onAIToggle, aiActive, title }) {
+function Toolbar({ editor, onBack, onAIToggle, aiActive, title, focusMode, onFocusToggle }) {
   const [, forceUpdate] = useState(0)
   const [showExport, setShowExport] = useState(false)
   const exportRef = useRef(null)
@@ -318,6 +318,7 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive, title }) {
   }, [showLinkInput])
 
   if (!editor) return null
+  if (focusMode) return null
 
   const editorSize = editor.getAttributes('textStyle').fontSize
   const currentSize = editorSize ? parseInt(editorSize).toString() : '14'
@@ -537,6 +538,19 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive, title }) {
         AI
       </button>
 
+      <button
+        onClick={onFocusToggle}
+        title="Focus mode"
+        className="w-7 h-7 flex items-center justify-center rounded transition-colors text-gray-900 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#222] shrink-0"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 3 21 3 21 9" />
+          <polyline points="9 21 3 21 3 15" />
+          <line x1="21" y1="3" x2="14" y2="10" />
+          <line x1="3" y1="21" x2="10" y2="14" />
+        </svg>
+      </button>
+
     </div>
   )
 }
@@ -566,6 +580,7 @@ function LoadingSkeleton() {
 
 export default function EntryPage() {
   const scrollProgress = useScrollProgress()
+  const [focusMode, setFocusMode] = useState(false)
   const { id } = useParams()
   const navigate = useNavigate()
   const [entry, setEntry] = useState(null)
@@ -853,6 +868,13 @@ export default function EntryPage() {
     }
   }, [id])
 
+  useEffect(() => {
+    if (!focusMode) return
+    function onKey(e) { if (e.key === 'Escape') setFocusMode(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [focusMode])
+
   async function handleContentBlur() {
     const html = contentRef.current
     if (html === lastSaved.current) return
@@ -921,7 +943,7 @@ export default function EntryPage() {
   }
 
   return (
-    <Layout>
+    <Layout focusMode={focusMode}>
       <div
         aria-hidden="true"
         style={{
@@ -936,6 +958,20 @@ export default function EntryPage() {
           pointerEvents: 'none',
         }}
       />
+      {focusMode && (
+        <button
+          onClick={() => setFocusMode(false)}
+          title="Exit focus mode (Esc)"
+          className="fixed top-4 right-5 z-[9999] w-8 h-8 flex items-center justify-center rounded-lg text-gray-900 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#222] transition-all opacity-60 hover:opacity-100"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="4 14 4 20 10 20" />
+            <polyline points="20 10 20 4 14 4" />
+            <line x1="14" y1="10" x2="20" y2="4" />
+            <line x1="4" y1="20" x2="10" y2="14" />
+          </svg>
+        </button>
+      )}
       {loading ? (
         <LoadingSkeleton />
       ) : !entry ? (
@@ -947,7 +983,7 @@ export default function EntryPage() {
         </div>
       ) : (
         <div className="px-4 py-6 sm:px-8 sm:py-8">
-          <Toolbar editor={editor} onBack={() => navigate(-1)} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} title={entry?.title} />
+          <Toolbar editor={editor} onBack={() => navigate(-1)} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} title={entry?.title} focusMode={focusMode} onFocusToggle={() => setFocusMode(true)} />
 
           {editingTitle ? (
             <input
