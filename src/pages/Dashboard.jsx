@@ -189,7 +189,7 @@ export default function Dashboard() {
           <div
             style={{
               overflow: 'hidden',
-              maxHeight: greetingVisible ? '60px' : '0px',
+              maxHeight: greetingVisible ? '100px' : '0px',
               opacity: greetingVisible ? 1 : 0,
               marginBottom: greetingVisible ? '24px' : '0px',
               transition: 'opacity 600ms ease, max-height 600ms ease, margin-bottom 600ms ease',
@@ -213,7 +213,7 @@ export default function Dashboard() {
           <div
             style={{
               overflow: 'hidden',
-              maxHeight: greetingVisible ? '60px' : '0px',
+              maxHeight: greetingVisible ? '100px' : '0px',
               opacity: greetingVisible ? 1 : 0,
               marginBottom: greetingVisible ? '24px' : '0px',
               transition: 'opacity 600ms ease, max-height 600ms ease, margin-bottom 600ms ease',
