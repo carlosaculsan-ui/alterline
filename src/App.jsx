@@ -20,6 +20,7 @@ import AdminUsers from './pages/admin/AdminUsers'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import SearchPage from './pages/SearchPage'
+import MerchantDashboard from './pages/MerchantDashboard'
 
 function KeyedEntryPage() {
   const { id } = useParams()
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
         </Route>
+        <Route path="/merchant" element={<MerchantDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>
