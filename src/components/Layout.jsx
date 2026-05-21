@@ -616,7 +616,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
                         setEditingId(cat.id)
                         setEditDraft({ name: cat.name, color: cat.color })
                       }}
-                      className="absolute top-2 right-7 w-5 h-5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
+                      className="absolute top-2 right-7 w-5 h-5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-center rounded text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#e5e5e5] dark:hover:bg-[#333] transition-all"
                       aria-label={`Edit ${cat.name}`}
                     >
                       <IconPencil />
@@ -632,9 +632,9 @@ export default function Layout({ children, forceLight = false, wide = false, foc
                         setConfirmDeleteId(cat.id)
                       }
                     }}
-                    className={`absolute top-2 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded leading-none transition-all ${
+                    className={`absolute top-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-center rounded leading-none transition-all ${
                       isConfirming
-                        ? 'right-1 px-1.5 h-5 text-[11px] font-medium text-red-500 dark:text-red-400 bg-red-50 dark:bg-[#2a1515] opacity-100'
+                        ? 'right-1 px-1.5 h-5 text-[11px] font-medium text-red-500 dark:text-red-400 bg-red-50 dark:bg-[#2a1515] !opacity-100'
                         : 'right-1.5 w-5 h-5 text-[15px] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#e5e5e5] dark:hover:bg-[#333]'
                     }`}
                     aria-label={`Delete ${cat.name}`}

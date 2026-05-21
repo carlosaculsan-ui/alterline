@@ -102,9 +102,7 @@ export default function EntryCard({ entry, displayDate, onDelete, onDuplicate, f
               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: entry.categories.color }} />
               <span className="text-[12px] text-gray-900 dark:text-white truncate">{entry.categories.name}</span>
             </>
-          ) : (
-            <span className="text-[12px] text-gray-900 dark:text-white opacity-30">No folder</span>
-          )}
+          ) : null}
         </div>
         <div className="text-[12px] text-gray-900 dark:text-white opacity-50 mt-1">{date}</div>
       </div>
