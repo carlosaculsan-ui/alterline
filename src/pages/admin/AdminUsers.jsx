@@ -14,6 +14,10 @@ function getDisplayName(user) {
 
 function Avatar({ user }) {
   const name = getDisplayName(user)
+  const avatarUrl = user?.user_metadata?.avatar_url
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt={name} className="w-8 h-8 rounded-full shrink-0 object-cover" />
+  }
   return (
     <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 text-white text-[13px] font-semibold select-none">
       {name[0]?.toUpperCase() ?? '?'}

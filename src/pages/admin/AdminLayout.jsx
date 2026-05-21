@@ -160,9 +160,13 @@ export default function AdminLayout({ children }) {
         <div className="p-3 border-t border-[#e5e5e5] dark:border-[#2a2a2a]">
           {user && (
             <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg">
-              <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 text-white text-[13px] font-semibold select-none">
-                {user.email[0].toUpperCase()}
-              </div>
+              {user.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-full shrink-0 object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 text-white text-[13px] font-semibold select-none">
+                  {user.email[0].toUpperCase()}
+                </div>
+              )}
               <span className="flex-1 text-left text-[13px] text-gray-900 dark:text-white truncate font-medium">
                 {user.email}
               </span>
