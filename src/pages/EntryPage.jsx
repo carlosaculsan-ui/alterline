@@ -976,14 +976,14 @@ export default function EntryPage() {
         <LoadingSkeleton />
       ) : !entry ? (
         <div className="px-4 py-6 sm:px-8 sm:py-8">
-          <button onClick={() => navigate(-1)} className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors mb-4 block">
+          <button onClick={() => navigate('/')} className="text-[13px] text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors mb-4 block">
             ← Back
           </button>
           <p className="text-[13px] text-gray-400 dark:text-[#555]">Entry not found.</p>
         </div>
       ) : (
         <div className="px-4 py-6 sm:px-8 sm:py-8">
-          <Toolbar editor={editor} onBack={() => navigate(-1)} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} title={entry?.title} focusMode={focusMode} onFocusToggle={() => setFocusMode(true)} />
+          <Toolbar editor={editor} onBack={() => navigate('/')} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} title={entry?.title} focusMode={focusMode} onFocusToggle={() => setFocusMode(true)} />
 
           {editingTitle ? (
             <input

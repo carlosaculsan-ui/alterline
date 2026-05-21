@@ -148,6 +148,8 @@ export default function Layout({ children, forceLight = false, wide = false, foc
   const { categories, createCategory, updateCategory, deleteCategory } = useCategories()
   const editInputRef = useRef(null)
   const cancelEditRef = useRef(false)
+  const touchStartX = useRef(null)
+  const touchStartY = useRef(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [showLearnMore, setShowLearnMore] = useState(false)
@@ -286,9 +288,25 @@ export default function Layout({ children, forceLight = false, wide = false, foc
   }
 
   const effectiveSidebarOpen = sidebarOpen && !focusMode
+  const isEntryDetailPage = /^\/(entry|carlopedia)\/.+/.test(location.pathname)
+
+  function handleTouchStart(e) {
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }
+
+  function handleTouchEnd(e) {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    const dy = e.changedTouches[0].clientY - touchStartY.current
+    if (Math.abs(dx) < Math.abs(dy) * 1.5 || Math.abs(dx) < 50) return
+    if (dx > 0 && touchStartX.current < 40 && !mobileMenuOpen) setMobileMenuOpen(true)
+    else if (dx < 0 && mobileMenuOpen) setMobileMenuOpen(false)
+    touchStartX.current = null
+  }
 
   return (
-    <div className="relative flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
+    <div className="relative flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       {/* Mobile backdrop */}
       {mobileMenuOpen && !focusMode && (
         <div
@@ -790,10 +808,45 @@ export default function Layout({ children, forceLight = false, wide = false, foc
           </div>
         )}
         {/* Content */}
-        <main id="main-scroll" className={`flex-1 overflow-auto ${forceLight ? 'bg-white' : 'bg-white dark:bg-[#111]'}`}>
+        <main id="main-scroll" className={`flex-1 overflow-auto ${forceLight ? 'bg-white' : 'bg-white dark:bg-[#111]'} ${focusMode ? '' : 'pb-14 lg:pb-0'}`}>
           {wide ? children : <div className="max-w-5xl mx-auto">{children}</div>}
         </main>
       </div>
+
+      {/* FAB */}
+      {!focusMode && !isEntryDetailPage && (
+        <button
+          onClick={() => setShowEntryModal(true)}
+          className="lg:hidden fixed bottom-[72px] right-4 z-50 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 shadow-lg flex items-center justify-center text-white transition-all"
+          aria-label="New entry"
+        >
+          <svg width="22" height="22" viewBox="0 0 13 13" fill="none">
+            <path d="M6.5 1V12M1 6.5H12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
+      )}
+
+      {/* Mobile bottom nav */}
+      {!focusMode && (
+        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-center h-14 bg-white/95 dark:bg-[#111]/95 backdrop-blur-xl border-t border-[#e5e5e5] dark:border-[#1e1e1e]">
+          {[...NAV, ...NAV_WIKI].map(({ to, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `flex-1 flex flex-col items-center justify-center gap-1 h-full text-[10px] font-medium transition-colors ${
+                  isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-900 dark:text-white'
+                }`
+              }
+            >
+              {icon}
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
 
       {showModal && (
         <NewCategoryModal
