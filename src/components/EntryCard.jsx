@@ -28,7 +28,29 @@ function stripHtml(html) {
   return doc.body.textContent?.trim() ?? ''
 }
 
-export default function EntryCard({ entry, displayDate, onDelete, onDuplicate, folders = [], onMoveToFolder }) {
+function getSnippet(text, query) {
+  if (!query || !text) return text.slice(0, 150)
+  const idx = text.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return text.slice(0, 150)
+  const start = Math.max(0, idx - 40)
+  const end = Math.min(text.length, idx + query.length + 100)
+  return (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '')
+}
+
+function Highlighted({ text, query }) {
+  if (!query || !text) return <>{text}</>
+  const idx = text.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return <>{text}</>
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-yellow-200/80 dark:bg-yellow-500/30 text-inherit rounded-sm">{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
+  )
+}
+
+export default function EntryCard({ entry, displayDate, searchQuery, onDelete, onDuplicate, folders = [], onMoveToFolder }) {
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
   const [showColors, setShowColors] = useState(false)
@@ -41,7 +63,8 @@ export default function EntryCard({ entry, displayDate, onDelete, onDuplicate, f
   const date = new Date(displayDate ?? entry.created_at).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
   })
-  const preview = stripHtml(entry.content)
+  const rawPreview = stripHtml(entry.content)
+  const preview = searchQuery ? getSnippet(rawPreview, searchQuery) : rawPreview
   const cardColor = CARD_COLORS.find((c) => c.id === cardColorId) ?? CARD_COLORS[0]
 
   function openMenu(e) {
@@ -87,11 +110,11 @@ export default function EntryCard({ entry, displayDate, onDelete, onDuplicate, f
           <IconNote />
         </div>
         <div className="text-[14px] font-medium text-gray-900 dark:text-white leading-snug mb-1.5 line-clamp-2">
-          {entry.title}
+          <Highlighted text={entry.title} query={searchQuery} />
         </div>
         {preview ? (
           <div className="text-[12px] text-gray-900 dark:text-white leading-snug mb-2 line-clamp-2 opacity-60">
-            {preview}
+            <Highlighted text={preview} query={searchQuery} />
           </div>
         ) : (
           <div className="mb-2" />

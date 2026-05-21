@@ -319,6 +319,7 @@ export default function Dashboard() {
                 <EntryCard
                   key={entry.id}
                   entry={entry}
+                  searchQuery={isSearching ? trimmed : undefined}
                   onDelete={deleteEntry}
                   onDuplicate={duplicateEntry}
                   folders={folders}
