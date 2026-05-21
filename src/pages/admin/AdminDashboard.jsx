@@ -188,22 +188,19 @@ export default function AdminDashboard() {
               <table className="w-full text-[13px]">
                 <thead>
                   <tr className="border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[#f9f9f9] dark:bg-[#141414]">
-                    <th className="text-left px-5 py-3 font-medium text-gray-900 dark:text-white">Title</th>
-                    <th className="text-left px-5 py-3 font-medium text-gray-900 dark:text-white">Type</th>
-                    <th className="text-left px-5 py-3 font-medium text-gray-900 dark:text-white">User</th>
-                    <th className="text-left px-5 py-3 font-medium text-gray-900 dark:text-white">Updated</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Title</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Type</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">User</th>
+                    <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Updated</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recent.map((entry, i) => (
-                    <tr
-                      key={entry.id}
-                      className={`${i < recent.length - 1 ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}
-                    >
-                      <td className="px-5 py-3 font-medium text-gray-900 dark:text-white truncate max-w-[200px]">
+                    <tr key={entry.id} className={`${i < recent.length - 1 ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-[120px] sm:max-w-[200px] truncate">
                         {entry.title || <span className="text-gray-400 dark:text-[#555] italic">Untitled</span>}
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-4 py-3">
                         <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
                           entry.type === 'carlopedia'
                             ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
@@ -212,10 +209,10 @@ export default function AdminDashboard() {
                           {typeLabel(entry.type)}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-gray-500 dark:text-[#777] truncate max-w-[180px]">
-                        {userMap[entry.user_id] ?? entry.user_id?.slice(0, 8) + '…'}
+                      <td className="px-4 py-3 text-gray-500 dark:text-[#777] max-w-[100px] sm:max-w-[180px] truncate">
+                        {(userMap[entry.user_id] ?? entry.user_id?.slice(0, 8) + '…').split('@')[0]}
                       </td>
-                      <td className="px-5 py-3 text-gray-500 dark:text-[#777]">{fmt(entry.updated_at)}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777]">{fmt(entry.updated_at)}</td>
                     </tr>
                   ))}
                 </tbody>

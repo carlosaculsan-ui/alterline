@@ -120,8 +120,8 @@ export default function AdminUsers() {
         </div>
 
         <div className="border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl overflow-hidden">
-          {/* Header */}
-          <div className="grid grid-cols-[1fr_100px_80px_80px_120px] gap-4 px-5 py-3 border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[#f9f9f9] dark:bg-[#141414] text-[12px] font-medium text-gray-900 dark:text-white">
+          {/* Desktop header */}
+          <div className="hidden sm:grid grid-cols-[1fr_100px_80px_80px_120px] gap-4 px-5 py-3 border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[#f9f9f9] dark:bg-[#141414] text-[12px] font-medium text-gray-900 dark:text-white">
             <span>User</span>
             <span>Joined</span>
             <span className="text-center">Entries</span>
@@ -137,38 +137,22 @@ export default function AdminUsers() {
             <div>
               {users.map((user, i) => (
                 <div key={user.id}>
-                  {/* User row */}
-                  <div className={`grid grid-cols-[1fr_100px_80px_80px_120px] gap-4 items-center px-5 py-3.5 ${i < users.length - 1 || expandedUser === user.id ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
-                    {/* Email + avatar */}
+                  {/* Desktop row */}
+                  <div className={`hidden sm:grid grid-cols-[1fr_100px_80px_80px_120px] gap-4 items-center px-5 py-3.5 ${i < users.length - 1 || expandedUser === user.id ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar user={user} />
                       <div className="min-w-0">
-                        <div className="text-[13px] font-medium text-gray-900 dark:text-white truncate">
-                          {getDisplayName(user)}
-                        </div>
+                        <div className="text-[13px] font-medium text-gray-900 dark:text-white truncate">{getDisplayName(user)}</div>
                         <div className="text-[11px] text-gray-500 dark:text-[#777] truncate">{user.email}</div>
                         {user.email === 'carlosaculsan123@gmail.com' && (
                           <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Owner</span>
                         )}
                       </div>
                     </div>
-
-                    {/* Joined */}
                     <div className="text-[12px] text-gray-500 dark:text-[#777]">{fmt(user.created_at)}</div>
-
-                    {/* Entry count */}
-                    <div className="text-center text-[13px] font-semibold text-gray-900 dark:text-white tabular-nums">
-                      {entryCounts[user.id] ?? '—'}
-                    </div>
-
-                    {/* Category count */}
-                    <div className="text-center text-[13px] font-semibold text-gray-900 dark:text-white tabular-nums">
-                      {categoryCounts[user.id] ?? '—'}
-                    </div>
-
-                    {/* Actions */}
+                    <div className="text-center text-[13px] font-semibold text-gray-900 dark:text-white tabular-nums">{entryCounts[user.id] ?? '—'}</div>
+                    <div className="text-center text-[13px] font-semibold text-gray-900 dark:text-white tabular-nums">{categoryCounts[user.id] ?? '—'}</div>
                     <div className="flex items-center gap-2 justify-end">
-                      {/* View entries */}
                       <button
                         onClick={() => toggleEntries(user.id)}
                         className={`text-[12px] font-medium px-2.5 py-1 rounded-md transition-colors ${
@@ -179,26 +163,59 @@ export default function AdminUsers() {
                       >
                         {expandedUser === user.id ? 'Hide' : 'View'}
                       </button>
-
-                      {/* Delete */}
                       {confirmDelete === user.id ? (
-                        <button
-                          onClick={() => handleDelete(user.id)}
-                          disabled={deleting === user.id}
-                          className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
-                        >
+                        <button onClick={() => handleDelete(user.id)} disabled={deleting === user.id} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50">
                           {deleting === user.id ? 'Deleting…' : 'Confirm'}
                         </button>
                       ) : (
-                        <button
-                          onClick={() => setConfirmDelete(user.id)}
-                          disabled={user.email === 'carlosaculsan123@gmail.com'}
-                          className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={user.email === 'carlosaculsan123@gmail.com' ? "Can't delete your own account" : 'Delete user'}
-                        >
+                        <button onClick={() => setConfirmDelete(user.id)} disabled={user.email === 'carlosaculsan123@gmail.com'} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title={user.email === 'carlosaculsan123@gmail.com' ? "Can't delete your own account" : 'Delete user'}>
                           Delete
                         </button>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Mobile card */}
+                  <div className={`sm:hidden px-4 py-3.5 ${i < users.length - 1 || expandedUser === user.id ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar user={user} />
+                        <div className="min-w-0">
+                          <div className="text-[13px] font-medium text-gray-900 dark:text-white truncate">{getDisplayName(user)}</div>
+                          <div className="text-[11px] text-gray-500 dark:text-[#777] truncate">{user.email}</div>
+                          {user.email === 'carlosaculsan123@gmail.com' && (
+                            <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Owner</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => toggleEntries(user.id)}
+                          className={`text-[12px] font-medium px-2.5 py-1 rounded-md transition-colors ${
+                            expandedUser === user.id
+                              ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                              : 'bg-[#f0f0f0] dark:bg-[#222] text-gray-900 dark:text-white'
+                          }`}
+                        >
+                          {expandedUser === user.id ? 'Hide' : 'View'}
+                        </button>
+                        {confirmDelete === user.id ? (
+                          <button onClick={() => handleDelete(user.id)} disabled={deleting === user.id} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-red-500 text-white disabled:opacity-50">
+                            {deleting === user.id ? '…' : 'Confirm'}
+                          </button>
+                        ) : (
+                          <button onClick={() => setConfirmDelete(user.id)} disabled={user.email === 'carlosaculsan123@gmail.com'} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 disabled:opacity-30 disabled:cursor-not-allowed">
+                            Del
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-2 ml-11 flex items-center gap-3 text-[11px] text-gray-500 dark:text-[#777]">
+                      <span>{fmt(user.created_at)}</span>
+                      <span>·</span>
+                      <span><strong className="text-gray-900 dark:text-white">{entryCounts[user.id] ?? 0}</strong> entries</span>
+                      <span>·</span>
+                      <span><strong className="text-gray-900 dark:text-white">{categoryCounts[user.id] ?? 0}</strong> cats</span>
                     </div>
                   </div>
 

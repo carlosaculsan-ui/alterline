@@ -25,7 +25,11 @@
       "Bash(Select-Object -First 50)",
       "Bash(Format-Table Name, FullName)",
       "PowerShell(New-Item -ItemType File -Path \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\pages\\\\PrivacyPage.jsx\")",
-      "PowerShell(New-Item -ItemType File -Force -Path \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\components\\\\ProfileModal.jsx\")"
+      "PowerShell(New-Item -ItemType File -Force -Path \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\components\\\\ProfileModal.jsx\")",
+      "Bash(Remove-Item \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\pages\\\\MerchantDashboard.jsx\" -Force)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\pages\\\\SignIn.jsx\" -Force)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\pages\\\\SignUp.jsx\" -Force)",
+      "Bash(git push *)"
     ]
   }
 }

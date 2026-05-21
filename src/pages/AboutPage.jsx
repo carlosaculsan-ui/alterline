@@ -1,18 +1,32 @@
+import { useNavigate } from 'react-router-dom'
+
 export default function AboutPage() {
+  const navigate = useNavigate()
   return (
     <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
       <div className="max-w-[680px] mx-auto px-8 py-16">
 
-        {/* Logo */}
-        <div className="flex items-center gap-2.5 mb-14">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M4 21L10 3" stroke="#111" strokeWidth="2" strokeLinecap="round" />
-            <path d="M14 3L20 21" stroke="#111" strokeWidth="2" strokeLinecap="round" />
-            <path d="M7 13H17" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span style={{ fontFamily: "'Space Grotesk', Inter, system-ui, sans-serif", fontSize: '15px', fontWeight: 700, letterSpacing: '0.1em', color: '#111' }}>
-            Alterline
-          </span>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-14">
+          <button
+            onClick={() => navigate(-1)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#888', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Back
+          </button>
+          <div className="flex items-center gap-2.5">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M4 21L10 3" stroke="#111" strokeWidth="2" strokeLinecap="round" />
+              <path d="M14 3L20 21" stroke="#111" strokeWidth="2" strokeLinecap="round" />
+              <path d="M7 13H17" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span style={{ fontFamily: "'Space Grotesk', Inter, system-ui, sans-serif", fontSize: '15px', fontWeight: 700, letterSpacing: '0.1em', color: '#111' }}>
+              Alterline
+            </span>
+          </div>
         </div>
 
         <h1 style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '12px', color: '#111' }}>
