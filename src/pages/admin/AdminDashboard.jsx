@@ -74,7 +74,8 @@ export default function AdminDashboard() {
         { data: usersData },
         { count: total },
         { count: stories },
-        { count: carlopedia },
+        { data: carlopediaTyped },
+        { data: carlopediaFields },
         { count: categories },
         { count: links },
         { count: newEntriesWeek },
@@ -84,7 +85,8 @@ export default function AdminDashboard() {
         supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
         supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }),
         supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }).eq('type', 'story'),
-        supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }).eq('type', 'carlopedia'),
+        supabaseAdmin.from('entries').select('id').eq('type', 'carlopedia'),
+        supabaseAdmin.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
         supabaseAdmin.from('categories').select('*', { count: 'exact', head: true }),
         supabaseAdmin.from('entry_links').select('*', { count: 'exact', head: true }),
         supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString()),
@@ -98,6 +100,11 @@ export default function AdminDashboard() {
       setUserMap(map)
 
       const newUsersWeek = users.filter((u) => new Date(u.created_at) >= new Date(weekAgo)).length
+      const carlopediaIds = new Set([
+        ...(carlopediaTyped ?? []).map((e) => e.id),
+        ...(carlopediaFields ?? []).map((r) => r.entry_id),
+      ])
+      const carlopedia = carlopediaIds.size
 
       setStats({ users: users.length, total, stories, carlopedia, categories, links, newUsersWeek, newEntriesWeek })
       setRecent(recentData ?? [])

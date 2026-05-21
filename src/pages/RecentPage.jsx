@@ -111,7 +111,7 @@ export default function RecentPage() {
               </div>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
                 {entries.map((entry) => (
-                  <EntryCard key={entry.id} entry={entry} />
+                  <EntryCard key={entry.id} entry={entry} displayDate={entry.updated_at ?? entry.created_at} />
                 ))}
               </div>
             </div>

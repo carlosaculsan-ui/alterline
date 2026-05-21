@@ -28,7 +28,7 @@ function stripHtml(html) {
   return doc.body.textContent?.trim() ?? ''
 }
 
-export default function EntryCard({ entry, onDelete, onDuplicate, folders = [], onMoveToFolder }) {
+export default function EntryCard({ entry, displayDate, onDelete, onDuplicate, folders = [], onMoveToFolder }) {
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
   const [showColors, setShowColors] = useState(false)
@@ -38,7 +38,7 @@ export default function EntryCard({ entry, onDelete, onDuplicate, folders = [], 
     () => localStorage.getItem(`alterline-card-color-${entry.id}`) ?? 'default'
   )
 
-  const date = new Date(entry.created_at).toLocaleDateString('en-US', {
+  const date = new Date(displayDate ?? entry.created_at).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
   })
   const preview = stripHtml(entry.content)
