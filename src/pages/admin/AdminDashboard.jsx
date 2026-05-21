@@ -63,12 +63,13 @@ export default function AdminDashboard() {
   const [userMap, setUserMap] = useState({})
   const [monthlyData, setMonthlyData] = useState(null)
   const [activeBar, setActiveBar] = useState(null)
+  const [chartYear, setChartYear] = useState(new Date().getFullYear())
+  const [chartLoading, setChartLoading] = useState(false)
 
   useEffect(() => {
     async function load() {
       const weekAgo = new Date()
       weekAgo.setDate(weekAgo.getDate() - 7)
-      const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString()
 
       const [
         { data: usersData },
@@ -80,7 +81,6 @@ export default function AdminDashboard() {
         { count: links },
         { count: newEntriesWeek },
         { data: recentData },
-        { data: yearEntries },
       ] = await Promise.all([
         supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
         supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }),
@@ -91,7 +91,6 @@ export default function AdminDashboard() {
         supabaseAdmin.from('entry_links').select('*', { count: 'exact', head: true }),
         supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString()),
         supabaseAdmin.from('entries').select('id, title, type, user_id, created_at, updated_at').order('updated_at', { ascending: false }).limit(12),
-        supabaseAdmin.from('entries').select('created_at').gte('created_at', yearStart),
       ])
 
       const users = usersData?.users ?? []
@@ -108,12 +107,23 @@ export default function AdminDashboard() {
 
       setStats({ users: users.length, total, stories, carlopedia, categories, links, newUsersWeek, newEntriesWeek })
       setRecent(recentData ?? [])
-      setMonthlyData(buildMonthlyData(yearEntries ?? []))
     }
     load()
   }, [])
 
-  const currentYear = new Date().getFullYear()
+  useEffect(() => {
+    setChartLoading(true)
+    const yearStart = new Date(chartYear, 0, 1).toISOString()
+    const yearEnd = new Date(chartYear + 1, 0, 1).toISOString()
+    supabaseAdmin.from('entries').select('created_at')
+      .gte('created_at', yearStart).lt('created_at', yearEnd)
+      .then(({ data }) => {
+        const counts = Array(12).fill(0)
+        ;(data ?? []).forEach((e) => { counts[new Date(e.created_at).getMonth()]++ })
+        setMonthlyData(MONTHS.map((month, i) => ({ month, count: counts[i] })))
+        setChartLoading(false)
+      })
+  }, [chartYear])
 
   return (
     <AdminLayout>
@@ -140,11 +150,30 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-[15px] font-semibold text-gray-900 dark:text-white">Monthly Entry Activity</h2>
-              <p className="text-[12px] text-gray-500 dark:text-[#777] mt-0.5">Entries created per month — {currentYear}</p>
+              <p className="text-[12px] text-gray-500 dark:text-[#777] mt-0.5">Entries created per month</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setChartYear((y) => y - 1)}
+                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-[#f0f0f0] dark:hover:bg-[#222] text-gray-900 dark:text-white transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
+                  <path d="M9.5 3L5.5 7.5L9.5 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <span className="text-[13px] font-semibold text-gray-900 dark:text-white w-10 text-center tabular-nums">{chartYear}</span>
+              <button
+                onClick={() => setChartYear((y) => y + 1)}
+                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-[#f0f0f0] dark:hover:bg-[#222] text-gray-900 dark:text-white transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
+                  <path d="M5.5 3L9.5 7.5L5.5 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
           </div>
 
-          {monthlyData === null ? (
+          {monthlyData === null || chartLoading ? (
             <div className="h-48 flex items-center justify-center text-[13px] text-gray-500 dark:text-[#777]">Loading…</div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
@@ -197,7 +226,7 @@ export default function AdminDashboard() {
                   <tr className="border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[#f9f9f9] dark:bg-[#141414]">
                     <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Title</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Type</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">User</th>
+                    <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">User</th>
                     <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Updated</th>
                   </tr>
                 </thead>
@@ -216,8 +245,8 @@ export default function AdminDashboard() {
                           {typeLabel(entry.type)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-500 dark:text-[#777] max-w-[100px] sm:max-w-[180px] truncate">
-                        {(userMap[entry.user_id] ?? entry.user_id?.slice(0, 8) + '…').split('@')[0]}
+                      <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777] max-w-[180px] truncate">
+                        {userMap[entry.user_id] ?? entry.user_id?.slice(0, 8) + '…'}
                       </td>
                       <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777]">{fmt(entry.updated_at)}</td>
                     </tr>
