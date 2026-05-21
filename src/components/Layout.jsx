@@ -712,9 +712,17 @@ export default function Layout({ children, forceLight = false, wide = false, foc
               onClick={() => { setShowUserMenu((v) => !v); setShowLearnMore(false) }}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
             >
-              <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 text-white text-[15px] font-semibold select-none">
-                {(user.user_metadata?.full_name || user.email)[0].toUpperCase()}
-              </div>
+              {user.user_metadata?.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt=""
+                  className="w-9 h-9 rounded-full shrink-0 object-cover"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 text-white text-[15px] font-semibold select-none">
+                  {(user.user_metadata?.full_name || user.email)[0].toUpperCase()}
+                </div>
+              )}
               <div className="flex-1 text-left min-w-0">
                 <div className="text-[13px] text-gray-900 dark:text-white font-medium truncate">
                   {user.user_metadata?.full_name || user.email.split('@')[0]}

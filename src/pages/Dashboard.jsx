@@ -123,7 +123,7 @@ export default function Dashboard() {
   }, [typingDone])
 
   useEffect(() => {
-    const q = query.trim()
+    const q = query.trim().toLowerCase()
     const gen = ++searchGen.current
 
     if (!q) {

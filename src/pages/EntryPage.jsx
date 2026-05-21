@@ -836,7 +836,7 @@ export default function EntryPage() {
   }, [editingTitle])
 
   useEffect(() => {
-    const q = linkQuery.trim()
+    const q = linkQuery.trim().toLowerCase()
     if (!q) { setLinkResults([]); return }
     const timer = setTimeout(async () => {
       const { data } = await supabase

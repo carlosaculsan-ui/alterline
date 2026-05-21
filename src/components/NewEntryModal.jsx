@@ -5,6 +5,7 @@ const INPUT = 'w-full bg-[#f5f5f5] dark:bg-[#222] border border-[#e5e5e5] dark:b
 export default function NewEntryModal({ onConfirm, onClose }) {
   const [title, setTitle] = useState('')
   const [saving, setSaving] = useState(false)
+  const [shake, setShake] = useState(false)
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -12,8 +13,14 @@ export default function NewEntryModal({ onConfirm, onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  function triggerShake() {
+    setShake(false)
+    requestAnimationFrame(() => setShake(true))
+  }
+
   async function handleConfirm() {
-    if (!title.trim() || saving) return
+    if (!title.trim()) { triggerShake(); return }
+    if (saving) return
     setSaving(true)
     await onConfirm({ type: 'story', title: title.trim(), category_id: null }, [])
     onClose()
@@ -36,8 +43,9 @@ export default function NewEntryModal({ onConfirm, onClose }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleConfirm()}
+            onAnimationEnd={() => setShake(false)}
             placeholder="Entry title…"
-            className={INPUT}
+            className={`${INPUT}${shake ? ' shake border-red-400 dark:border-red-500' : ''}`}
           />
         </div>
         <div className="flex gap-2 justify-end mt-5">

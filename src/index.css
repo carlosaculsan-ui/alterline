@@ -39,6 +39,15 @@ input:-webkit-autofill:focus {
 .dark .prose-content pre { background: #1e1e1e; }
 .dark .prose-content hr { border-top-color: #2a2a2a; }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+.shake { animation: shake 0.35s ease; }
+
 .ProseMirror { outline: none; }
 .ProseMirror p { margin-bottom: 0.85rem; }
 .ProseMirror p:last-child { margin-bottom: 0; }
