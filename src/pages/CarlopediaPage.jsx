@@ -16,11 +16,13 @@ function LoadingSkeleton() {
   )
 }
 
+const articlesCache = {}
+
 export default function CarlopediaPage() {
   const navigate = useNavigate()
   const { activeWorldId } = useWorld()
-  const [articles, setArticles] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [articles, setArticles] = useState(() => articlesCache[activeWorldId] ?? [])
+  const [loading, setLoading] = useState(() => !articlesCache[activeWorldId])
   const [showNew, setShowNew] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [creating, setCreating] = useState(false)
@@ -29,7 +31,7 @@ export default function CarlopediaPage() {
 
   useEffect(() => {
     if (!activeWorldId) return
-    setLoading(true)
+    if (!articlesCache[activeWorldId]) setLoading(true)
     async function load() {
       const [{ data: typed }, { data: wikiFields }] = await Promise.all([
         supabase.from('entries').select('id, title, updated_at').eq('type', 'carlopedia').eq('world_id', activeWorldId),
@@ -50,6 +52,7 @@ export default function CarlopediaPage() {
       }
 
       all.sort((a, b) => a.title.localeCompare(b.title))
+      articlesCache[activeWorldId] = all
       setArticles(all)
       setLoading(false)
     }
