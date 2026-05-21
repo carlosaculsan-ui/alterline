@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import { supabaseAdmin } from '../../lib/supabaseAdmin'
@@ -111,7 +112,10 @@ export default function AdminUsers() {
     return type ?? '—'
   }
 
+  const deleteTarget = confirmDelete && users ? users.find((u) => u.id === confirmDelete) ?? null : null
+
   return (
+    <>
     <AdminLayout>
       <div className="px-6 py-8">
         <div className="mb-8 flex items-center justify-between">
@@ -167,15 +171,9 @@ export default function AdminUsers() {
                       >
                         {expandedUser === user.id ? 'Hide' : 'View'}
                       </button>
-                      {confirmDelete === user.id ? (
-                        <button onClick={() => handleDelete(user.id)} disabled={deleting === user.id} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50">
-                          {deleting === user.id ? 'Deleting…' : 'Confirm'}
-                        </button>
-                      ) : (
-                        <button onClick={() => setConfirmDelete(user.id)} disabled={user.email === 'carlosaculsan123@gmail.com'} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title={user.email === 'carlosaculsan123@gmail.com' ? "Can't delete your own account" : 'Delete user'}>
-                          Delete
-                        </button>
-                      )}
+                      <button onClick={() => setConfirmDelete(user.id)} disabled={user.email === 'carlosaculsan123@gmail.com'} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title={user.email === 'carlosaculsan123@gmail.com' ? "Can't delete your own account" : 'Delete user'}>
+                        Delete
+                      </button>
                     </div>
                   </div>
 
@@ -203,15 +201,9 @@ export default function AdminUsers() {
                         >
                           {expandedUser === user.id ? 'Hide' : 'View'}
                         </button>
-                        {confirmDelete === user.id ? (
-                          <button onClick={() => handleDelete(user.id)} disabled={deleting === user.id} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-red-500 text-white disabled:opacity-50">
-                            {deleting === user.id ? '…' : 'Confirm'}
-                          </button>
-                        ) : (
-                          <button onClick={() => setConfirmDelete(user.id)} disabled={user.email === 'carlosaculsan123@gmail.com'} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 disabled:opacity-30 disabled:cursor-not-allowed">
-                            Del
-                          </button>
-                        )}
+                        <button onClick={() => setConfirmDelete(user.id)} disabled={user.email === 'carlosaculsan123@gmail.com'} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 disabled:opacity-30 disabled:cursor-not-allowed">
+                          Del
+                        </button>
                       </div>
                     </div>
                     <div className="mt-2 ml-11 flex items-center gap-3 text-[11px] text-gray-500 dark:text-[#777]">
@@ -263,5 +255,45 @@ export default function AdminUsers() {
         </div>
       </div>
     </AdminLayout>
+
+    {deleteTarget && createPortal(
+      <div
+        className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md"
+        onClick={(e) => { if (e.target === e.currentTarget) setConfirmDelete(null) }}
+      >
+        <div className="bg-white/95 dark:bg-[#1c1c1c]/95 rounded-2xl border border-black/[0.08] dark:border-white/10 shadow-2xl w-full max-w-[400px] p-6">
+          <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
+            <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 4h11M5 4V2.5h5V4M6 7v4.5M9 7v4.5M3 4l.8 8.5a1 1 0 001 .9h6.4a1 1 0 001-.9L13 4" />
+            </svg>
+          </div>
+          <h2 className="text-[17px] font-bold text-gray-900 dark:text-white mb-1">Delete account?</h2>
+          <p className="text-[13px] text-gray-500 dark:text-[#888] mb-1 leading-relaxed">You are about to permanently delete</p>
+          <p className="text-[13px] font-semibold text-gray-900 dark:text-white mb-1">{getDisplayName(deleteTarget)}</p>
+          <p className="text-[12px] text-gray-400 dark:text-[#666] mb-5">{deleteTarget.email}</p>
+          <p className="text-[13px] text-gray-500 dark:text-[#888] mb-6 leading-relaxed">
+            This will permanently delete their <strong className="text-gray-700 dark:text-gray-300">entries, folders, and all data</strong>. This cannot be undone.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setConfirmDelete(null)}
+              disabled={!!deleting}
+              className="flex-1 py-2 rounded-lg text-[13px] font-medium border border-[#e5e5e5] dark:border-[#2a2a2a] text-gray-700 dark:text-gray-300 hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors disabled:opacity-40"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleDelete(confirmDelete)}
+              disabled={!!deleting}
+              className="flex-1 py-2 rounded-lg text-[13px] font-medium bg-red-600 hover:bg-red-500 text-white transition-colors disabled:opacity-50"
+            >
+              {deleting ? 'Deleting…' : 'Delete account'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   )
 }
