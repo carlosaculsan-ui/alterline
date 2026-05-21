@@ -1,8 +1,22 @@
 import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 
 const INPUT = 'w-full bg-[#f5f5f5] dark:bg-[#222] border border-[#e5e5e5] dark:border-[#333] rounded-lg px-3 py-2 text-[13px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none focus:border-indigo-500 transition-colors'
 
-export default function NewEntryModal({ onConfirm, onClose }) {
+async function nextUntitledTitle(worldId) {
+  const { data } = await supabase
+    .from('entries')
+    .select('title')
+    .eq('world_id', worldId)
+    .ilike('title', 'Untitled%')
+  const existing = new Set((data ?? []).map((e) => e.title.trim()))
+  if (!existing.has('Untitled')) return 'Untitled'
+  let n = 2
+  while (existing.has(`Untitled ${n}`)) n++
+  return `Untitled ${n}`
+}
+
+export default function NewEntryModal({ onConfirm, onClose, worldId }) {
   const [title, setTitle] = useState('')
   const [saving, setSaving] = useState(false)
   const [shake, setShake] = useState(false)
@@ -12,6 +26,11 @@ export default function NewEntryModal({ onConfirm, onClose }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  useEffect(() => {
+    if (!worldId) return
+    nextUntitledTitle(worldId).then(setTitle)
+  }, [worldId])
 
   function triggerShake() {
     setShake(false)

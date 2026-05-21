@@ -859,6 +859,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
         <NewEntryModal
           onConfirm={handleCreateEntry}
           onClose={() => setShowEntryModal(false)}
+          worldId={activeWorldId}
         />
       )}
       {toastMsg && <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />}
