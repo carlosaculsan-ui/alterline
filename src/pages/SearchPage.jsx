@@ -48,6 +48,7 @@ export default function SearchPage() {
         supabase.from('profile_fields').select('entry_id').ilike('field_value', `%${q}%`),
         supabase.from('entries').select('*, categories(name, color)')
           .or(`title.ilike.%${q}%,content.ilike.%${q}%`)
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(50),
       ])
@@ -60,7 +61,7 @@ export default function SearchPage() {
         const missing = pfIds.filter((id) => !found.has(id))
         if (missing.length > 0) {
           const { data: extra } = await supabase
-            .from('entries').select('*, categories(name, color)').in('id', missing)
+            .from('entries').select('*, categories(name, color)').in('id', missing).is('deleted_at', null)
           data = [...data, ...(extra ?? [])]
         }
       }

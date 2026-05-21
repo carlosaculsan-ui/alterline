@@ -84,6 +84,7 @@ export default function RecentPage() {
       supabase.from('entries').select('*, categories(name, color)')
         .eq('world_id', activeWorldId)
         .neq('type', 'carlopedia')
+        .is('deleted_at', null)
         .order('updated_at', { ascending: false })
         .limit(50),
       supabase.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),

@@ -14,6 +14,7 @@ export function useCategories() {
       .from('categories')
       .select('*')
       .eq('world_id', activeWorldId)
+      .is('deleted_at', null)
       .order('created_at', { ascending: true })
       .then(({ data, error }) => {
         if (!error && data) setCategories(data)
@@ -36,7 +37,7 @@ export function useCategories() {
   }
 
   async function deleteCategory(id) {
-    const { error } = await supabase.from('categories').delete().eq('id', id)
+    const { error } = await supabase.from('categories').update({ deleted_at: new Date().toISOString() }).eq('id', id)
     if (!error) setCategories((prev) => prev.filter((c) => c.id !== id))
   }
 

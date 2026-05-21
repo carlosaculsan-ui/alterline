@@ -152,6 +152,7 @@ export default function Dashboard() {
           .eq('world_id', activeWorldId)
           .or(`title.ilike.%${q}%,content.ilike.%${q}%`)
           .neq('type', 'carlopedia')
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(50),
         supabase.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
@@ -166,7 +167,7 @@ export default function Dashboard() {
         const missing = pfIds.filter((id) => !found.has(id))
         if (missing.length > 0) {
           const { data: extra } = await supabase
-            .from('entries').select('*, categories(name, color)').eq('world_id', activeWorldId).in('id', missing).neq('type', 'carlopedia')
+            .from('entries').select('*, categories(name, color)').eq('world_id', activeWorldId).in('id', missing).neq('type', 'carlopedia').is('deleted_at', null)
           data = [...data, ...(extra ?? []).filter((e) => !wikiIds.has(e.id))]
         }
       }

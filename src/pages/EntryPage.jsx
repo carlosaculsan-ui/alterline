@@ -64,14 +64,14 @@ function EntryLinkBubble({ editor, range, onSaveAndNavigate, onError }) {
     const timer = setTimeout(async () => {
       setSearchLoading(true)
       const [{ data: typed }, { data: pfRows }] = await Promise.all([
-        supabase.from('entries').select('id, title').eq('type', 'carlopedia').ilike('title', `%${q}%`).limit(6),
+        supabase.from('entries').select('id, title').eq('type', 'carlopedia').ilike('title', `%${q}%`).is('deleted_at', null).limit(6),
         supabase.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
       ])
       let results = typed ?? []
       const pfIds = (pfRows ?? []).map((r) => r.entry_id)
       if (pfIds.length > 0) {
         const { data: pfEntries } = await supabase
-          .from('entries').select('id, title').in('id', pfIds).ilike('title', `%${q}%`).limit(6)
+          .from('entries').select('id, title').in('id', pfIds).ilike('title', `%${q}%`).is('deleted_at', null).limit(6)
         const seen = new Set(results.map((e) => e.id))
         results = [...results, ...(pfEntries ?? []).filter((e) => !seen.has(e.id))]
       }
@@ -762,7 +762,7 @@ export default function EntryPage() {
       const [{ data: typed }, { data: pfRows }] = await Promise.all([
         (() => {
           let query = supabase.from('entries').select('id, title')
-            .eq('world_id', activeWorldId).eq('type', 'carlopedia').limit(6)
+            .eq('world_id', activeWorldId).eq('type', 'carlopedia').is('deleted_at', null).limit(6)
           if (q) query = query.ilike('title', `%${q}%`)
           return query
         })(),
@@ -775,7 +775,7 @@ export default function EntryPage() {
         const missing = pfIds.filter((id) => !seen.has(id))
         if (missing.length > 0) {
           let fbQuery = supabase.from('entries').select('id, title')
-            .eq('world_id', activeWorldId).in('id', missing).limit(6)
+            .eq('world_id', activeWorldId).in('id', missing).is('deleted_at', null).limit(6)
           if (q) fbQuery = fbQuery.ilike('title', `%${q}%`)
           const { data: fb } = await fbQuery
           results = [...results, ...(fb ?? [])]
@@ -841,7 +841,7 @@ export default function EntryPage() {
     const timer = setTimeout(async () => {
       const { data } = await supabase
         .from('entries').select('id, title')
-        .ilike('title', `%${q}%`).neq('id', id).limit(10)
+        .ilike('title', `%${q}%`).neq('id', id).is('deleted_at', null).limit(10)
       const alreadyLinked = new Set(links.map((l) => l.entry.id))
       setLinkResults((data ?? []).filter((e) => !alreadyLinked.has(e.id)).slice(0, 8))
     }, 300)
@@ -899,7 +899,7 @@ export default function EntryPage() {
     }
     clearTimeout(confirmDeleteTimer.current)
     setDeleting(true)
-    supabase.from('entries').delete().eq('id', id).then(() => navigate(-1))
+    supabase.from('entries').update({ deleted_at: new Date().toISOString() }).eq('id', id).then(() => navigate('/'))
   }
 
   async function saveTitleEdit() {

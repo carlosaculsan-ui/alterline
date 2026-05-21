@@ -111,6 +111,7 @@ export default function GraphPage() {
         .from('entries')
         .select('id, title, type, categories(name, color)')
         .eq('world_id', activeWorldId)
+        .is('deleted_at', null)
 
       const all = entriesData ?? []
       if (all.length === 0) {

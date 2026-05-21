@@ -176,7 +176,7 @@ export default function EntryCard({ entry, displayDate, searchQuery, onDelete, o
             </div>
             <h3 className="text-[16px] font-semibold text-gray-900 dark:text-white mb-1">Delete entry?</h3>
             <p className="text-[13px] text-gray-600 dark:text-gray-300 mb-6">
-              <span className="font-medium text-gray-900 dark:text-white">"{entry.title}"</span> will be permanently deleted and cannot be recovered.
+              <span className="font-medium text-gray-900 dark:text-white">"{entry.title}"</span> will be moved to Archive. You have 30 days to restore it.
             </p>
             <div className="flex gap-2">
               <button

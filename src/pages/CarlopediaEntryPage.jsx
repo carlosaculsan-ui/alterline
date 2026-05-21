@@ -516,9 +516,7 @@ export default function CarlopediaEntryPage() {
     }
     clearTimeout(confirmDeleteTimer.current)
     setDeleting(true)
-    supabase.from('profile_fields').delete().eq('entry_id', id).then(() =>
-      supabase.from('entries').delete().eq('id', id).then(() => navigate('/carlopedia'))
-    )
+    supabase.from('entries').update({ deleted_at: new Date().toISOString() }).eq('id', id).then(() => navigate('/carlopedia'))
   }
 
   async function saveTitleEdit() {

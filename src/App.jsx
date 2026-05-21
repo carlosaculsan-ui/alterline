@@ -20,6 +20,7 @@ import AdminUsers from './pages/admin/AdminUsers'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import SearchPage from './pages/SearchPage'
+import ArchivePage from './pages/ArchivePage'
 
 function KeyedEntryPage() {
   const { id } = useParams()
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/carlopedia" element={<CarlopediaPage />} />
           <Route path="/carlopedia/:id" element={<KeyedCarlopediaEntryPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/archive" element={<ArchivePage />} />
         </Route>
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />

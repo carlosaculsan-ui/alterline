@@ -18,6 +18,7 @@ function buildEntriesQuery(excludeIds, worldId, sort = { column: 'created_at', a
     .select('*, categories(name, color)')
     .eq('world_id', worldId)
     .neq('type', 'carlopedia')
+    .is('deleted_at', null)
     .order(sort.column, { ascending: sort.ascending })
   if (excludeIds.length > 0) {
     q = q.not('id', 'in', `(${excludeIds.join(',')})`)
@@ -99,8 +100,7 @@ export function useEntries(sort = { column: 'created_at', ascending: false }) {
   }
 
   async function deleteEntry(id) {
-    await supabase.from('profile_fields').delete().eq('entry_id', id)
-    const { error } = await supabase.from('entries').delete().eq('id', id)
+    const { error } = await supabase.from('entries').update({ deleted_at: new Date().toISOString() }).eq('id', id)
     if (!error) setEntries((prev) => prev.filter((e) => e.id !== id))
   }
 

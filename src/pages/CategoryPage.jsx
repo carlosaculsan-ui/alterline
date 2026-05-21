@@ -57,6 +57,7 @@ export default function CategoryPage() {
         .select('*, categories(name, color)')
         .eq('world_id', activeWorldId)
         .eq('category_id', id)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false }),
     ]).then(([{ data: cat }, { data: ents }]) => {
       if (cat) setCategory(cat)

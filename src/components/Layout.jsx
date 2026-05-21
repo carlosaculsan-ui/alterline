@@ -119,6 +119,16 @@ const NAV_WIKI = [
   { to: '/carlopedia', label: 'Carlopedia', icon: <IconBook /> },
 ]
 
+function IconArchive() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
+      <rect x="1" y="2.5" width="13" height="3" rx="0.8" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M2.5 5.5V12a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V5.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M5.5 8.5h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function IconLogOut() {
   return (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
@@ -540,6 +550,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
               {label}
             </NavLink>
           ))}
+
         </nav>
 
         {/* Categories */}
@@ -639,7 +650,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
                     }`}
                     aria-label={`Delete ${cat.name}`}
                   >
-                    {isConfirming ? 'Confirm?' : '×'}
+                    {isConfirming ? 'Archive?' : '×'}
                   </button>
                 </div>
               )
@@ -700,6 +711,13 @@ export default function Layout({ children, forceLight = false, wide = false, foc
                 </button>
               </div>
 
+              <button
+                onClick={() => { setShowUserMenu(false); navigate('/archive') }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-800 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors"
+              >
+                <IconArchive />
+                Archive
+              </button>
               {user?.email === 'carlosaculsan123@gmail.com' && (
                 <button
                   onClick={() => { setShowUserMenu(false); navigate('/admin') }}

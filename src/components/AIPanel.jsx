@@ -26,7 +26,7 @@ export default function AIPanel({ worldId, worldName, entryTitle, getContent, on
     if (!worldId) return
     async function fetchLore() {
       const [{ data: typed }, { data: pfRows }] = await Promise.all([
-        supabase.from('entries').select('id, title, content').eq('world_id', worldId).eq('type', 'carlopedia').limit(30),
+        supabase.from('entries').select('id, title, content').eq('world_id', worldId).eq('type', 'carlopedia').is('deleted_at', null).limit(30),
         supabase.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
       ])
       let results = typed ?? []
@@ -35,7 +35,7 @@ export default function AIPanel({ worldId, worldName, entryTitle, getContent, on
         const seen = new Set(results.map((e) => e.id))
         const missing = pfIds.filter((pid) => !seen.has(pid))
         if (missing.length > 0) {
-          const { data: fb } = await supabase.from('entries').select('id, title, content').in('id', missing).limit(30)
+          const { data: fb } = await supabase.from('entries').select('id, title, content').in('id', missing).is('deleted_at', null).limit(30)
           results = [...results, ...(fb ?? [])]
         }
       }

@@ -29,7 +29,8 @@
       "Bash(Remove-Item \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\pages\\\\MerchantDashboard.jsx\" -Force)",
       "Bash(Remove-Item \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\pages\\\\SignIn.jsx\" -Force)",
       "Bash(Remove-Item \"c:\\\\Users\\\\Admin\\\\Downloads\\\\alterline\\\\src\\\\pages\\\\SignUp.jsx\" -Force)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(findstr /r \"\\\\.from.*entries.*\\\\.select\" hooks\\\\useEntries.js pages\\\\*.jsx components\\\\*.jsx contexts\\\\*.jsx pages\\\\admin\\\\*.jsx)"
     ]
   }
 }

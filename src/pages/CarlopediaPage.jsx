@@ -34,7 +34,7 @@ export default function CarlopediaPage() {
     if (!articlesCache[activeWorldId]) setLoading(true)
     async function load() {
       const [{ data: typed }, { data: wikiFields }] = await Promise.all([
-        supabase.from('entries').select('id, title, updated_at').eq('type', 'carlopedia').eq('world_id', activeWorldId),
+        supabase.from('entries').select('id, title, updated_at').eq('type', 'carlopedia').eq('world_id', activeWorldId).is('deleted_at', null),
         supabase.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
       ])
 
@@ -46,7 +46,7 @@ export default function CarlopediaPage() {
         const missing = fallbackIds.filter((id) => !existing.has(id))
         if (missing.length > 0) {
           const { data: extras } = await supabase
-            .from('entries').select('id, title, updated_at').eq('world_id', activeWorldId).in('id', missing)
+            .from('entries').select('id, title, updated_at').eq('world_id', activeWorldId).in('id', missing).is('deleted_at', null)
           all = [...all, ...(extras ?? [])]
         }
       }
