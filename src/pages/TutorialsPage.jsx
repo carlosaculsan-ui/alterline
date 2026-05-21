@@ -82,7 +82,8 @@ export default function TutorialsPage() {
             '6. Relationship graph',
             '7. Backlinks',
             '8. AI writing assistant',
-            '9. Dark mode',
+            '9. Archive',
+            '10. Dark mode',
           ].map((item) => (
             <p key={item} style={{ fontSize: '14px', color: '#555', marginBottom: '6px' }}>{item}</p>
           ))}
@@ -158,7 +159,14 @@ export default function TutorialsPage() {
           <Tip>The AI assistant works best when your Carlopedia articles are detailed. The more context your world has, the more grounded the suggestions will be.</Tip>
         </Section>
 
-        <Section title="9. Dark mode" subtitle="Alterline supports light and dark mode, saved to your browser.">
+        <Section title="9. Archive" subtitle="Deleted entries and folders aren't gone immediately — they go to the Archive first.">
+          <Step n="1" text='Click your account button at the bottom of the sidebar, then choose "Archive" from the menu.' />
+          <Step n="2" text="The Archive lists everything you've deleted — entries and folders — along with how many days remain before permanent deletion." />
+          <Step n="3" text='Click "Restore" on any item to bring it back exactly as it was. Click "Delete forever" to permanently remove it right away.' />
+          <Tip>Items in the Archive are automatically hard-deleted after 30 days. The countdown turns red when fewer than 7 days remain.</Tip>
+        </Section>
+
+        <Section title="10. Dark mode" subtitle="Alterline supports light and dark mode, saved to your browser.">
           <p style={{ fontSize: '15px', color: '#444', lineHeight: '1.7' }}>
             Click your account button at the bottom of the sidebar, then choose <strong style={{ color: '#111' }}>Light mode</strong> or <strong style={{ color: '#111' }}>Dark mode</strong> to toggle. Your preference is saved locally and persists across sessions.
           </p>

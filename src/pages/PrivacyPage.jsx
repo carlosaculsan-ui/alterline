@@ -75,7 +75,10 @@ export default function PrivacyPage() {
 
         <Section title="Data Retention and Deletion">
           <p>
-            Your data is retained for as long as your account exists. If you wish to delete your account and all associated data, contact us at the address below and we will process your request promptly.
+            Your data is retained for as long as your account exists. When you delete an entry or folder inside the app, it is moved to the Archive and held for 30 days before being permanently removed — giving you a window to restore anything deleted by mistake.
+          </p>
+          <p>
+            If you wish to delete your account and all associated data, contact us at the address below and we will process your request promptly.
           </p>
         </Section>
 
