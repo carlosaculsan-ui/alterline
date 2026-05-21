@@ -100,6 +100,17 @@ export default function Dashboard() {
   ]
   const [sortIndex, setSortIndex] = useState(0)
   const sort = SORT_OPTIONS[sortIndex]
+  const [showSortMenu, setShowSortMenu] = useState(false)
+  const sortRef = useRef(null)
+
+  useEffect(() => {
+    if (!showSortMenu) return
+    function handleClick(e) {
+      if (!sortRef.current?.contains(e.target)) setShowSortMenu(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showSortMenu])
 
   const { entries, loading, hasMore, loadingMore, loadMore, duplicateEntry, deleteEntry, updateEntryFolder } = useEntries(sort)
   const { categories: folders } = useCategories()
@@ -247,15 +258,39 @@ export default function Dashboard() {
             </button>
           )}
           {!query && (
-            <select
-              value={sortIndex}
-              onChange={(e) => setSortIndex(Number(e.target.value))}
-              className="text-[12px] bg-transparent text-gray-500 dark:text-[#555] outline-none cursor-pointer shrink-0 hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              {SORT_OPTIONS.map((o, i) => (
-                <option key={o.label} value={i}>{o.label}</option>
-              ))}
-            </select>
+            <div className="relative shrink-0" ref={sortRef}>
+              <button
+                onClick={() => setShowSortMenu((v) => !v)}
+                className="flex items-center gap-1 text-[12px] text-gray-900 dark:text-white opacity-40 hover:opacity-100 transition-opacity"
+              >
+                {SORT_OPTIONS[sortIndex].label}
+                <svg width="10" height="10" viewBox="0 0 15 15" fill="none">
+                  <path d="M3.5 5.5L7.5 9.5L11.5 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              {showSortMenu && (
+                <div className="absolute right-0 top-full mt-1.5 z-30 bg-white dark:bg-[#1c1c1c] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden min-w-[140px]">
+                  {SORT_OPTIONS.map((o, i) => (
+                    <button
+                      key={o.label}
+                      onClick={() => { setSortIndex(i); setShowSortMenu(false) }}
+                      className={`w-full px-3 py-2 text-left text-[13px] flex items-center justify-between gap-3 transition-colors ${
+                        i === sortIndex
+                          ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
+                          : 'text-gray-900 dark:text-white hover:bg-[#f5f5f5] dark:hover:bg-[#252525]'
+                      }`}
+                    >
+                      {o.label}
+                      {i === sortIndex && (
+                        <svg width="11" height="11" viewBox="0 0 15 15" fill="none">
+                          <path d="M2 7.5L6 11.5L13 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
