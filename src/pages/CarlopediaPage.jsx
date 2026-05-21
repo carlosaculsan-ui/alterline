@@ -24,6 +24,7 @@ export default function CarlopediaPage() {
   const [showNew, setShowNew] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [creating, setCreating] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const newInputRef = useRef(null)
 
   useEffect(() => {
@@ -75,7 +76,11 @@ export default function CarlopediaPage() {
     }
   }
 
-  const grouped = articles.reduce((acc, article) => {
+  const filteredArticles = searchQuery.trim()
+    ? articles.filter((a) => a.title.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+    : articles
+
+  const grouped = filteredArticles.reduce((acc, article) => {
     const letter = article.title[0]?.toUpperCase() ?? '#'
     if (!acc[letter]) acc[letter] = []
     acc[letter].push(article)
@@ -97,7 +102,31 @@ export default function CarlopediaPage() {
             + New article
           </button>
         </div>
-        <p className="text-[14px] text-gray-500 dark:text-gray-400 mb-6">Your personal encyclopedia.</p>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400 mb-4">Your personal encyclopedia.</p>
+
+        {articles.length > 0 && (
+          <div className="relative mb-6">
+            <svg width="14" height="14" viewBox="0 0 15 15" fill="none" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#555] pointer-events-none">
+              <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M10 10l3 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search articles…"
+              className="w-full bg-[#f5f5f5] dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-lg pl-8 pr-3 py-2 text-[13px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] outline-none focus:border-indigo-400 transition-colors"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#555] hover:text-gray-700 dark:hover:text-gray-300 transition-colors text-[16px] leading-none"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        )}
 
         {/* New article inline input */}
         {showNew && (
@@ -140,6 +169,10 @@ export default function CarlopediaPage() {
             <div className="text-[13px] text-gray-300 dark:text-[#3a3a3a]">
               Select a word in any story and hit "Create Carlopedia", or use "+ New article" above
             </div>
+          </div>
+        ) : filteredArticles.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="text-[15px] text-gray-400 dark:text-[#555]">No articles match "{searchQuery}"</div>
           </div>
         ) : (
           <div className="pt-2">

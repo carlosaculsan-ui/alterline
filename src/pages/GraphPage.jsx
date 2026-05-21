@@ -57,8 +57,8 @@ function EmptyState() {
       <div className="flex flex-col items-center gap-2 text-center px-8">
         <div className="text-[36px] text-gray-200 dark:text-[#2a2a2a] select-none mb-1">◎</div>
         <p className="text-[14px] font-medium text-gray-900 dark:text-white">No connections yet</p>
-        <p className="text-[13px] text-gray-500 dark:text-[#666] max-w-[260px] leading-relaxed">
-          Link entries to each other, or use @mentions in your stories, to see the map
+        <p className="text-[13px] text-gray-500 dark:text-[#666] max-w-[320px] leading-relaxed">
+          Link entries together or use @mentions in your stories — connections appear here as a map.
         </p>
       </div>
     </div>
