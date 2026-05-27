@@ -1,0 +1,16 @@
+{
+  "name": "Alterline",
+  "short_name": "Alterline",
+  "description": "A private notebook for worlds that only exist in your head.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "/alterline.jpg",
+      "sizes": "any",
+      "type": "image/jpeg"
+    }
+  ]
+}
