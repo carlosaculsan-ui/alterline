@@ -214,7 +214,7 @@ function WikiInfobox({ entryId, entryTitle, photo, onPhotoClick, onPhotoRemove, 
   }
 
   return (
-    <div className="mb-4 w-full sm:float-right sm:clear-right sm:ml-6 sm:w-[290px] border border-[#a2a9b1] bg-[#f8f9fa] text-sm">
+    <div className="relative z-10 mb-4 w-full sm:float-right sm:clear-right sm:ml-6 sm:w-[290px] border border-[#a2a9b1] bg-[#f8f9fa] text-sm">
       {/* Name header */}
       <div className="bg-[#cee0f3] text-center font-bold py-1.5 px-3 text-gray-900 text-[14px] border-b border-[#a2a9b1]">
         {entryTitle}
