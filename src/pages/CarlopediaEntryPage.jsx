@@ -128,60 +128,93 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting }) {
   )
 }
 
-const INFO_ROWS = [
-  { key: 'born', label: 'Born' },
-  { key: 'died', label: 'Died' },
-  { key: 'nationality', label: 'Nationality' },
-  { key: 'occupation', label: 'Occupation' },
-  { key: 'known_for', label: 'Known for' },
-]
-
-function WikiInfobox({ entryId, entryTitle, photo, onPhotoClick, onPhotoRemove, fields, fieldIds, onFieldsChange, onFieldIdsChange }) {
-  const [editingKey, setEditingKey] = useState(null)
+function WikiInfobox({ entryId, entryTitle, photo, onPhotoClick, onPhotoRemove, rows, onRowsChange, caption, onCaptionSave }) {
+  const [editingRowId, setEditingRowId] = useState(null)
+  const [editingField, setEditingField] = useState(null)
+  const [editingCaption, setEditingCaption] = useState(false)
   const [draft, setDraft] = useState('')
+  const [addingRow, setAddingRow] = useState(false)
+  const [newLabel, setNewLabel] = useState('')
 
-  function startEdit(key) {
-    setEditingKey(key)
-    setDraft(fields[key] || '')
+  function startEditCell(rowId, field) {
+    const row = rows.find((r) => r.rowId === rowId)
+    if (!row) return
+    setEditingRowId(rowId)
+    setEditingField(field)
+    setDraft(field === 'label' ? row.label : (row.value || ''))
   }
 
-  async function commitEdit() {
-    if (!editingKey) return
-    const key = editingKey
-    const value = draft.trim()
-    setEditingKey(null)
+  async function commitCell() {
+    if (!editingRowId || !editingField) return
+    const rowId = editingRowId
+    const field = editingField
+    const trimmed = draft.trim()
+    setEditingRowId(null)
+    setEditingField(null)
 
-    onFieldsChange((prev) => ({ ...prev, [key]: value }))
+    const row = rows.find((r) => r.rowId === rowId)
+    if (!row) return
 
-    const dbKey = key === 'caption' ? 'infobox_caption' : `infobox_${key}`
-    const existingId = fieldIds[key]
+    const newLabelVal = field === 'label' ? trimmed : row.label
+    const newValueVal = field === 'value' ? trimmed : row.value
 
-    if (!value && existingId) {
-      await supabase.from('profile_fields').delete().eq('id', existingId)
-      onFieldIdsChange((prev) => { const n = { ...prev }; delete n[key]; return n })
-    } else if (value && existingId) {
-      await supabase.from('profile_fields').update({ field_value: value }).eq('id', existingId)
-    } else if (value) {
+    if (field === 'label' && !newLabelVal) {
+      await deleteRow(rowId, row.dbId)
+      return
+    }
+
+    if (newLabelVal === row.label && newValueVal === row.value) return
+
+    onRowsChange(rows.map((r) => r.rowId === rowId ? { ...r, label: newLabelVal, value: newValueVal } : r))
+
+    const order = rows.findIndex((r) => r.rowId === rowId)
+    const fieldValue = JSON.stringify({ label: newLabelVal, value: newValueVal, order })
+
+    if (row.dbId) {
+      await supabase.from('profile_fields').update({ field_value: fieldValue }).eq('id', row.dbId)
+    } else {
       const { data } = await supabase.from('profile_fields').insert({
         entry_id: entryId,
-        field_key: dbKey,
-        field_value: value,
+        field_key: `infobox_row_${rowId}`,
+        field_value: fieldValue,
       }).select('id').single()
-      if (data) onFieldIdsChange((prev) => ({ ...prev, [key]: data.id }))
+      if (data) onRowsChange((prev) => prev.map((r) => r.rowId === rowId ? { ...r, dbId: data.id } : r))
     }
   }
 
-  function cancelEdit() {
-    setEditingKey(null)
+  async function deleteRow(rowId, dbId) {
+    if (dbId) await supabase.from('profile_fields').delete().eq('id', dbId)
+    onRowsChange((prev) => prev.filter((r) => r.rowId !== rowId))
   }
 
-  const filledRows = INFO_ROWS.filter((r) => fields[r.key] || editingKey === r.key)
-  const emptyRows = INFO_ROWS.filter((r) => !fields[r.key] && editingKey !== r.key)
+  async function confirmAddRow() {
+    const label = newLabel.trim()
+    setAddingRow(false)
+    setNewLabel('')
+    if (!label) return
+
+    const rowId = crypto.randomUUID()
+    const order = rows.length
+
+    const { data } = await supabase.from('profile_fields').insert({
+      entry_id: entryId,
+      field_key: `infobox_row_${rowId}`,
+      field_value: JSON.stringify({ label, value: '', order }),
+    }).select('id').single()
+
+    onRowsChange((prev) => [...prev, { rowId, label, value: '', order, dbId: data?.id ?? null }])
+    setEditingRowId(rowId)
+    setEditingField('value')
+    setDraft('')
+  }
+
+  function commitCaption() {
+    setEditingCaption(false)
+    onCaptionSave(draft.trim())
+  }
 
   return (
-    <div
-      className="mb-4 w-full sm:float-right sm:clear-right sm:ml-6 sm:w-[290px] border border-[#a2a9b1] bg-[#f8f9fa] text-sm"
-    >
+    <div className="mb-4 w-full sm:float-right sm:clear-right sm:ml-6 sm:w-[290px] border border-[#a2a9b1] bg-[#f8f9fa] text-sm">
       {/* Name header */}
       <div className="bg-[#cee0f3] text-center font-bold py-1.5 px-3 text-gray-900 text-[14px] border-b border-[#a2a9b1]">
         {entryTitle}
@@ -226,75 +259,113 @@ function WikiInfobox({ entryId, entryTitle, photo, onPhotoClick, onPhotoRemove, 
 
         {/* Caption */}
         <div className="px-2 py-1.5 bg-white min-h-[28px]">
-          {editingKey === 'caption' ? (
+          {editingCaption ? (
             <input
               autoFocus
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              onBlur={commitEdit}
+              onBlur={commitCaption}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') e.target.blur()
-                if (e.key === 'Escape') { cancelEdit(); e.target.blur() }
+                if (e.key === 'Escape') setEditingCaption(false)
               }}
               className="w-full text-center text-[11px] italic text-gray-600 bg-transparent outline-none border-b border-indigo-300"
               placeholder="Add caption…"
             />
           ) : (
             <div
-              onClick={() => startEdit('caption')}
+              onClick={() => { setEditingCaption(true); setDraft(caption || '') }}
               className="text-center text-[11px] italic text-gray-600 cursor-text hover:bg-[#f5f5f5] rounded px-1 min-h-[1rem] leading-snug"
             >
-              {fields.caption || <span className="text-gray-300">Add caption…</span>}
+              {caption || <span className="text-gray-300">Add caption…</span>}
             </div>
           )}
         </div>
       </div>
 
-      {/* Info rows */}
-      {filledRows.map(({ key, label }) => (
-        <div key={key} className="flex border-b border-[#a2a9b1] last:border-b-0">
-          <div className="w-[38%] bg-[#eaecf0] px-2 py-1.5 font-bold text-gray-900 text-[12px] shrink-0 border-r border-[#a2a9b1] flex items-start leading-snug">
-            {label}
-          </div>
-          <div className="flex-1 bg-white px-2 py-1.5">
-            {editingKey === key ? (
+      {/* Dynamic rows */}
+      {rows.map((row) => (
+        <div key={row.rowId} className="flex border-b border-[#a2a9b1] group">
+          {/* Label cell — click to rename */}
+          <div className="w-[38%] bg-[#eaecf0] px-2 py-1.5 shrink-0 border-r border-[#a2a9b1] flex items-start">
+            {editingRowId === row.rowId && editingField === 'label' ? (
               <input
                 autoFocus
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                onBlur={commitEdit}
+                onBlur={commitCell}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') e.target.blur()
-                  if (e.key === 'Escape') { cancelEdit(); e.target.blur() }
+                  if (e.key === 'Escape') { setEditingRowId(null); setEditingField(null) }
                 }}
-                className="w-full text-[12px] text-gray-900 bg-transparent outline-none border-b border-indigo-300"
+                className="w-full text-[12px] font-bold text-gray-900 bg-transparent outline-none border-b border-indigo-300"
+              />
+            ) : (
+              <span
+                onClick={() => startEditCell(row.rowId, 'label')}
+                className="text-[12px] font-bold text-gray-900 cursor-text leading-snug hover:bg-[#dde1e7] rounded px-0.5 w-full block"
+              >
+                {row.label}
+              </span>
+            )}
+          </div>
+          {/* Value cell */}
+          <div className="flex-1 bg-white px-2 py-1.5 flex items-center min-w-0">
+            {editingRowId === row.rowId && editingField === 'value' ? (
+              <input
+                autoFocus
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={commitCell}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.target.blur()
+                  if (e.key === 'Escape') { setEditingRowId(null); setEditingField(null) }
+                }}
+                className="flex-1 text-[12px] text-gray-900 bg-transparent outline-none border-b border-indigo-300 min-w-0"
               />
             ) : (
               <div
-                onClick={() => startEdit(key)}
-                className="text-[12px] text-gray-900 cursor-text hover:bg-[#f5f5f5] rounded px-0.5 min-h-[1rem] leading-snug"
+                onClick={() => startEditCell(row.rowId, 'value')}
+                className="flex-1 text-[12px] text-gray-900 cursor-text hover:bg-[#f5f5f5] rounded px-0.5 min-h-[1rem] leading-snug"
               >
-                {fields[key]}
+                {row.value || <span className="text-gray-300">—</span>}
               </div>
             )}
+            <button
+              onClick={() => deleteRow(row.rowId, row.dbId)}
+              className="ml-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity text-[18px] leading-none flex-shrink-0 font-light"
+              title="Remove field"
+            >
+              ×
+            </button>
           </div>
         </div>
       ))}
 
-      {/* Add field buttons */}
-      {emptyRows.length > 0 && (
-        <div className="bg-[#f8f9fa] px-3 py-1.5 flex flex-wrap gap-x-3 gap-y-0.5 border-t border-[#a2a9b1]">
-          {emptyRows.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => startEdit(key)}
-              className="text-[11px] text-blue-600 hover:underline"
-            >
-              + {label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Add field */}
+      <div className="bg-[#f8f9fa] px-3 py-1.5">
+        {addingRow ? (
+          <input
+            autoFocus
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
+            onBlur={confirmAddRow}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.target.blur()
+              if (e.key === 'Escape') { setAddingRow(false); setNewLabel('') }
+            }}
+            placeholder="Field name…"
+            className="w-full text-[12px] text-gray-900 bg-transparent outline-none border-b border-indigo-300 py-0.5"
+          />
+        ) : (
+          <button
+            onClick={() => setAddingRow(true)}
+            className="text-[11px] text-blue-600 hover:underline"
+          >
+            + Add field
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -344,8 +415,9 @@ export default function CarlopediaEntryPage() {
   const [loading, setLoading] = useState(true)
   const [infoboxPhoto, setInfoboxPhoto] = useState(null)
   const [infoboxPhotoFieldId, setInfoboxPhotoFieldId] = useState(null)
-  const [infoboxFields, setInfoboxFields] = useState({})
-  const [infoboxFieldIds, setInfoboxFieldIds] = useState({})
+  const [infoboxRows, setInfoboxRows] = useState([])
+  const [infoboxCaption, setInfoboxCaption] = useState('')
+  const [infoboxCaptionDbId, setInfoboxCaptionDbId] = useState(null)
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -410,30 +482,30 @@ export default function CarlopediaEntryPage() {
             .from('profile_fields')
             .select('id, field_key, field_value')
             .eq('entry_id', id)
-            .in('field_key', [
-              'cover_image',
-              'infobox_caption',
-              'infobox_born',
-              'infobox_died',
-              'infobox_nationality',
-              'infobox_occupation',
-              'infobox_known_for',
-            ])
 
-          const fieldMap = {}
-          const fieldIdMap = {}
+          const loadedRows = []
           ;(fields ?? []).forEach((f) => {
             if (f.field_key === 'cover_image') {
               setInfoboxPhoto(f.field_value)
               setInfoboxPhotoFieldId(f.id)
-            } else {
-              const key = f.field_key.replace('infobox_', '')
-              fieldMap[key] = f.field_value
-              fieldIdMap[key] = f.id
+            } else if (f.field_key === 'infobox_caption') {
+              setInfoboxCaption(f.field_value)
+              setInfoboxCaptionDbId(f.id)
+            } else if (f.field_key.startsWith('infobox_row_')) {
+              try {
+                const parsed = JSON.parse(f.field_value)
+                loadedRows.push({
+                  rowId: f.field_key.replace('infobox_row_', ''),
+                  label: parsed.label || '',
+                  value: parsed.value || '',
+                  order: parsed.order ?? 0,
+                  dbId: f.id,
+                })
+              } catch {}
             }
           })
-          setInfoboxFields(fieldMap)
-          setInfoboxFieldIds(fieldIdMap)
+          loadedRows.sort((a, b) => a.order - b.order)
+          setInfoboxRows(loadedRows)
 
           const { data: backlinkRows } = await supabase
             .from('entry_links')
@@ -505,6 +577,23 @@ export default function CarlopediaEntryPage() {
     await supabase.from('profile_fields').delete().eq('id', infoboxPhotoFieldId)
     setInfoboxPhoto(null)
     setInfoboxPhotoFieldId(null)
+  }
+
+  async function handleCaptionSave(value) {
+    setInfoboxCaption(value)
+    if (!value && infoboxCaptionDbId) {
+      await supabase.from('profile_fields').delete().eq('id', infoboxCaptionDbId)
+      setInfoboxCaptionDbId(null)
+    } else if (value && infoboxCaptionDbId) {
+      await supabase.from('profile_fields').update({ field_value: value }).eq('id', infoboxCaptionDbId)
+    } else if (value) {
+      const { data } = await supabase.from('profile_fields').insert({
+        entry_id: id,
+        field_key: 'infobox_caption',
+        field_value: value,
+      }).select('id').single()
+      if (data) setInfoboxCaptionDbId(data.id)
+    }
   }
 
   function handleDelete() {
@@ -590,10 +679,10 @@ export default function CarlopediaEntryPage() {
               photo={infoboxPhoto}
               onPhotoClick={() => imageInputRef.current?.click()}
               onPhotoRemove={removePhoto}
-              fields={infoboxFields}
-              fieldIds={infoboxFieldIds}
-              onFieldsChange={setInfoboxFields}
-              onFieldIdsChange={setInfoboxFieldIds}
+              rows={infoboxRows}
+              onRowsChange={setInfoboxRows}
+              caption={infoboxCaption}
+              onCaptionSave={handleCaptionSave}
             />
 
             <EditorContent editor={editor} />
