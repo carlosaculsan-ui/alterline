@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -33,6 +34,14 @@ function KeyedCarlopediaEntryPage() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const splash = document.getElementById('splash')
+    if (!splash) return
+    splash.style.opacity = '0'
+    const t = setTimeout(() => splash.remove(), 400)
+    return () => clearTimeout(t)
+  }, [])
+
   return (
     <ErrorBoundary>
     <CursorTrail />

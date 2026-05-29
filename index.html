@@ -2,8 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/alterline.jpg" />
-    <link rel="apple-touch-icon" href="/alterline.jpg" />
+    <link rel="icon" type="image/jpeg" href="/Icon.jpg" />
+    <link rel="apple-touch-icon" href="/Icon.jpg" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#111111" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,6 +18,9 @@
     </script>
   </head>
   <body>
+    <div id="splash" style="position:fixed;inset:0;z-index:9999;background:#111;display:flex;align-items:center;justify-content:center;transition:opacity 0.4s ease;pointer-events:none">
+      <img src="/alterline.jpg" style="width:130px;height:130px;object-fit:contain;border-radius:22px" alt="" />
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
