@@ -63,7 +63,7 @@ function Toolbar({ editor, onBack, onDelete, confirmDelete, deleting }) {
   const currentSize = editorSize ? parseInt(editorSize).toString() : '15'
 
   return (
-    <div className="sticky top-0 z-10 bg-white dark:bg-[#111] border-b border-[#f0f0f0] dark:border-[#1e1e1e] px-4 py-2.5 sm:px-8 flex items-center gap-0.5 overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+    <div className="sticky top-0 z-20 bg-white dark:bg-[#111] border-b border-[#f0f0f0] dark:border-[#1e1e1e] px-4 py-2.5 sm:px-8 flex items-center gap-0.5 overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
       {onBack && (
         <>
           <button
