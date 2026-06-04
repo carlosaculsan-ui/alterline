@@ -167,8 +167,12 @@ export default function LoginPage() {
       password,
       options: { data: { full_name: displayName.trim() || email.split('@')[0] } },
     })
-    if (err) setError(err.message)
-    else setDone(true)
+    if (err) {
+      if (err.message === 'User already registered') switchMode('login')
+      else setError(err.message)
+    } else {
+      setDone(true)
+    }
     setLoading(false)
   }
 
@@ -343,6 +347,10 @@ export default function LoginPage() {
           ) : signupStep === 1 ? (
             /* Signup step 1 — email + password + confirm + terms */
             <>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 20 }}>
+                <div style={{ width: 24, height: 4, borderRadius: 2, backgroundColor: 'white' }} />
+                <div style={{ width: 24, height: 4, borderRadius: 2, backgroundColor: '#333' }} />
+              </div>
               <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, margin: '0 0 6px', textAlign: 'center' }}>Create account</h1>
               <p style={{ color: '#666', fontSize: 14, margin: '0 0 28px', textAlign: 'center' }}>Join your universe today</p>
 
@@ -475,6 +483,10 @@ export default function LoginPage() {
           ) : (
             /* Signup step 2 — name */
             <>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 20 }}>
+                <div style={{ width: 24, height: 4, borderRadius: 2, backgroundColor: 'white' }} />
+                <div style={{ width: 24, height: 4, borderRadius: 2, backgroundColor: 'white' }} />
+              </div>
               <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, margin: '0 0 6px', textAlign: 'center' }}>What should we call you?</h1>
               <p style={{ color: '#666', fontSize: 14, margin: '0 0 32px', textAlign: 'center' }}>This is how we'll greet you in Alterline</p>
 

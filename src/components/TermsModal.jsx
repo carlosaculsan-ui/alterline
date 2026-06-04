@@ -54,7 +54,7 @@ export default function TermsModal({ onAgree, onClose }) {
         {/* Scroll hint */}
         {!scrolledToBottom && (
           <div style={{ backgroundColor: '#1a1a1a', borderBottom: '1px solid #222', padding: '8px 24px', flexShrink: 0 }}>
-            <p style={{ color: '#555', fontSize: 12, margin: 0, textAlign: 'center' }}>Scroll to the bottom to accept</p>
+            <p style={{ color: '#aaa', fontSize: 12, margin: 0, textAlign: 'center' }}>Scroll to the bottom to accept</p>
           </div>
         )}
 

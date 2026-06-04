@@ -74,16 +74,31 @@ function TypewriterGreeting({ text, onDone }) {
   )
 }
 
-function EmptyState({ worldName }) {
+function EmptyState({ worldName, isFirstVisit }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-12">
       <div className="text-[36px] text-gray-200 dark:text-[#2a2a2a] mb-3 select-none">✦</div>
       <div className="text-[15px] font-medium text-gray-900 dark:text-white mb-1">
         Nothing in {worldName} yet
       </div>
-      <div className="text-[13px] text-gray-600 dark:text-gray-300">
+      <div className={`text-[13px] text-gray-600 dark:text-gray-300 ${isFirstVisit ? 'mb-6' : ''}`}>
         Hit "New Entry" to start building your universe
       </div>
+      {isFirstVisit && (
+        <div className="flex flex-col gap-3 text-left max-w-[280px] bg-gray-50 dark:bg-[#111] rounded-xl p-4 border border-gray-100 dark:border-[#1e1e1e]">
+          {[
+            ['Entry', 'A character, location, scene — any building block of your world'],
+            ['Category', 'A folder to group related entries'],
+            ['Carlopedia', 'Shared knowledge base for world lore'],
+            ['World', 'A separate universe — switch between them in the sidebar'],
+          ].map(([term, def]) => (
+            <div key={term} className="flex gap-2">
+              <span className="text-[12px] font-semibold text-gray-900 dark:text-white shrink-0 w-[80px]">{term}</span>
+              <span className="text-[12px] text-gray-700 dark:text-gray-300">{def}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -92,6 +107,13 @@ export default function Dashboard() {
   const user = useAuth()
   const name = getDisplayName(user)
   const { activeWorldId, activeWorld } = useWorld()
+  const [isFirstVisit] = useState(() => {
+    if (!user?.id) return false
+    const key = `alterline-welcomed-${user.id}`
+    if (localStorage.getItem(key)) return false
+    localStorage.setItem(key, '1')
+    return true
+  })
   const SORT_OPTIONS = [
     { label: 'Newest',          column: 'created_at',  ascending: false },
     { label: 'Oldest',          column: 'created_at',  ascending: true  },
@@ -188,10 +210,11 @@ export default function Dashboard() {
 
   const entryNoun = (!hasMore && entries.length === 1) ? 'entry' : 'entries'
   const countStr = hasMore ? `${entries.length}+` : String(entries.length)
+  const greeting = isFirstVisit ? 'Welcome' : 'Welcome back'
   const greetingText = name
     ? entries.length > 0
-      ? `Welcome back, ${name}. Your universe has ${countStr} ${entryNoun}.`
-      : `Welcome back, ${name}.`
+      ? `${greeting}, ${name}. Your universe has ${countStr} ${entryNoun}.`
+      : `${greeting}, ${name}.`
     : ''
 
   if (entries.length === 0) return (
@@ -212,7 +235,7 @@ export default function Dashboard() {
             </h2>
           </div>
         )}
-        <EmptyState worldName={activeWorld?.name ?? 'this world'} />
+        <EmptyState worldName={activeWorld?.name ?? 'this world'} isFirstVisit={isFirstVisit} />
       </div>
     </Layout>
   )
