@@ -83,7 +83,7 @@ export default function ArchivePage() {
             <div className="text-[36px] text-gray-200 dark:text-[#2a2a2a] mb-3 select-none">✦</div>
             <div className="text-[14px] font-medium text-gray-900 dark:text-white mb-1">Nothing here</div>
             <div className="text-[13px] text-gray-900 dark:text-white opacity-50">
-              Deleted items are permanently removed after 30 days.
+              Items you delete will appear here.
             </div>
           </div>
         ) : (
