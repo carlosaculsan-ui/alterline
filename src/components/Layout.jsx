@@ -357,7 +357,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
         {/* World switcher */}
         <div className="px-3 py-2 border-b border-[#e5e5e5] dark:border-[#2a2a2a] relative min-w-[280px]" ref={worldSwitcherRef}>
           <button
-            onClick={() => { setShowWorldSwitcher((v) => !v); setShowNewWorld(false) }}
+            onClick={() => { setShowWorldSwitcher((v) => !v); setShowNewWorld(false); setShowUserMenu(false); setShowLearnMore(false) }}
             className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors group"
           >
             <span
@@ -745,7 +745,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
           {/* Trigger */}
           {user && (
             <button
-              onClick={() => { setShowUserMenu((v) => !v); setShowLearnMore(false) }}
+              onClick={() => { setShowUserMenu((v) => !v); setShowLearnMore(false); setShowWorldSwitcher(false); setShowNewWorld(false) }}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
               aria-label={`User menu — ${user.user_metadata?.full_name || user.email.split('@')[0]}`}
             >
@@ -861,7 +861,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
               }
             >
               {icon}
-              {label}
+              <span className="truncate w-full text-center">{label}</span>
             </NavLink>
           ))}
         </nav>
