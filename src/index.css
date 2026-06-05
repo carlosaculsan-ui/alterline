@@ -48,7 +48,7 @@ input:-webkit-autofill:focus {
 }
 .shake { animation: shake 0.35s ease; }
 
-.ProseMirror { outline: none; }
+.ProseMirror { outline: none; white-space: pre-wrap; }
 .ProseMirror p { margin-bottom: 0.85rem; }
 .ProseMirror p:last-child { margin-bottom: 0; }
 .ProseMirror strong { font-weight: 600; }

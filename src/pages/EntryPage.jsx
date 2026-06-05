@@ -625,7 +625,7 @@ export default function EntryPage() {
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ underline: false }),
+      StarterKit.configure({ underline: false, link: false }),
       Underline,
       TextStyle,
       FontSize,
