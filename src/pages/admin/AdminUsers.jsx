@@ -151,11 +151,13 @@ export default function AdminUsers() {
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar user={user} />
                       <div className="min-w-0">
-                        <div className="text-[13px] font-medium text-gray-900 dark:text-white truncate">{getDisplayName(user)}</div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="text-[13px] font-medium text-gray-900 dark:text-white truncate">{getDisplayName(user)}</div>
+                          {user.email === 'carlosaculsan123@gmail.com' && (
+                            <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider shrink-0">Owner</span>
+                          )}
+                        </div>
                         <div className="text-[11px] text-gray-500 dark:text-[#777] truncate">{user.email}</div>
-                        {user.email === 'carlosaculsan123@gmail.com' && (
-                          <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Owner</span>
-                        )}
                       </div>
                     </div>
                     <div className="text-[12px] text-gray-500 dark:text-[#777]">{fmt(user.created_at)}</div>
@@ -172,9 +174,11 @@ export default function AdminUsers() {
                       >
                         {expandedUser === user.id ? 'Hide' : 'View'}
                       </button>
-                      <button onClick={() => setConfirmDelete(user.id)} disabled={user.email === 'carlosaculsan123@gmail.com'} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title={user.email === 'carlosaculsan123@gmail.com' ? "Can't delete your own account" : 'Delete user'}>
-                        Delete
-                      </button>
+                      <span title="Can't delete your own account" className={user.email === 'carlosaculsan123@gmail.com' ? 'cursor-not-allowed' : ''}>
+                        <button onClick={() => setConfirmDelete(user.id)} disabled={user.email === 'carlosaculsan123@gmail.com'} className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:pointer-events-none">
+                          Delete
+                        </button>
+                      </span>
                     </div>
                   </div>
 
@@ -184,11 +188,13 @@ export default function AdminUsers() {
                       <div className="flex items-center gap-3 min-w-0">
                         <Avatar user={user} />
                         <div className="min-w-0">
-                          <div className="text-[13px] font-medium text-gray-900 dark:text-white truncate">{getDisplayName(user)}</div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="text-[13px] font-medium text-gray-900 dark:text-white truncate">{getDisplayName(user)}</div>
+                            {user.email === 'carlosaculsan123@gmail.com' && (
+                              <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider shrink-0">Owner</span>
+                            )}
+                          </div>
                           <div className="text-[11px] text-gray-500 dark:text-[#777] truncate">{user.email}</div>
-                          {user.email === 'carlosaculsan123@gmail.com' && (
-                            <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Owner</span>
-                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">

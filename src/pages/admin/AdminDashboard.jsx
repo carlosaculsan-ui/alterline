@@ -17,7 +17,7 @@ function StatCard({ label, value, sub }) {
         ) : value}
       </div>
       <div className="mt-1 text-[13px] text-gray-900 dark:text-white font-medium">{label}</div>
-      {sub && <div className="mt-0.5 text-[11px] text-gray-500 dark:text-[#777]">{sub}</div>}
+      <div className="mt-0.5 text-[11px] text-gray-500 dark:text-[#777]">{sub ?? ' '}</div>
     </div>
   )
 }
