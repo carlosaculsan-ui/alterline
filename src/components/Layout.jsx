@@ -783,7 +783,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
         <div className={`lg:hidden shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] bg-white dark:bg-[#111] ${focusMode ? 'hidden' : ''}`}>
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="text-gray-900 dark:text-white p-1.5 hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] rounded-md transition-colors"
+            className="text-gray-900 dark:text-white w-11 h-11 flex items-center justify-center hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] rounded-md transition-colors"
             aria-label="Open menu"
           >
             <IconHamburger />
@@ -806,7 +806,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
           </button>
           <button
             onClick={() => setShowEntryModal(true)}
-            className="text-gray-900 dark:text-white p-1.5 hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] rounded-md transition-colors"
+            className="text-gray-900 dark:text-white w-11 h-11 flex items-center justify-center hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] rounded-md transition-colors"
             aria-label="New Entry"
           >
             <IconPlus />

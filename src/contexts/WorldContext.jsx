@@ -37,12 +37,23 @@ export function WorldProvider({ children }) {
         .single()
 
       if (insertErr) {
-        console.error('worlds insert error:', insertErr)
-        setLoading(false)
-        return
+        // Insert may have lost a race or hit a duplicate — attempt a read recovery
+        const { data: existing } = await supabase
+          .from('worlds')
+          .select('*')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+        if (existing) {
+          list = [existing]
+        } else {
+          console.error('worlds insert error:', insertErr)
+          setLoading(false)
+          return
+        }
+      } else if (newWorld) {
+        list = [newWorld]
       }
-
-      if (newWorld) list = [newWorld]
     }
 
     if (list.length > 0) {
