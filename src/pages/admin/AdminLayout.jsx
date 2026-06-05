@@ -112,7 +112,10 @@ export default function AdminLayout({ children }) {
       <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto shrink-0 flex flex-col w-[280px] bg-[#f9f9f9] dark:bg-[#141414] border-r border-[#e5e5e5] dark:border-[#2a2a2a] overflow-hidden transition-transform lg:transition-[width] duration-200 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${sidebarOpen ? '' : 'lg:w-0'}`}>
         {/* Logo */}
         <div className="px-5 py-[18px] border-b border-[#e5e5e5] dark:border-[#2a2a2a] flex items-center justify-between min-w-[280px]">
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="shrink-0 text-gray-900 dark:text-white">
               <path d="M4 21L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <path d="M14 3L20 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -129,7 +132,7 @@ export default function AdminLayout({ children }) {
                 Admin
               </span>
             </div>
-          </div>
+          </button>
           <button
             onClick={() => { setSidebarOpen(false); setMobileMenuOpen(false) }}
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#ebebeb] dark:hover:bg-[#222] p-1.5 rounded-md transition-colors"
