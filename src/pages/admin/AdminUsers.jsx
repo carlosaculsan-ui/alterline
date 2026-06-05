@@ -166,10 +166,10 @@ export default function AdminUsers() {
                     <div className="flex items-center gap-2 justify-end">
                       <button
                         onClick={() => toggleEntries(user.id)}
-                        className={`text-[12px] font-medium px-2.5 py-1 rounded-md transition-colors ${
+                        className={`text-[12px] font-medium px-2.5 py-1 rounded-md transition-colors border ${
                           expandedUser === user.id
-                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                            : 'bg-[#f0f0f0] dark:bg-[#222] text-gray-900 dark:text-white hover:bg-[#e5e5e5] dark:hover:bg-[#2a2a2a]'
+                            ? 'border-indigo-400 dark:border-indigo-500 text-indigo-600 dark:text-indigo-400 bg-transparent'
+                            : 'border-transparent bg-[#f0f0f0] dark:bg-[#222] text-gray-900 dark:text-white hover:bg-[#e5e5e5] dark:hover:bg-[#2a2a2a]'
                         }`}
                       >
                         {expandedUser === user.id ? 'Hide' : 'View'}
@@ -200,10 +200,10 @@ export default function AdminUsers() {
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           onClick={() => toggleEntries(user.id)}
-                          className={`text-[12px] font-medium px-2.5 py-1 rounded-md transition-colors ${
+                          className={`text-[12px] font-medium px-2.5 py-1 rounded-md transition-colors border ${
                             expandedUser === user.id
-                              ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                              : 'bg-[#f0f0f0] dark:bg-[#222] text-gray-900 dark:text-white'
+                              ? 'border-indigo-400 dark:border-indigo-500 text-indigo-600 dark:text-indigo-400 bg-transparent'
+                              : 'border-transparent bg-[#f0f0f0] dark:bg-[#222] text-gray-900 dark:text-white'
                           }`}
                         >
                           {expandedUser === user.id ? 'Hide' : 'View'}
@@ -224,7 +224,7 @@ export default function AdminUsers() {
 
                   {/* Expanded entries */}
                   {expandedUser === user.id && (
-                    <div className="border-b border-[#f0f0f0] dark:border-[#1e1e1e] bg-[#fafafa] dark:bg-[#0e0e0e]">
+                    <div className="border-b border-b-[#e5e5e5] dark:border-b-[#2a2a2a] border-l-[3px] border-l-indigo-200 dark:border-l-indigo-800 bg-[#fafafa] dark:bg-[#0e0e0e]">
                       {loadingEntries && !userEntries[user.id] ? (
                         <div className="px-8 py-4 text-[12px] text-gray-500 dark:text-[#777]">Loading entries…</div>
                       ) : (userEntries[user.id] ?? []).length === 0 ? (
