@@ -224,13 +224,13 @@ export default function Dashboard() {
           <div
             style={{
               overflow: 'hidden',
-              maxHeight: greetingVisible ? '100px' : '0px',
+              maxHeight: greetingVisible ? '120px' : '0px',
               opacity: greetingVisible ? 1 : 0,
               marginBottom: greetingVisible ? '24px' : '0px',
               transition: 'opacity 600ms ease, max-height 600ms ease, margin-bottom 600ms ease',
             }}
           >
-            <h2 className="text-[25px] font-bold text-gray-900 dark:text-white text-center">
+            <h2 className="text-[20px] sm:text-[24px] font-bold text-gray-900 dark:text-white text-center" style={{ overflowWrap: 'break-word' }}>
               <TypewriterGreeting text={greetingText} onDone={() => setTypingDone(true)} />
             </h2>
           </div>
@@ -248,13 +248,13 @@ export default function Dashboard() {
           <div
             style={{
               overflow: 'hidden',
-              maxHeight: greetingVisible ? '100px' : '0px',
+              maxHeight: greetingVisible ? '120px' : '0px',
               opacity: greetingVisible ? 1 : 0,
               marginBottom: greetingVisible ? '24px' : '0px',
               transition: 'opacity 600ms ease, max-height 600ms ease, margin-bottom 600ms ease',
             }}
           >
-            <h2 className="text-[25px] font-bold text-gray-900 dark:text-white text-center">
+            <h2 className="text-[20px] sm:text-[24px] font-bold text-gray-900 dark:text-white text-center" style={{ overflowWrap: 'break-word' }}>
               <TypewriterGreeting text={greetingText} onDone={() => setTypingDone(true)} />
             </h2>
           </div>

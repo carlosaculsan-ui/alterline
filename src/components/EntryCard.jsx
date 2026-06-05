@@ -71,7 +71,6 @@ export default function EntryCard({ entry, displayDate, searchQuery, onDelete, o
     e.stopPropagation()
     setShowMenu(true)
     setShowColors(false)
-    setConfirmDelete(false)
   }
 
   function closeMenu() {
@@ -130,13 +129,13 @@ export default function EntryCard({ entry, displayDate, searchQuery, onDelete, o
         <div className="text-[12px] text-gray-900 dark:text-white opacity-50 mt-1">{date}</div>
       </div>
 
-      {/* Hover action buttons */}
-      <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-        {/* Trash */}
+      {/* Action buttons — trash hover-only, 3-dot always visible at low opacity */}
+      <div className="absolute top-2 right-2 flex items-center gap-1">
+        {/* Trash — hidden until card hover */}
         {onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); setShowDeleteModal(true) }}
-            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-red-100 dark:hover:bg-red-950/40 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
             aria-label="Delete entry"
             title="Delete entry"
           >
@@ -147,10 +146,10 @@ export default function EntryCard({ entry, displayDate, searchQuery, onDelete, o
             </svg>
           </button>
         )}
-        {/* 3-dot */}
+        {/* 3-dot — always visible so touch users have a tap target */}
         <button
           onClick={openMenu}
-          className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-black/10 dark:hover:bg-white/10 transition-all text-gray-900 dark:text-white text-[16px] leading-none"
+          className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-black/10 dark:hover:bg-white/10 text-gray-900 dark:text-white text-[16px] leading-none opacity-30 group-hover:opacity-100 transition-all"
           aria-label="Options"
         >
           ···
