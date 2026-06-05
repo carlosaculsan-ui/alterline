@@ -102,7 +102,7 @@ ${storyContent || '(empty)'}`
   const showRunButton = mode !== 'chat' && messages.length === 0
 
   return (
-    <div className="fixed right-0 bottom-0 top-14 lg:top-0 w-full sm:w-[340px] z-40 flex flex-col bg-white dark:bg-[#111] border-l border-[#e5e5e5] dark:border-[#1e1e1e] shadow-2xl">
+    <div className="fixed right-0 bottom-14 lg:bottom-0 top-14 lg:top-0 w-full sm:w-[340px] z-40 flex flex-col bg-white dark:bg-[#111] border-l border-[#e5e5e5] dark:border-[#1e1e1e] shadow-2xl">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] shrink-0">
         <span className="text-[13px] font-semibold text-gray-900 dark:text-white flex-1">✦ AI Assistant</span>

@@ -357,7 +357,8 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive, title, focusMode, onFoc
   }
 
   return (
-    <div className="sticky top-0 z-10 -mx-4 px-4 sm:-mx-8 sm:px-8 pt-3 bg-white dark:bg-[#111] flex items-center gap-0.5 mb-6 pb-3 border-b border-[#f0f0f0] dark:border-[#1e1e1e] overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+    <div className="sticky top-0 z-10 -mx-4 sm:-mx-8 bg-white dark:bg-[#111] mb-6 border-b border-[#f0f0f0] dark:border-[#1e1e1e] relative">
+      <div className="px-4 sm:px-8 pt-3 pb-3 flex items-center gap-0.5 overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
       {onBack && (
         <>
           <button
@@ -568,6 +569,8 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive, title, focusMode, onFoc
         </svg>
       </button>
 
+      </div>
+      <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-[#111] to-transparent sm:hidden" aria-hidden="true" />
     </div>
   )
 }
@@ -623,6 +626,7 @@ export default function EntryPage() {
   const linkInputRef = useRef(null)
   const cancelTitle = useRef(false)
   const contentInitialized = useRef(false)
+  const autoSaveTimer = useRef(null)
 
   const [searchParams] = useSearchParams()
   const [showAI, setShowAI] = useState(() => searchParams.get('ai') === '1')
@@ -696,6 +700,15 @@ export default function EntryPage() {
       contentRef.current = editor.getHTML()
       checkMentionRef.current?.(editor)
       setSaveStatus('dirty')
+      clearTimeout(autoSaveTimer.current)
+      autoSaveTimer.current = setTimeout(async () => {
+        const html = contentRef.current
+        if (html === lastSaved.current) { setSaveStatus('saved'); return }
+        setSaveStatus('saving')
+        const { error } = await supabase.from('entries').update({ content: html, updated_at: new Date().toISOString() }).eq('id', id)
+        if (!error) { lastSaved.current = html; setSaveStatus('saved') }
+        else { setToastMsg('Auto-save failed. Try again.'); setSaveStatus('dirty') }
+      }, 3000)
     },
     onSelectionUpdate({ editor }) {
       checkMentionRef.current?.(editor)
@@ -896,8 +909,9 @@ export default function EntryPage() {
   }, [focusMode])
 
   async function handleContentBlur() {
+    clearTimeout(autoSaveTimer.current)
     const html = contentRef.current
-    if (html === lastSaved.current) return
+    if (html === lastSaved.current) { setSaveStatus('saved'); return }
     setSaveStatus('saving')
     const { error } = await supabase.from('entries').update({ content: html, updated_at: new Date().toISOString() }).eq('id', id)
     if (error) { setToastMsg('Save failed. Try again.'); setSaveStatus('dirty'); return }
