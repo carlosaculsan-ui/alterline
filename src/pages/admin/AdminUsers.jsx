@@ -37,6 +37,9 @@ export default function AdminUsers() {
   const [expandedUser, setExpandedUser] = useState(null)
   const [userEntries, setUserEntries] = useState({})
   const [loadingEntries, setLoadingEntries] = useState(false)
+  const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState('joined')
+  const [sortDir, setSortDir] = useState('desc')
 
   useEffect(() => {
     load()
@@ -113,18 +116,88 @@ export default function AdminUsers() {
     return type ?? '—'
   }
 
+  function toggleSort(col) {
+    if (sortBy === col) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    else { setSortBy(col); setSortDir('desc') }
+  }
+
+  const displayUsers = users === null ? null : [...users]
+    .filter((u) => {
+      if (!search.trim()) return true
+      const q = search.toLowerCase()
+      return getDisplayName(u).toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q)
+    })
+    .sort((a, b) => {
+      if (sortBy === 'entries') {
+        const av = entryCounts[a.id] ?? 0
+        const bv = entryCounts[b.id] ?? 0
+        return sortDir === 'asc' ? av - bv : bv - av
+      }
+      if (sortBy === 'name') {
+        return sortDir === 'asc'
+          ? getDisplayName(a).localeCompare(getDisplayName(b))
+          : getDisplayName(b).localeCompare(getDisplayName(a))
+      }
+      const av = new Date(a.created_at).getTime()
+      const bv = new Date(b.created_at).getTime()
+      return sortDir === 'asc' ? av - bv : bv - av
+    })
+
   const deleteTarget = confirmDelete && users ? users.find((u) => u.id === confirmDelete) ?? null : null
 
   return (
     <>
     <AdminLayout>
       <div className="px-6 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-[22px] font-bold text-gray-900 dark:text-white">Users</h1>
-            <p className="mt-1 text-[13px] text-gray-500 dark:text-[#777]">
-              {users === null ? 'Loading…' : `${users.length} account${users.length !== 1 ? 's' : ''}`}
-            </p>
+        <div className="mb-6">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-[22px] font-bold text-gray-900 dark:text-white">Users</h1>
+              <p className="mt-1 text-[13px] text-gray-500 dark:text-[#777]">
+                {users === null
+                  ? 'Loading…'
+                  : displayUsers !== null && displayUsers.length !== users.length
+                    ? `${displayUsers.length} of ${users.length} accounts`
+                    : `${users.length} account${users.length !== 1 ? 's' : ''}`}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="relative flex-1">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#555] pointer-events-none" width="13" height="13" viewBox="0 0 15 15" fill="none">
+                <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.4" />
+                <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search by name or email…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-2 text-[13px] rounded-lg border border-[#e5e5e5] dark:border-[#2a2a2a] bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#555] focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:focus:ring-indigo-600"
+              />
+            </div>
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-[#f0f0f0] dark:bg-[#1a1a1a] shrink-0 text-[12px]">
+              {[['joined', 'Joined'], ['entries', 'Entries'], ['name', 'Name']].map(([val, label]) => (
+                <button
+                  key={val}
+                  onClick={() => toggleSort(val)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md font-medium transition-colors ${
+                    sortBy === val
+                      ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-500 dark:text-[#666] hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {label}
+                  {sortBy === val && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      {sortDir === 'asc'
+                        ? <path d="M5 2L8 7H2L5 2Z" fill="currentColor" />
+                        : <path d="M5 8L2 3H8L5 8Z" fill="currentColor" />}
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -138,16 +211,18 @@ export default function AdminUsers() {
             <span />
           </div>
 
-          {users === null ? (
+          {displayUsers === null ? (
             <div className="px-6 py-10 text-center text-[13px] text-gray-500 dark:text-[#777]">Loading…</div>
-          ) : users.length === 0 ? (
-            <div className="px-6 py-10 text-center text-[13px] text-gray-500 dark:text-[#777]">No users found.</div>
+          ) : displayUsers.length === 0 ? (
+            <div className="px-6 py-10 text-center text-[13px] text-gray-500 dark:text-[#777]">
+              {search ? 'No users match your search.' : 'No users found.'}
+            </div>
           ) : (
             <div>
-              {users.map((user, i) => (
+              {displayUsers.map((user, i) => (
                 <div key={user.id}>
                   {/* Desktop row */}
-                  <div className={`hidden sm:grid grid-cols-[1fr_100px_80px_80px_120px] gap-4 items-center px-5 py-3.5 ${i < users.length - 1 || expandedUser === user.id ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
+                  <div className={`hidden sm:grid grid-cols-[1fr_100px_80px_80px_120px] gap-4 items-center px-5 py-3.5 ${i < displayUsers.length - 1 || expandedUser === user.id ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar user={user} />
                       <div className="min-w-0">
@@ -183,7 +258,7 @@ export default function AdminUsers() {
                   </div>
 
                   {/* Mobile card */}
-                  <div className={`sm:hidden px-4 py-3.5 ${i < users.length - 1 || expandedUser === user.id ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
+                  <div className={`sm:hidden px-4 py-3.5 ${i < displayUsers.length - 1 || expandedUser === user.id ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <Avatar user={user} />

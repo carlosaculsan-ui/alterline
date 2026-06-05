@@ -18,6 +18,7 @@ import PrivacyPage from './pages/PrivacyPage'
 import AboutPage from './pages/AboutPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
+import AdminEntries from './pages/admin/AdminEntries'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import SearchPage from './pages/SearchPage'
@@ -67,6 +68,7 @@ export default function App() {
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/entries" element={<AdminEntries />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

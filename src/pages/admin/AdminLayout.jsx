@@ -25,6 +25,15 @@ function IconUsers() {
   )
 }
 
+function IconEntries() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0">
+      <rect x="2" y="1.5" width="11" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M5 5h5M5 7.5h5M5 10h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function IconArrowLeft() {
   return (
     <svg width="14" height="14" viewBox="0 0 15 15" fill="none" className="shrink-0">
@@ -63,6 +72,7 @@ function IconLogOut() {
 const NAV = [
   { to: '/admin', label: 'Overview', icon: <IconGrid />, end: true },
   { to: '/admin/users', label: 'Users', icon: <IconUsers />, end: false },
+  { to: '/admin/entries', label: 'Entries', icon: <IconEntries />, end: false },
 ]
 
 export default function AdminLayout({ children }) {

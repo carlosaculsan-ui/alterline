@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
@@ -60,6 +60,7 @@ export default function AdminDashboard() {
     categories: null, links: null, newUsersWeek: null, newEntriesWeek: null,
   })
   const [recent, setRecent] = useState(null)
+  const [recentFilter, setRecentFilter] = useState('all')
   const [userMap, setUserMap] = useState({})
   const [monthlyData, setMonthlyData] = useState(null)
   const [activeBar, setActiveBar] = useState(null)
@@ -221,47 +222,79 @@ export default function AdminDashboard() {
 
         {/* Recent activity */}
         <div>
-          <h2 className="text-[15px] font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
-          <div className="border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl overflow-hidden">
-            {recent === null ? (
-              <div className="px-6 py-10 text-center text-[13px] text-gray-500 dark:text-[#777]">Loading…</div>
-            ) : recent.length === 0 ? (
-              <div className="px-6 py-10 text-center text-[13px] text-gray-500 dark:text-[#777]">No entries yet.</div>
-            ) : (
-              <table className="w-full text-[13px]">
-                <thead>
-                  <tr className="border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[#f9f9f9] dark:bg-[#141414]">
-                    <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Title</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Type</th>
-                    <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">User</th>
-                    <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recent.map((entry, i) => (
-                    <tr key={entry.id} className={`${i < recent.length - 1 ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-[120px] sm:max-w-[200px] truncate">
-                        {entry.title || <span className="text-gray-400 dark:text-[#555] italic">Untitled</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                          entry.type === 'carlopedia'
-                            ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                            : 'bg-[#f0f0f0] dark:bg-[#222] text-gray-900 dark:text-white'
-                        }`}>
-                          {typeLabel(entry.type)}
-                        </span>
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777] max-w-[180px] truncate">
-                        {userMap[entry.user_id] ?? entry.user_id?.slice(0, 8) + '…'}
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777]">{fmt(entry.updated_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          <div className="flex items-center justify-between mb-4 gap-4">
+            <h2 className="text-[15px] font-semibold text-gray-900 dark:text-white shrink-0">Recent Activity</h2>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-[#f0f0f0] dark:bg-[#1a1a1a]">
+                {[['all', 'All'], ['story', 'Stories'], ['carlopedia', 'Carlopedia']].map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setRecentFilter(val)}
+                    className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors ${
+                      recentFilter === val
+                        ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-500 dark:text-[#666] hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <Link
+                to="/admin/entries"
+                className="text-[12px] font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors shrink-0"
+              >
+                View all →
+              </Link>
+            </div>
           </div>
+          {(() => {
+            const filteredRecent = recentFilter === 'all' ? recent : (recent ?? []).filter((e) => e.type === recentFilter)
+            return (
+              <div className="border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl overflow-hidden">
+                {recent === null ? (
+                  <div className="px-6 py-10 text-center text-[13px] text-gray-500 dark:text-[#777]">Loading…</div>
+                ) : filteredRecent.length === 0 ? (
+                  <div className="px-6 py-10 text-center text-[13px] text-gray-500 dark:text-[#777]">
+                    {recentFilter !== 'all' ? 'No recent activity for this type.' : 'No entries yet.'}
+                  </div>
+                ) : (
+                  <table className="w-full text-[13px]">
+                    <thead>
+                      <tr className="border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[#f9f9f9] dark:bg-[#141414]">
+                        <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Title</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Type</th>
+                        <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">User</th>
+                        <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Updated</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRecent.map((entry, i) => (
+                        <tr key={entry.id} className={i < filteredRecent.length - 1 ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}>
+                          <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-[120px] sm:max-w-[200px] truncate">
+                            {entry.title || <span className="text-gray-400 dark:text-[#555] italic">Untitled</span>}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                              entry.type === 'carlopedia'
+                                ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                                : 'bg-[#f0f0f0] dark:bg-[#222] text-gray-900 dark:text-white'
+                            }`}>
+                              {typeLabel(entry.type)}
+                            </span>
+                          </td>
+                          <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777] max-w-[180px] truncate">
+                            {userMap[entry.user_id] ?? entry.user_id?.slice(0, 8) + '…'}
+                          </td>
+                          <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777]">{fmt(entry.updated_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )
+          })()}
         </div>
       </div>
     </AdminLayout>
