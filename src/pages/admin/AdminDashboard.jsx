@@ -74,7 +74,7 @@ export default function AdminDashboard() {
       const [
         { data: usersData },
         { count: total },
-        { count: stories },
+        ,
         { data: carlopediaTyped },
         { data: carlopediaFields },
         { count: categories },
@@ -104,14 +104,19 @@ export default function AdminDashboard() {
         ...(carlopediaFields ?? []).map((r) => r.entry_id),
       ])
       const carlopedia = carlopediaIds.size
+      const stories = (total ?? 0) - carlopedia
 
       setStats({ users: users.length, total, stories, carlopedia, categories, links, newUsersWeek, newEntriesWeek })
-      setRecent(recentData ?? [])
+      setRecent((recentData ?? []).map((e) => ({
+        ...e,
+        type: carlopediaIds.has(e.id) ? 'carlopedia' : e.type,
+      })))
     }
     load()
   }, [])
 
   useEffect(() => {
+    setActiveBar(null)
     setChartLoading(true)
     const yearStart = new Date(chartYear, 0, 1).toISOString()
     const yearEnd = new Date(chartYear + 1, 0, 1).toISOString()
@@ -175,6 +180,8 @@ export default function AdminDashboard() {
 
           {monthlyData === null || chartLoading ? (
             <div className="h-48 flex items-center justify-center text-[13px] text-gray-500 dark:text-[#777]">Loading…</div>
+          ) : monthlyData.every((d) => d.count === 0) ? (
+            <div className="h-48 flex items-center justify-center text-[13px] text-gray-500 dark:text-[#777]">No entries for {chartYear}</div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={monthlyData} barSize={28} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
