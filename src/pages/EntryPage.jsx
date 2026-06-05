@@ -272,9 +272,16 @@ function WordCountBar({ editor }) {
   )
 }
 
-function Toolbar({ editor, onBack, onAIToggle, aiActive, title, focusMode, onFocusToggle }) {
+function Toolbar({ editor, onBack, onAIToggle, aiActive, title, focusMode, onFocusToggle, saveStatus }) {
   const [, forceUpdate] = useState(0)
   const [showExport, setShowExport] = useState(false)
+  const [showSaved, setShowSaved] = useState(false)
+  useEffect(() => {
+    if (saveStatus !== 'saved') return
+    setShowSaved(true)
+    const t = setTimeout(() => setShowSaved(false), 2500)
+    return () => clearTimeout(t)
+  }, [saveStatus])
   const exportRef = useRef(null)
   const exportDropdownRef = useRef(null)
   const [showLinkInput, setShowLinkInput] = useState(false)
@@ -485,6 +492,16 @@ function Toolbar({ editor, onBack, onAIToggle, aiActive, title, focusMode, onFoc
 
       <div className="flex-1" />
 
+      {saveStatus === 'dirty' && (
+        <span className="text-[11px] text-amber-500 dark:text-amber-400 mr-2 shrink-0 select-none" title="Unsaved changes">●</span>
+      )}
+      {saveStatus === 'saving' && (
+        <span className="text-[11px] text-gray-600 dark:text-gray-400 mr-2 shrink-0 select-none">Saving…</span>
+      )}
+      {showSaved && saveStatus !== 'dirty' && (
+        <span className="text-[11px] text-gray-600 dark:text-gray-400 mr-2 shrink-0 select-none">Saved ✓</span>
+      )}
+
       <div className="relative shrink-0 mr-1">
         <button
           ref={exportRef}
@@ -598,6 +615,7 @@ export default function EntryPage() {
   const [linkResults, setLinkResults] = useState([])
   const [showLinkResults, setShowLinkResults] = useState(false)
   const [showLinkInput, setShowLinkInput] = useState(false)
+  const [saveStatus, setSaveStatus] = useState('saved')
 
   const lastSaved = useRef('')
   const contentRef = useRef('')
@@ -677,6 +695,7 @@ export default function EntryPage() {
     onUpdate({ editor }) {
       contentRef.current = editor.getHTML()
       checkMentionRef.current?.(editor)
+      setSaveStatus('dirty')
     },
     onSelectionUpdate({ editor }) {
       checkMentionRef.current?.(editor)
@@ -853,9 +872,10 @@ export default function EntryPage() {
     const timer = setTimeout(async () => {
       const html = contentRef.current
       if (html === lastSaved.current) return
+      setSaveStatus('saving')
       const { error } = await supabase.from('entries').update({ content: html, updated_at: new Date().toISOString() }).eq('id', id)
-      if (!error) lastSaved.current = html
-      else setToastMsg('Auto-save failed. Try again.')
+      if (!error) { lastSaved.current = html; setSaveStatus('saved') }
+      else { setToastMsg('Auto-save failed. Try again.'); setSaveStatus('dirty') }
     }, 60000)
     return () => clearTimeout(timer)
   }, [entry])
@@ -878,9 +898,11 @@ export default function EntryPage() {
   async function handleContentBlur() {
     const html = contentRef.current
     if (html === lastSaved.current) return
+    setSaveStatus('saving')
     const { error } = await supabase.from('entries').update({ content: html, updated_at: new Date().toISOString() }).eq('id', id)
-    if (error) { setToastMsg('Save failed. Try again.'); return }
+    if (error) { setToastMsg('Save failed. Try again.'); setSaveStatus('dirty'); return }
     lastSaved.current = html
+    setSaveStatus('saved')
   }
 
   function saveAndNavigate(targetId, path) {
@@ -983,7 +1005,7 @@ export default function EntryPage() {
         </div>
       ) : (
         <div className="px-4 py-6 sm:px-8 sm:py-8">
-          <Toolbar editor={editor} onBack={() => navigate('/')} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} title={entry?.title} focusMode={focusMode} onFocusToggle={() => setFocusMode(true)} />
+          <Toolbar editor={editor} onBack={() => navigate('/')} onAIToggle={() => setShowAI((v) => !v)} aiActive={showAI} title={entry?.title} focusMode={focusMode} onFocusToggle={() => setFocusMode(true)} saveStatus={saveStatus} />
 
           {editingTitle ? (
             <input
