@@ -747,6 +747,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
             <button
               onClick={() => { setShowUserMenu((v) => !v); setShowLearnMore(false) }}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
+              aria-label={`User menu — ${user.user_metadata?.full_name || user.email.split('@')[0]}`}
             >
               {user.user_metadata?.avatar_url ? (
                 <img
@@ -755,7 +756,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
                   className="w-9 h-9 rounded-full shrink-0 object-cover"
                 />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 text-white text-[15px] font-semibold select-none">
+                <div aria-hidden="true" className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 text-white text-[15px] font-semibold select-none">
                   {(user.user_metadata?.full_name || user.email)[0].toUpperCase()}
                 </div>
               )}
