@@ -11,11 +11,10 @@ export function AuthProvider({ children }) {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         const provider = session.user?.app_metadata?.provider
-        const persistent = localStorage.getItem('alterline_persist')
-        const temporary = sessionStorage.getItem('alterline_persist')
-        // For email/password logins, enforce remember-me: if the browser was
-        // closed without "remember me", neither marker survives → sign out.
-        if (provider === 'email' && !persistent && !temporary) {
+        const persist = localStorage.getItem('alterline_persist')
+        // For email/password logins, enforce remember-me: no marker means
+        // the user never logged in on this browser or already cleared it.
+        if (provider === 'email' && !persist) {
           await supabase.auth.signOut()
           setUser(null)
           return
@@ -27,13 +26,23 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (_event === 'SIGNED_OUT') {
         localStorage.removeItem('alterline_persist')
-        sessionStorage.removeItem('alterline_persist')
         sessionStorage.removeItem('alterline-greeted')
       }
       setUser(session?.user ?? null)
     })
 
-    return () => subscription.unsubscribe()
+    // Clear non-persistent ("session") marker when the browser/tab closes
+    function clearSessionMarker() {
+      if (localStorage.getItem('alterline_persist') === 'session') {
+        localStorage.removeItem('alterline_persist')
+      }
+    }
+    window.addEventListener('beforeunload', clearSessionMarker)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('beforeunload', clearSessionMarker)
+    }
   }, [])
 
   return <AuthContext.Provider value={user}>{children}</AuthContext.Provider>

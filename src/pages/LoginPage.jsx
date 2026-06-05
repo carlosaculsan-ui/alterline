@@ -137,13 +137,7 @@ export default function LoginPage() {
     setLoading(true)
     const { error: err } = await supabase.auth.signInWithPassword({ email, password })
     if (!err) {
-      if (remember) {
-        localStorage.setItem('alterline_persist', '1')
-        sessionStorage.removeItem('alterline_persist')
-      } else {
-        sessionStorage.setItem('alterline_persist', '1')
-        localStorage.removeItem('alterline_persist')
-      }
+      localStorage.setItem('alterline_persist', remember ? 'persistent' : 'session')
     }
     if (err) setError(err.message)
     setLoading(false)
@@ -177,8 +171,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogle() {
-    localStorage.setItem('alterline_persist', '1')
-    sessionStorage.removeItem('alterline_persist')
+    localStorage.setItem('alterline_persist', 'persistent')
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
@@ -418,11 +411,7 @@ export default function LoginPage() {
                     <input
                       type="checkbox"
                       checked={termsAccepted}
-                      readOnly
-                      onClick={() => {
-                        if (termsAccepted) setTermsAccepted(false)
-                        else setShowTermsModal(true)
-                      }}
+                      onChange={e => setTermsAccepted(e.target.checked)}
                       style={{ width: 14, height: 14, accentColor: 'white', cursor: 'pointer', flexShrink: 0 }}
                     />
                     <span style={{ fontSize: 13, color: '#777' }}>
@@ -463,7 +452,7 @@ export default function LoginPage() {
 
               {showTermsModal && (
                 <TermsModal
-                  onAgree={() => { setTermsAccepted(true); setShowTermsModal(false) }}
+                  onAgree={() => { setTermsAccepted(true); setError(null); setShowTermsModal(false) }}
                   onClose={() => setShowTermsModal(false)}
                 />
               )}
