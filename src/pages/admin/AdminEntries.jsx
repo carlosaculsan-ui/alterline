@@ -173,47 +173,49 @@ export default function AdminEntries() {
             </div>
           ) : (
             <>
-              <table className="w-full text-[13px]">
-                <thead>
-                  <tr className="border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[#f9f9f9] dark:bg-[#141414]">
-                    <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Title</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Type</th>
-                    <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">User</th>
-                    <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Updated</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((entry, i) => (
-                    <tr key={entry.id} className={i < filtered.length - 1 ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}>
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-[140px] sm:max-w-[280px] truncate">
-                        {entry.title || <span className="italic text-gray-400 dark:text-[#555]">Untitled</span>}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                          entry.type === 'carlopedia'
-                            ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                            : 'bg-[#f0f0f0] dark:bg-[#222] text-gray-900 dark:text-white'
-                        }`}>
-                          {typeLabel(entry.type)}
-                        </span>
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777] max-w-[180px] truncate">
-                        {userMap[entry.user_id] ?? entry.user_id?.slice(0, 8) + '…'}
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777] whitespace-nowrap">{fmt(entry.updated_at)}</td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => setConfirmDelete(entry.id)}
-                          className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                        >
-                          Delete
-                        </button>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-[13px]">
+                  <thead>
+                    <tr className="border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[#f9f9f9] dark:bg-[#141414]">
+                      <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Title</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Type</th>
+                      <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">User</th>
+                      <th className="hidden sm:table-cell text-left px-4 py-3 font-medium text-gray-900 dark:text-white">Updated</th>
+                      <th className="px-4 py-3" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filtered.map((entry, i) => (
+                      <tr key={entry.id} className={i < filtered.length - 1 ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}>
+                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-[140px] sm:max-w-[280px] truncate">
+                          {entry.title || <span className="italic text-gray-400 dark:text-[#555]">Untitled</span>}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                            entry.type === 'carlopedia'
+                              ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                              : 'bg-[#f0f0f0] dark:bg-[#222] text-gray-900 dark:text-white'
+                          }`}>
+                            {typeLabel(entry.type)}
+                          </span>
+                        </td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777] max-w-[180px] truncate">
+                          {userMap[entry.user_id] ?? entry.user_id?.slice(0, 8) + '…'}
+                        </td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-[#777] whitespace-nowrap">{fmt(entry.updated_at)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => setConfirmDelete(entry.id)}
+                            className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-[#f0f0f0] dark:bg-[#222] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               {hasMore && (
                 <div className="px-4 py-3 border-t border-[#f0f0f0] dark:border-[#1e1e1e]">
                   <button

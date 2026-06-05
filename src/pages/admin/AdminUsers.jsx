@@ -38,7 +38,7 @@ export default function AdminUsers() {
   const [userEntries, setUserEntries] = useState({})
   const [loadingEntries, setLoadingEntries] = useState(false)
   const [search, setSearch] = useState('')
-  const [sortBy, setSortBy] = useState('joined')
+  const [sortBy, setSortBy] = useState('active')
   const [sortDir, setSortDir] = useState('desc')
 
   useEffect(() => {
@@ -138,6 +138,11 @@ export default function AdminUsers() {
           ? getDisplayName(a).localeCompare(getDisplayName(b))
           : getDisplayName(b).localeCompare(getDisplayName(a))
       }
+      if (sortBy === 'active') {
+        const av = new Date(a.last_sign_in_at ?? 0).getTime()
+        const bv = new Date(b.last_sign_in_at ?? 0).getTime()
+        return sortDir === 'asc' ? av - bv : bv - av
+      }
       const av = new Date(a.created_at).getTime()
       const bv = new Date(b.created_at).getTime()
       return sortDir === 'asc' ? av - bv : bv - av
@@ -177,7 +182,7 @@ export default function AdminUsers() {
               />
             </div>
             <div className="flex items-center gap-1 p-1 rounded-lg bg-[#f0f0f0] dark:bg-[#1a1a1a] shrink-0 text-[12px]">
-              {[['joined', 'Joined'], ['entries', 'Entries'], ['name', 'Name']].map(([val, label]) => (
+              {[['active', 'Active'], ['joined', 'Joined'], ['entries', 'Entries'], ['name', 'Name']].map(([val, label]) => (
                 <button
                   key={val}
                   onClick={() => toggleSort(val)}
@@ -203,9 +208,9 @@ export default function AdminUsers() {
 
         <div className="border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl overflow-hidden">
           {/* Desktop header */}
-          <div className="hidden sm:grid grid-cols-[1fr_100px_80px_80px_120px] gap-4 px-5 py-3 border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[#f9f9f9] dark:bg-[#141414] text-[12px] font-medium text-gray-900 dark:text-white">
+          <div className="hidden sm:grid grid-cols-[1fr_110px_80px_80px_120px] gap-4 px-5 py-3 border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[#f9f9f9] dark:bg-[#141414] text-[12px] font-medium text-gray-900 dark:text-white">
             <span>User</span>
-            <span>Joined</span>
+            <span>Last Active</span>
             <span className="text-center">Entries</span>
             <span className="text-center">Categories</span>
             <span />
@@ -222,7 +227,7 @@ export default function AdminUsers() {
               {displayUsers.map((user, i) => (
                 <div key={user.id}>
                   {/* Desktop row */}
-                  <div className={`hidden sm:grid grid-cols-[1fr_100px_80px_80px_120px] gap-4 items-center px-5 py-3.5 ${i < displayUsers.length - 1 || expandedUser === user.id ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
+                  <div className={`hidden sm:grid grid-cols-[1fr_110px_80px_80px_120px] gap-4 items-center px-5 py-3.5 ${i < displayUsers.length - 1 || expandedUser === user.id ? 'border-b border-[#f0f0f0] dark:border-[#1e1e1e]' : ''}`}>
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar user={user} />
                       <div className="min-w-0">
@@ -235,7 +240,7 @@ export default function AdminUsers() {
                         <div className="text-[11px] text-gray-500 dark:text-[#777] truncate">{user.email}</div>
                       </div>
                     </div>
-                    <div className="text-[12px] text-gray-500 dark:text-[#777]">{fmt(user.created_at)}</div>
+                    <div className="text-[12px] text-gray-500 dark:text-[#777]">{fmt(user.last_sign_in_at) || '—'}</div>
                     <div className="text-center text-[13px] font-semibold text-gray-900 dark:text-white tabular-nums">{entryCounts[user.id] ?? '—'}</div>
                     <div className="text-center text-[13px] font-semibold text-gray-900 dark:text-white tabular-nums">{categoryCounts[user.id] ?? '—'}</div>
                     <div className="flex items-center gap-2 justify-end">
@@ -289,7 +294,7 @@ export default function AdminUsers() {
                       </div>
                     </div>
                     <div className="mt-2 ml-11 flex items-center gap-3 text-[11px] text-gray-500 dark:text-[#777]">
-                      <span>{fmt(user.created_at)}</span>
+                      <span>Active {fmt(user.last_sign_in_at) || '—'}</span>
                       <span>·</span>
                       <span><strong className="text-gray-900 dark:text-white">{entryCounts[user.id] ?? 0}</strong> entries</span>
                       <span>·</span>

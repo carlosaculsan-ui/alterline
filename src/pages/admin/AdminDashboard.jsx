@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
@@ -8,18 +8,51 @@ import { supabaseAdmin } from '../../lib/supabaseAdmin'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-function StatCard({ label, value, sub }) {
-  return (
-    <div className="border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl p-5 bg-white dark:bg-[#141414]">
+function useCountUp(target, duration = 650) {
+  const [count, setCount] = useState(0)
+  const isFirst = useRef(true)
+  useEffect(() => {
+    if (target === null) return
+    if (!isFirst.current) { setCount(target); return }
+    isFirst.current = false
+    if (target === 0) { setCount(0); return }
+    let raf
+    const start = Date.now()
+    const tick = () => {
+      const progress = Math.min((Date.now() - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setCount(Math.round(eased * target))
+      if (progress < 1) raf = requestAnimationFrame(tick)
+      else setCount(target)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target])
+  return count
+}
+
+function StatCard({ label, value, sub, to }) {
+  const displayValue = useCountUp(value)
+
+  const inner = (
+    <>
       <div className="text-[28px] font-bold text-gray-900 dark:text-white tabular-nums">
         {value === null ? (
           <span className="inline-block w-12 h-7 rounded bg-[#f0f0f0] dark:bg-[#222] animate-pulse" />
-        ) : value}
+        ) : displayValue}
       </div>
       <div className="mt-1 text-[13px] text-gray-900 dark:text-white font-medium">{label}</div>
       <div className="mt-0.5 text-[11px] text-gray-500 dark:text-[#777]">{sub ?? ' '}</div>
-    </div>
+    </>
   )
+
+  const cls = "border border-[#e5e5e5] dark:border-[#2a2a2a] rounded-xl p-5 bg-white dark:bg-[#141414] hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-sm hover:-translate-y-px transition-all duration-150"
+
+  if (to) {
+    return <Link to={to} className={`block ${cls}`}>{inner}</Link>
+  }
+
+  return <div className={cls}>{inner}</div>
 }
 
 function CustomTooltip({ active, payload, label }) {
@@ -43,18 +76,7 @@ function fmt(iso) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function buildMonthlyData(entries) {
-  const year = new Date().getFullYear()
-  const counts = Array(12).fill(0)
-  entries.forEach((e) => {
-    const d = new Date(e.created_at)
-    if (d.getFullYear() === year) counts[d.getMonth()]++
-  })
-  return MONTHS.map((month, i) => ({ month, count: counts[i] }))
-}
-
 export default function AdminDashboard() {
-  const navigate = useNavigate()
   const [stats, setStats] = useState({
     users: null, total: null, stories: null, carlopedia: null,
     categories: null, links: null, newUsersWeek: null, newEntriesWeek: null,
@@ -66,55 +88,59 @@ export default function AdminDashboard() {
   const [activeBar, setActiveBar] = useState(null)
   const [chartYear, setChartYear] = useState(new Date().getFullYear())
   const [chartLoading, setChartLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [lastRefreshed, setLastRefreshed] = useState(null)
 
-  useEffect(() => {
-    async function load() {
-      const weekAgo = new Date()
-      weekAgo.setDate(weekAgo.getDate() - 7)
+  async function loadStats() {
+    setRefreshing(true)
+    const weekAgo = new Date()
+    weekAgo.setDate(weekAgo.getDate() - 7)
 
-      const [
-        { data: usersData },
-        { count: total },
-        ,
-        { data: carlopediaTyped },
-        { data: carlopediaFields },
-        { count: categories },
-        { count: links },
-        { count: newEntriesWeek },
-        { data: recentData },
-      ] = await Promise.all([
-        supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
-        supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }),
-        supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }).eq('type', 'story'),
-        supabaseAdmin.from('entries').select('id').eq('type', 'carlopedia'),
-        supabaseAdmin.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
-        supabaseAdmin.from('categories').select('*', { count: 'exact', head: true }),
-        supabaseAdmin.from('entry_links').select('*', { count: 'exact', head: true }),
-        supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString()),
-        supabaseAdmin.from('entries').select('id, title, type, user_id, created_at, updated_at').order('updated_at', { ascending: false }).limit(12),
-      ])
+    const [
+      { data: usersData },
+      { count: total },
+      ,
+      { data: carlopediaTyped },
+      { data: carlopediaFields },
+      { count: categories },
+      { count: links },
+      { count: newEntriesWeek },
+      { data: recentData },
+    ] = await Promise.all([
+      supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
+      supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }),
+      supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }).eq('type', 'story'),
+      supabaseAdmin.from('entries').select('id').eq('type', 'carlopedia'),
+      supabaseAdmin.from('profile_fields').select('entry_id').eq('field_key', 'carlopedia'),
+      supabaseAdmin.from('categories').select('*', { count: 'exact', head: true }),
+      supabaseAdmin.from('entry_links').select('*', { count: 'exact', head: true }),
+      supabaseAdmin.from('entries').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString()),
+      supabaseAdmin.from('entries').select('id, title, type, user_id, created_at, updated_at').order('updated_at', { ascending: false }).limit(12),
+    ])
 
-      const users = usersData?.users ?? []
-      const map = {}
-      users.forEach((u) => { map[u.id] = u.email })
-      setUserMap(map)
+    const users = usersData?.users ?? []
+    const map = {}
+    users.forEach((u) => { map[u.id] = u.email })
+    setUserMap(map)
 
-      const newUsersWeek = users.filter((u) => new Date(u.created_at) >= new Date(weekAgo)).length
-      const carlopediaIds = new Set([
-        ...(carlopediaTyped ?? []).map((e) => e.id),
-        ...(carlopediaFields ?? []).map((r) => r.entry_id),
-      ])
-      const carlopedia = carlopediaIds.size
-      const stories = (total ?? 0) - carlopedia
+    const newUsersWeek = users.filter((u) => new Date(u.created_at) >= new Date(weekAgo)).length
+    const carlopediaIds = new Set([
+      ...(carlopediaTyped ?? []).map((e) => e.id),
+      ...(carlopediaFields ?? []).map((r) => r.entry_id),
+    ])
+    const carlopedia = carlopediaIds.size
+    const stories = (total ?? 0) - carlopedia
 
-      setStats({ users: users.length, total, stories, carlopedia, categories, links, newUsersWeek, newEntriesWeek })
-      setRecent((recentData ?? []).map((e) => ({
-        ...e,
-        type: carlopediaIds.has(e.id) ? 'carlopedia' : e.type,
-      })))
-    }
-    load()
-  }, [])
+    setStats({ users: users.length, total, stories, carlopedia, categories, links, newUsersWeek, newEntriesWeek })
+    setRecent((recentData ?? []).map((e) => ({
+      ...e,
+      type: carlopediaIds.has(e.id) ? 'carlopedia' : e.type,
+    })))
+    setLastRefreshed(new Date())
+    setRefreshing(false)
+  }
+
+  useEffect(() => { loadStats() }, [])
 
   useEffect(() => {
     setActiveBar(null)
@@ -134,19 +160,44 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       <div className="px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-[22px] font-bold text-gray-900 dark:text-white">Overview</h1>
-          <p className="mt-1 text-[13px] text-gray-500 dark:text-[#777]">Platform-wide stats across all users</p>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-[22px] font-bold text-gray-900 dark:text-white">Overview</h1>
+            <p className="mt-1 text-[13px] text-gray-500 dark:text-[#777]">Platform-wide stats across all users</p>
+          </div>
+          <div className="flex items-center gap-2 pt-1 shrink-0">
+            {lastRefreshed && (
+              <span className="text-[11px] text-gray-500 dark:text-[#777]">
+                {lastRefreshed.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+              </span>
+            )}
+            <button
+              onClick={loadStats}
+              disabled={refreshing}
+              title="Refresh stats"
+              className="p-1.5 rounded-md text-gray-500 dark:text-[#777] hover:bg-[#f0f0f0] dark:hover:bg-[#222] hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-40"
+            >
+              <svg
+                width="14" height="14" viewBox="0 0 15 15" fill="none"
+                className={refreshing ? 'animate-spin' : ''}
+              >
+                <path d="M13 7.5A5.5 5.5 0 0 1 2.5 11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                <path d="M2 7.5A5.5 5.5 0 0 1 12.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                <path d="M13.5 10.5L13 7.5l-3 .5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M1.5 4.5L2 7.5l3-.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-          <StatCard label="Total Users" value={stats.users} />
-          <StatCard label="New Users" value={stats.newUsersWeek} sub="this week" />
-          <StatCard label="Total Entries" value={stats.total} />
-          <StatCard label="New Entries" value={stats.newEntriesWeek} sub="this week" />
-          <StatCard label="Stories" value={stats.stories} />
-          <StatCard label="Carlopedia Articles" value={stats.carlopedia} />
+          <StatCard label="Total Users" value={stats.users} to="/admin/users" />
+          <StatCard label="New Users" value={stats.newUsersWeek} sub="this week" to="/admin/users" />
+          <StatCard label="Total Entries" value={stats.total} to="/admin/entries" />
+          <StatCard label="New Entries" value={stats.newEntriesWeek} sub="this week" to="/admin/entries" />
+          <StatCard label="Stories" value={stats.stories} to="/admin/entries" />
+          <StatCard label="Carlopedia Articles" value={stats.carlopedia} to="/admin/entries" />
           <StatCard label="Categories" value={stats.categories} />
           <StatCard label="Entry Links" value={stats.links} />
         </div>

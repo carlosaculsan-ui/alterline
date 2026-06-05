@@ -93,6 +93,12 @@ export default function AdminLayout({ children }) {
     setMobileMenuOpen(false)
   }, [location.pathname])
 
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') setMobileMenuOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
     <div className="relative flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
       {mobileMenuOpen && (
@@ -136,7 +142,7 @@ export default function AdminLayout({ children }) {
         <nav className="px-2 pt-4 pb-2 space-y-1">
           <button
             onClick={() => navigate('/')}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[14px] text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c] transition-colors"
           >
             <IconArrowLeft />
             Back to app
@@ -151,7 +157,7 @@ export default function AdminLayout({ children }) {
               end={end}
               onClick={() => setMobileMenuOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] transition-colors ${
+                `flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[14px] transition-colors ${
                   isActive
                     ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
                     : 'text-gray-800 dark:text-white hover:bg-[#f0f0f0] dark:hover:bg-[#1c1c1c]'
