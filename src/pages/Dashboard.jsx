@@ -141,9 +141,7 @@ export default function Dashboard() {
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
   const searchGen = useRef(0)
-  const [greetingVisible, setGreetingVisible] = useState(
-    () => !sessionStorage.getItem('alterline-greeted')
-  )
+  const [greetingVisible, setGreetingVisible] = useState(true)
   const [typingDone, setTypingDone] = useState(false)
 
   useEffect(() => {

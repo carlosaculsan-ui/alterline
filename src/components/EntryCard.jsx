@@ -135,7 +135,7 @@ export default function EntryCard({ entry, displayDate, searchQuery, onDelete, o
         {onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); setShowDeleteModal(true) }}
-            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-red-100 dark:hover:bg-red-950/40 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-red-100 dark:hover:bg-red-950/40 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
             aria-label="Delete entry"
             title="Delete entry"
           >
@@ -149,7 +149,7 @@ export default function EntryCard({ entry, displayDate, searchQuery, onDelete, o
         {/* 3-dot — always visible so touch users have a tap target */}
         <button
           onClick={openMenu}
-          className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-black/10 dark:hover:bg-white/10 text-gray-900 dark:text-white text-[16px] leading-none opacity-30 group-hover:opacity-100 transition-all"
+          className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-black/10 dark:hover:bg-white/10 text-gray-900 dark:text-white text-[16px] leading-none opacity-100 sm:opacity-30 sm:group-hover:opacity-100 transition-all"
           aria-label="Options"
         >
           ···
