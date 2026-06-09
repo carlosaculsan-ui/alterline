@@ -320,7 +320,7 @@ export default function Layout({ children, forceLight = false, wide = false, foc
       {/* Mobile backdrop */}
       {mobileMenuOpen && !focusMode && (
         <div
-          className="lg:hidden fixed inset-0 z-40 bg-black/40"
+          className="lg:hidden fixed inset-0 z-40 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}

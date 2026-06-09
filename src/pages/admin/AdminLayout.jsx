@@ -103,7 +103,7 @@ export default function AdminLayout({ children }) {
     <div className="relative flex h-screen overflow-hidden bg-white dark:bg-[#111] text-gray-900 dark:text-gray-100">
       {mobileMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-40 bg-black/40"
+          className="lg:hidden fixed inset-0 z-40 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
